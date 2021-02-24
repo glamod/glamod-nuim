@@ -1,0 +1,45 @@
+# Data Policy Information for Observation Records
+
+## Data Policies derived from Sources
+
+Source: International collection (non U.S. data received through  personal contacts) (Source ID: 232):
+	Product Name: International collection (non U.S. data received through  personal contacts)
+	Product References: -
+	Product Citation: -
+
+Source: Official Global Climate Observing System (GCOS) or  other government-supplied data (Source ID: 231):
+	Product Name: Official Global Climate Observing System (GCOS) or  other government-supplied data
+	Product References: -
+	Product Citation: -
+
+Source: European Climate Assessment and Dataset (Klein Tank et al. 2002) (Source ID: 229):
+	Product Name: European Climate Assessment and Dataset (Klein Tank et al. 2002)
+	Product References: -
+	Product Citation: Klein Tank, A.M.G. and Coauthors, 2002. Daily dataset of 20th-century surface air temperature and precipitation series for the European Climate Assessment. Int. J. of Climatol., 22, 1441-1453. Data and metadata available at https://www.ecad.eu
+
+Source: U.S. Fort data (Source ID: 230):
+	Product Name: U.S. Fort data
+	Product References: -
+	Product Citation: -
+
+Source: CDMP Cooperative Summary of the Day (NCDC DSI-3206) (Source ID: 162):
+	Product Name: CDMP Cooperative Summary of the Day (NCDC DSI-3206)
+	Product References: -
+	Product Citation: National Climatic Data Center/NESDIS/NOAA/U.S. Department of Commerce. 2004.U.S. Surface Data Keyed from the Climate Database Modernization Program (CDMP). Research Data Archive at the National Center for Atmospheric Research, Computational and Information Systems Laboratory. https://doi.org/10.5065/YWVY-YQ19. Accesseddd mmm yyyy.
+
+Source: U.S. Cooperative Summary of the Day (NCDC DSI-3200) (Source ID: 161):
+	Product Name: U.S. Cooperative Summary of the Day (NCDC DSI-3200)
+	Product References: -
+	Product Citation: -
+
+
+## National Data Policies
+
+National Data Policy Information: Germany (Nation ID: GM):
+	Data Policy Link: https://opendata.dwd.de/climate_environment/CDC/Terms_of_use.pdf
+	Institute: DWD
+
+National Data Policy Information: United States (Nation ID: US):
+	Data Policy Link: https://www.ncdc.noaa.gov/wdcmet, https://obamawhitehouse.archives.gov/sites/default/files/omb/memoranda/2013/m-13-13.pdf
+	Institute: NOAA NCEI
+

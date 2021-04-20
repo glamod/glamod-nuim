@@ -3,12 +3,12 @@
 """
 Created on Tue Mar 19 09:02:55 2019
 
-@author: 67135099
+@author: S. Noone
 """
 ##reads all the files in the current working directory, make sure only input files are in folde
 import os
 #import numpy as np     
-os.chdir(r"D:/DWD_overseas_subdy/data_togo/") 
+os.chdir(r"xxxxxxx/") 
 files = [ f for f in os.listdir( os.curdir ) if os.path.isfile(f) ]
 files
 firstFile = files[0]
@@ -144,7 +144,7 @@ giantDataFrame['Report_type_code'] = giantDataFrame['Report_type_code'].str.stri
 #write one large pipe delimited file with all stations combined if same station named by station_id+ variable name
  
 #stationsAsBigList =  giantDataFrame["Station_ID"].tolist()
-#.to_csv('CHN01000_station_level_pressure_321.psv',sep='|',index=False)
+#.to_csv('station_level_pressure_158.psv',sep='|',index=False)
 
 ####################to csv by unique staion id
 os.chdir(r"D:/DWD_overseas_subdy/data_togo/output/wind_dir")

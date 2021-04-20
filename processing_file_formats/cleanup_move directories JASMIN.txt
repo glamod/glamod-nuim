@@ -1,0 +1,18 @@
+#### directories for clean up/moving
+##The following folders/files have been moved from incomning directory
+/gws/nopw/j04/c3s311a_lot2/data/incoming/superghcnd_full_20190731.csv.gz (moved to /gws/nopw/j04/c3s311a_lot2/data/level0/land/daily_data)
+/gws/nopw/j04/c3s311a_lot2/data/incoming/superghcnd_full_20181022.csv (moved to /gws/nopw/j04/c3s311a_lot2/data/level0/land/daily_data)
+/gws/nopw/j04/c3s311a_lot2/data/incoming/gsom-latest.tar.gz  (moved to /gws/nopw/j04/c3s311a_lot2/data/level0/land/monthly_data)
+/gws/nopw/j04/c3s311a_lot2/data/incoming/Archive_copy_gsom_superghcnd (moved to /gws/nopw/j04/c3s311a_lot2/data/level0/land/monthly_data)
+
+##The following folders/files might need to be cleaned up
+/gws/nopw/j04/c3s311a_lot2/data/AJK_area
+/gws/nopw/j04/c3s311a_lot2/data/incoming/MO_QC_flags
+/gws/nopw/j04/c3s311a_lot2/data/incoming/GSOM_use
+
+##The following data folders need to be zipped up and moved to /gws/nopw/j04/c3s311a_lot2/data/level0/land/sub_daily_data for tape backup, any files that are processed within these directories and are important can also be moved to level0 (e.g USAF separated stations files). 
+All other processed files should be moved to /gws/nopw/j04/c3s311a_lot2/data/level0/land/sub_daily_data _processing directory.
+/gws/nopw/j04/c3s311a_lot2/data/incoming/usaf
+/gws/nopw/j04/c3s311a_lot2/data/incoming/usaf_update
+/gws/nopw/j04/c3s311a_lot2/data/incoming/mars
+/gws/nopw/j04/c3s311a_lot2/data/incoming/ecmwf_era_archive

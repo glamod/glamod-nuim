@@ -1,0 +1,7 @@
+#!/bin/bash
+#SBATCH  -p short-serial
+#SBATCH  -o %J.out
+#SBATCH  -e %J.err
+#SBATCH  -t 04:00:00
+source /home/users/sjnoone/venv/bin/activate
+python /home/users/sjnoone/ghcnd_ftp_updates_dy/FTP_download_ghcnd_diff_scratch.py

@@ -1,0 +1,3 @@
+#!/bin/bash
+rm /gws/nopw/j04/c3s311a_lot2/data/level0/land/daily_data_processing/superghcnd_daily_updates/*.gz
+remove_gz (END)

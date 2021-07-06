@@ -1,0 +1,226 @@
+#Script to compile fortran code for GHCNd
+#AJ_Kettle, Dec03/2018
+#26Apr2019: modified to run pd2
+#24Oct2019: applied to new GHCND procedure
+#10Apr2020: applied to new data release
+#30Jan2021: used for new ghcnd data release
+
+#remove previous compiled subroutines
+rm *.o
+rm ../Subroutine/*.o
+rm b.exe
+
+gfortran -c -o gd20210510.o gd20210510.f
+gfortran -c -o ../Subroutine/readin_lastfile_number.o \
+               ../Subroutine/readin_lastfile_number.f
+gfortran -c -o ../Subroutine/erase_files_seq20201210.o \
+               ../Subroutine/erase_files_seq20201210.f
+gfortran -c -o ../Subroutine/readin_source_id2.o \
+               ../Subroutine/readin_source_id2.f
+gfortran -c -o ../Subroutine/get_stnconfig_ghcnd2.o \
+               ../Subroutine/get_stnconfig_ghcnd2.f
+gfortran -c -o ../Subroutine/get_elements_stnconfig_line2.o \
+               ../Subroutine/get_elements_stnconfig_line2.f
+gfortran -c -o ../Subroutine/readin_subset.o \
+               ../Subroutine/readin_subset.f
+gfortran -c -o ../Subroutine/get_qckey.o \
+               ../Subroutine/get_qckey.f
+gfortran -c -o ../Subroutine/main_cycler20201210.o \
+               ../Subroutine/main_cycler20201210.f
+gfortran -c -o ../Subroutine/get_singles_stnconfig_v5.o \
+               ../Subroutine/get_singles_stnconfig_v5.f
+gfortran -c -o ../Subroutine/export_errorfile.o \
+               ../Subroutine/export_errorfile.f
+gfortran -c -o ../Subroutine/input_output_single_station20201210.o \
+               ../Subroutine/input_output_single_station20201210.f
+gfortran -c -o ../Subroutine/get_lines_1file2.o \
+               ../Subroutine/get_lines_1file2.f
+gfortran -c -o ../Subroutine/get_fields_from_ghcnd_line2.o \
+               ../Subroutine/get_fields_from_ghcnd_line2.f
+gfortran -c -o ../Subroutine/find_len_fields2.o \
+               ../Subroutine/find_len_fields2.f
+gfortran -c -o ../Subroutine/verify_stn_id2.o \
+               ../Subroutine/verify_stn_id2.f
+gfortran -c -o ../Subroutine/find_hist_param_elements2.o \
+               ../Subroutine/find_hist_param_elements2.f
+gfortran -c -o ../Subroutine/find_distinct_timesteps2.o \
+               ../Subroutine/find_distinct_timesteps2.f
+gfortran -c -o ../Subroutine/qc_converter.o \
+               ../Subroutine/qc_converter.f
+gfortran -c -o ../Subroutine/resolve_qc_single_param.o \
+               ../Subroutine/resolve_qc_single_param.f
+gfortran -c -o ../Subroutine/get_sourceid_numcode2.o \
+               ../Subroutine/get_sourceid_numcode2.f
+gfortran -c -o ../Subroutine/get_source_id_single2.o \
+               ../Subroutine/get_source_id_single2.f
+gfortran -c -o ../Subroutine/get_record_number2.o \
+               ../Subroutine/get_record_number2.f
+gfortran -c -o ../Subroutine/search_stringfragment2.o \
+               ../Subroutine/search_stringfragment2.f
+gfortran -c -o ../Subroutine/ambigcase_get_low_record2.o \
+               ../Subroutine/ambigcase_get_low_record2.f
+gfortran -c -o ../Subroutine/total_counts_recordnumber2.o \
+               ../Subroutine/total_counts_recordnumber2.f
+gfortran -c -o ../Subroutine/convert_string_to_float_ghcnd3.o \
+               ../Subroutine/convert_string_to_float_ghcnd3.f
+gfortran -c -o ../Subroutine/convert_variable_column2.o \
+               ../Subroutine/convert_variable_column2.f
+gfortran -c -o ../Subroutine/convert_float_to_string2.o \
+               ../Subroutine/convert_float_to_string2.f
+gfortran -c -o ../Subroutine/convert_integer_to_string2.o \
+               ../Subroutine/convert_integer_to_string2.f
+gfortran -c -o ../Subroutine/get_lines_1file2.o \
+               ../Subroutine/get_lines_1file2.f
+gfortran -c -o ../Subroutine/get_fields_from_ghcnd_line2.o \
+               ../Subroutine/get_fields_from_ghcnd_line2.f
+gfortran -c -o ../Subroutine/time_sort_process.o \
+               ../Subroutine/time_sort_process.f
+gfortran -c -o ../Subroutine/sort_doublelist_pvwave2.o \
+               ../Subroutine/sort_doublelist_pvwave2.f
+gfortran -c -o ../Subroutine/find_len_fields2.o \
+               ../Subroutine/find_len_fields2.f
+gfortran -c -o ../Subroutine/verify_stn_id2.o \
+               ../Subroutine/verify_stn_id2.f
+gfortran -c -o ../Subroutine/find_hist_param_elements2.o \
+               ../Subroutine/find_hist_param_elements2.f
+gfortran -c -o ../Subroutine/find_distinct_timesteps2.o \
+               ../Subroutine/find_distinct_timesteps2.f
+gfortran -c -o ../Subroutine/get_sourceid_numcode2.o \
+               ../Subroutine/get_sourceid_numcode2.f
+gfortran -c -o ../Subroutine/get_source_id_single2.o \
+               ../Subroutine/get_source_id_single2.f
+gfortran -c -o ../Subroutine/get_record_number2.o \
+               ../Subroutine/get_record_number2.f
+gfortran -c -o ../Subroutine/search_stringfragment2.o \
+               ../Subroutine/search_stringfragment2.f
+gfortran -c -o ../Subroutine/ambigcase_get_low_record2.o \
+               ../Subroutine/ambigcase_get_low_record2.f
+gfortran -c -o ../Subroutine/total_counts_recordnumber2.o \
+               ../Subroutine/total_counts_recordnumber2.f
+gfortran -c -o ../Subroutine/convert_string_to_float_ghcnd3.o \
+               ../Subroutine/convert_string_to_float_ghcnd3.f
+gfortran -c -o ../Subroutine/convert_variable_column2.o \
+               ../Subroutine/convert_variable_column2.f
+gfortran -c -o ../Subroutine/convert_float_to_string2.o \
+               ../Subroutine/convert_float_to_string2.f
+gfortran -c -o ../Subroutine/convert_integer_to_string2.o \
+               ../Subroutine/convert_integer_to_string2.f
+gfortran -c -o ../Subroutine/test_precision_variables2.o \
+               ../Subroutine/test_precision_variables2.f
+gfortran -c -o ../Subroutine/precision_interpreter_tenths2.o \
+               ../Subroutine/precision_interpreter_tenths2.f
+gfortran -c -o ../Subroutine/precision_interpreter_whole2.o \
+               ../Subroutine/precision_interpreter_whole2.f
+gfortran -c -o ../Subroutine/precision_single_vector1a.o \
+               ../Subroutine/precision_single_vector1a.f
+gfortran -c -o ../Subroutine/precision_single_vector2a.o \
+               ../Subroutine/precision_single_vector2a.f
+gfortran -c -o ../Subroutine/find_hist_dailyprecision2.o \
+               ../Subroutine/find_hist_dailyprecision2.f
+gfortran -c -o ../Subroutine/header_obs_lite_table20201215.o \
+               ../Subroutine/header_obs_lite_table20201215.f
+gfortran -c -o ../Subroutine/sort_vec_obs_ancillary_ghcnd2.o \
+               ../Subroutine/sort_vec_obs_ancillary_ghcnd2.f
+gfortran -c -o ../Subroutine/find_vector_recordnumber2.o \
+               ../Subroutine/find_vector_recordnumber2.f
+gfortran -c -o ../Subroutine/sample_screenprint_header.o \
+               ../Subroutine/sample_screenprint_header.f
+gfortran -c -o ../Subroutine/assemble_vec_original_precision2.o \
+               ../Subroutine/assemble_vec_original_precision2.f
+gfortran -c -o ../Subroutine/get_numerical_precision2.o \
+               ../Subroutine/get_numerical_precision2.f
+gfortran -c -o ../Subroutine/get_quality_flag_vector2.o \
+               ../Subroutine/get_quality_flag_vector2.f
+gfortran -c -o ../Subroutine/get_qcmethod_vector20201216.o \
+               ../Subroutine/get_qcmethod_vector20201216.f
+gfortran -c -o ../Subroutine/qc_single_variable2.o \
+               ../Subroutine/qc_single_variable2.f
+gfortran -c -o ../Subroutine/get_observationvalue_vector2.o \
+               ../Subroutine/get_observationvalue_vector2.f
+gfortran -c -o ../Subroutine/get_hght_obs_above_sfc.o \
+               ../Subroutine/get_hght_obs_above_sfc.f
+gfortran -c -o ../Subroutine/get_jtime_from_datetime.o \
+               ../Subroutine/get_jtime_from_datetime.f
+gfortran -c -o ../Subroutine/str_to_dt_pvwave3.o \
+               ../Subroutine/str_to_dt_pvwave3.f
+gfortran -c -o ../Subroutine/find_minmax_datetime.o \
+               ../Subroutine/find_minmax_datetime.f
+gfortran -c -o ../Subroutine/sample_screenprint_obs.o \
+               ../Subroutine/sample_screenprint_obs.f
+gfortran -c -o ../Subroutine/sample_screenprint_qcmethod.o \
+               ../Subroutine/sample_screenprint_qcmethod.f
+gfortran -c -o ../Subroutine/convert_float_to_string_single2.o \
+               ../Subroutine/convert_float_to_string_single2.f
+gfortran -c -o ../Subroutine/sample_screenprint_lite.o \
+               ../Subroutine/sample_screenprint_lite.f
+gfortran -c -o ../Subroutine/get_strvector_distinct.o \
+               ../Subroutine/get_strvector_distinct.f
+gfortran -c -o ../Subroutine/export_stnconfig_lines.o \
+               ../Subroutine/export_stnconfig_lines.f
+gfortran -c -o ../Subroutine/make_receiptfile_linecount20201222.o \
+               ../Subroutine/make_receiptfile_linecount20201222.f
+gfortran -c -o ../Subroutine/export_last_index.o \
+               ../Subroutine/export_last_index.f
+
+echo finished compilations
+
+gfortran -o b.exe gd20210510.o \
+  ../Subroutine/readin_lastfile_number.o \
+  ../Subroutine/erase_files_seq20201210.o \
+  ../Subroutine/readin_source_id2.o \
+  ../Subroutine/get_stnconfig_ghcnd2.o \
+    ../Subroutine/get_elements_stnconfig_line2.o \
+  ../Subroutine/readin_subset.o \
+  ../Subroutine/get_qckey.o \
+  ../Subroutine/main_cycler20201210.o \
+   ../Subroutine/get_singles_stnconfig_v5.o \
+   ../Subroutine/export_errorfile.o \
+   ../Subroutine/input_output_single_station20201210.o \
+    ../Subroutine/get_lines_1file2.o \
+      ../Subroutine/get_fields_from_ghcnd_line2.o \
+    ../Subroutine/time_sort_process.o \
+      ../Subroutine/sort_doublelist_pvwave2.o \
+    ../Subroutine/find_len_fields2.o \
+    ../Subroutine/verify_stn_id2.o \
+    ../Subroutine/find_hist_param_elements2.o \
+    ../Subroutine/find_distinct_timesteps2.o \
+    ../Subroutine/qc_converter.o \
+      ../Subroutine/resolve_qc_single_param.o \
+    ../Subroutine/get_sourceid_numcode2.o \
+      ../Subroutine/get_source_id_single2.o \
+    ../Subroutine/get_record_number2.o \
+      ../Subroutine/search_stringfragment2.o \
+      ../Subroutine/ambigcase_get_low_record2.o \
+    ../Subroutine/total_counts_recordnumber2.o \
+    ../Subroutine/convert_string_to_float_ghcnd3.o \
+      ../Subroutine/convert_variable_column2.o \
+      ../Subroutine/convert_float_to_string2.o \
+      ../Subroutine/convert_integer_to_string2.o \
+    ../Subroutine/test_precision_variables2.o \
+      ../Subroutine/precision_single_vector1a.o \
+      ../Subroutine/precision_single_vector2a.o \
+        ../Subroutine/find_hist_dailyprecision2.o \
+      ../Subroutine/precision_interpreter_tenths2.o \
+      ../Subroutine/precision_interpreter_whole2.o \
+    ../Subroutine/header_obs_lite_table20201215.o \
+      ../Subroutine/sort_vec_obs_ancillary_ghcnd2.o \
+      ../Subroutine/find_vector_recordnumber2.o \
+      ../Subroutine/sample_screenprint_header.o \
+      ../Subroutine/assemble_vec_original_precision2.o \
+      ../Subroutine/get_numerical_precision2.o \
+      ../Subroutine/get_quality_flag_vector2.o \
+        ../Subroutine/qc_single_variable2.o \
+      ../Subroutine/get_qcmethod_vector20201216.o \
+      ../Subroutine/get_observationvalue_vector2.o \
+        ../Subroutine/convert_float_to_string_single2.o \
+      ../Subroutine/get_hght_obs_above_sfc.o \
+      ../Subroutine/get_jtime_from_datetime.o \
+        ../Subroutine/str_to_dt_pvwave3.o \
+      ../Subroutine/find_minmax_datetime.o \
+      ../Subroutine/sample_screenprint_obs.o \
+      ../Subroutine/sample_screenprint_qcmethod.o \
+      ../Subroutine/sample_screenprint_lite.o \
+      ../Subroutine/get_strvector_distinct.o \
+      ../Subroutine/export_stnconfig_lines.o \
+      ../Subroutine/make_receiptfile_linecount20201222.o \
+  ../Subroutine/export_last_index.o

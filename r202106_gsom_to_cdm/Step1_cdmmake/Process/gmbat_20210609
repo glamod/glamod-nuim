@@ -1,0 +1,198 @@
+#Script to compile fortran code for GSOM
+#AJ_Kettle, 19May2020
+#02Feb2021: modified for Feb2021 release
+#09Jun2021: modified for r202106
+
+rm *.o
+rm a.exe
+
+gfortran -c -o gm20210609.o gm20210609.f
+gfortran -c -o ../Subroutine/readin_source_id2.o \
+               ../Subroutine/readin_source_id2.f
+gfortran -c -o ../Subroutine/get_stnconfig_ghcnd2.o \
+               ../Subroutine/get_stnconfig_ghcnd2.f
+gfortran -c -o ../Subroutine/get_scinput_info.o \
+               ../Subroutine/get_scinput_info.f
+gfortran -c -o ../Subroutine/get_elements_stnconfig_line2.o \
+               ../Subroutine/get_elements_stnconfig_line2.f
+gfortran -c -o ../Subroutine/readin_subset.o \
+               ../Subroutine/readin_subset.f
+gfortran -c -o ../Subroutine/get_qckey.o \
+               ../Subroutine/get_qckey.f
+gfortran -c -o ../Subroutine/process_gsom_files20210204.o \
+               ../Subroutine/process_gsom_files20210204.f
+gfortran -c -o ../Subroutine/get_codes_gsom_processing20200527.o \
+               ../Subroutine/get_codes_gsom_processing20200527.f
+gfortran -c -o ../Subroutine/station_loop_process20210204.o \
+               ../Subroutine/station_loop_process20210204.f
+gfortran -c -o ../Subroutine/info_from_stnconfig.o \
+               ../Subroutine/info_from_stnconfig.f
+gfortran -c -o ../Subroutine/info_from_stnconfig_vector.o \
+               ../Subroutine/info_from_stnconfig_vector.f
+gfortran -c -o ../Subroutine/readin_lastfile_number20200603.o \
+               ../Subroutine/readin_lastfile_number20200603.f
+gfortran -c -o ../Subroutine/get_singles_stnconfig_v5.o \
+               ../Subroutine/get_singles_stnconfig_v5.f
+gfortran -c -o ../Subroutine/export_test1.o \
+               ../Subroutine/export_test1.f
+gfortran -c -o ../Subroutine/get_gsom_datalines20200523.o \
+               ../Subroutine/get_gsom_datalines20200523.f
+gfortran -c -o ../Subroutine/field_extractor_gen.o \
+               ../Subroutine/field_extractor_gen.f
+gfortran -c -o ../Subroutine/find_variable_indices.o \
+               ../Subroutine/find_variable_indices.f
+gfortran -c -o ../Subroutine/find_variable_index_single.o \
+               ../Subroutine/find_variable_index_single.f
+gfortran -c -o ../Subroutine/field_extractor_quot.o \
+               ../Subroutine/field_extractor_quot.f
+gfortran -c -o ../Subroutine/get_data_into_vectors2.o \
+               ../Subroutine/get_data_into_vectors2.f
+gfortran -c -o ../Subroutine/get_date_into_vector.o \
+               ../Subroutine/get_date_into_vector.f
+gfortran -c -o ../Subroutine/get_singlestring_into_vector20200523.o \
+               ../Subroutine/get_singlestring_into_vector20200523.f
+gfortran -c -o ../Subroutine/latlon_4decimal20200523.o \
+               ../Subroutine/latlon_4decimal20200523.f
+gfortran -c -o ../Subroutine/find_original_precision2.o \
+               ../Subroutine/find_original_precision2.f
+gfortran -c -o ../Subroutine/find_precision_vector3.o \
+               ../Subroutine/find_precision_vector3.f
+gfortran -c -o ../Subroutine/find_number_elements.o \
+               ../Subroutine/find_number_elements.f
+gfortran -c -o ../Subroutine/get_qc_from_attrib20210204.o \
+               ../Subroutine/get_qc_from_attrib20210204.f
+gfortran -c -o ../Subroutine/qc_checker20210204.o \
+               ../Subroutine/qc_checker20210204.f
+gfortran -c -o ../Subroutine/set_qcmethod_code.o \
+               ../Subroutine/set_qcmethod_code.f
+gfortran -c -o ../Subroutine/resolve_qc_single_param20210205.o \
+               ../Subroutine/resolve_qc_single_param20210205.f
+gfortran -c -o ../Subroutine/get_source_char_from_attrib3.o \
+               ../Subroutine/get_source_char_from_attrib3.f
+gfortran -c -o ../Subroutine/get_single_source_char.o \
+               ../Subroutine/get_single_source_char.f
+gfortran -c -o ../Subroutine/get_single_source_char2.o \
+               ../Subroutine/get_single_source_char2.f
+gfortran -c -o ../Subroutine/get_matrix_horiz_search.o \
+               ../Subroutine/get_matrix_horiz_search.f
+gfortran -c -o ../Subroutine/find_altern_letter.o \
+               ../Subroutine/find_altern_letter.f
+gfortran -c -o ../Subroutine/export_test2.o \
+               ../Subroutine/export_test2.f
+gfortran -c -o ../Subroutine/source_number_from_character.o \
+               ../Subroutine/source_number_from_character.f
+gfortran -c -o ../Subroutine/source_number_from_character_single.o \
+               ../Subroutine/source_number_from_character_single.f
+gfortran -c -o ../Subroutine/record_number_from_source_number3.o \
+               ../Subroutine/record_number_from_source_number3.f
+gfortran -c -o ../Subroutine/find_record_number_single3.o \
+               ../Subroutine/find_record_number_single3.f
+gfortran -c -o ../Subroutine/get_mat_altern_sourcenum.o \
+               ../Subroutine/get_mat_altern_sourcenum.f
+gfortran -c -o ../Subroutine/fix_record_number.o \
+               ../Subroutine/fix_record_number.f
+gfortran -c -o ../Subroutine/fix_datzilla.o \
+               ../Subroutine/fix_datzilla.f
+gfortran -c -o ../Subroutine/export_test4.o \
+               ../Subroutine/export_test4.f
+gfortran -c -o ../Subroutine/modify_qc_code.o \
+               ../Subroutine/modify_qc_code.f
+gfortran -c -o ../Subroutine/convert_variables2.o \
+               ../Subroutine/convert_variables2.f
+gfortran -c -o ../Subroutine/declare_converted_var_precision.o \
+               ../Subroutine/declare_converted_var_precision.f
+gfortran -c -o ../Subroutine/count_occurrence_variables.o \
+               ../Subroutine/count_occurrence_variables.f
+gfortran -c -o ../Subroutine/make_header_observation_lite20210203.o \
+               ../Subroutine/make_header_observation_lite20210203.f
+gfortran -c -o ../Subroutine/assemble_vector_gsom.o \
+               ../Subroutine/assemble_vector_gsom.f
+gfortran -c -o ../Subroutine/count_elements_vector.o \
+               ../Subroutine/count_elements_vector.f
+gfortran -c -o ../Subroutine/sample_screenprint_obs.o \
+               ../Subroutine/sample_screenprint_obs.f
+gfortran -c -o ../Subroutine/sample_screenprint_qcmethod.o \
+               ../Subroutine/sample_screenprint_qcmethod.f
+gfortran -c -o ../Subroutine/sample_screenprint_lite.o \
+               ../Subroutine/sample_screenprint_lite.f
+gfortran -c -o ../Subroutine/sample_screenprint_header.o \
+               ../Subroutine/sample_screenprint_header.f
+gfortran -c -o ../Subroutine/find_distinct_recnum_gsom.o \
+               ../Subroutine/find_distinct_recnum_gsom.f
+gfortran -c -o ../Subroutine/make_receiptfile_linecount20210207.o \
+               ../Subroutine/make_receiptfile_linecount20210207.f
+gfortran -c -o ../Subroutine/make_new_stnconfig2.o \
+               ../Subroutine/make_new_stnconfig2.f
+gfortran -c -o ../Subroutine/get_strvector_distinct.o \
+               ../Subroutine/get_strvector_distinct.f
+gfortran -c -o ../Subroutine/export_stnconfig_lines20200522.o \
+               ../Subroutine/export_stnconfig_lines20200522.f
+gfortran -c -o ../Subroutine/export_last_index20200603.o \
+               ../Subroutine/export_last_index20200603.f
+
+echo 'cleared compilations'
+
+gfortran -o a.exe gm20210609.o \
+  ../Subroutine/readin_source_id2.o \
+  ../Subroutine/get_stnconfig_ghcnd2.o \
+    ../Subroutine/get_elements_stnconfig_line2.o \
+  ../Subroutine/get_scinput_info.o \
+  ../Subroutine/readin_subset.o \
+  ../Subroutine/get_qckey.o \
+  ../Subroutine/process_gsom_files20210204.o \
+    ../Subroutine/get_codes_gsom_processing20200527.o \
+    ../Subroutine/station_loop_process20210204.o \
+      ../Subroutine/info_from_stnconfig.o \
+      ../Subroutine/info_from_stnconfig_vector.o \
+      ../Subroutine/readin_lastfile_number20200603.o \
+      ../Subroutine/get_singles_stnconfig_v5.o \
+      ../Subroutine/export_test1.o \
+      ../Subroutine/get_gsom_datalines20200523.o \
+        ../Subroutine/field_extractor_gen.o \
+        ../Subroutine/find_variable_indices.o \
+        ../Subroutine/find_variable_index_single.o \
+        ../Subroutine/field_extractor_quot.o \
+        ../Subroutine/get_data_into_vectors2.o \
+        ../Subroutine/get_date_into_vector.o \
+        ../Subroutine/get_singlestring_into_vector20200523.o \
+      ../Subroutine/latlon_4decimal20200523.o \
+      ../Subroutine/find_original_precision2.o \
+        ../Subroutine/find_precision_vector3.o \
+          ../Subroutine/find_number_elements.o \
+      ../Subroutine/get_qc_from_attrib20210204.o \
+        ../Subroutine/qc_checker20210204.o \
+      ../Subroutine/set_qcmethod_code.o \
+        ../Subroutine/resolve_qc_single_param20210205.o \
+      ../Subroutine/get_source_char_from_attrib3.o \
+        ../Subroutine/get_single_source_char.o \
+        ../Subroutine/get_single_source_char2.o \
+        ../Subroutine/get_matrix_horiz_search.o \
+        ../Subroutine/find_altern_letter.o \
+      ../Subroutine/export_test2.o \
+      ../Subroutine/source_number_from_character.o \
+        ../Subroutine/source_number_from_character_single.o \
+      ../Subroutine/record_number_from_source_number3.o \
+        ../Subroutine/find_record_number_single3.o \
+        ../Subroutine/get_mat_altern_sourcenum.o \
+        ../Subroutine/fix_record_number.o \
+        ../Subroutine/fix_datzilla.o \
+      ../Subroutine/export_test4.o \
+      ../Subroutine/modify_qc_code.o \
+      ../Subroutine/convert_variables2.o \
+      ../Subroutine/declare_converted_var_precision.o \
+      ../Subroutine/count_occurrence_variables.o \
+      ../Subroutine/make_header_observation_lite20210203.o \
+        ../Subroutine/assemble_vector_gsom.o \
+        ../Subroutine/count_elements_vector.o \
+        ../Subroutine/sample_screenprint_obs.o \
+        ../Subroutine/sample_screenprint_qcmethod.o \
+        ../Subroutine/sample_screenprint_lite.o \
+        ../Subroutine/sample_screenprint_header.o \
+        ../Subroutine/find_distinct_recnum_gsom.o \
+        ../Subroutine/make_receiptfile_linecount20210207.o \
+      ../Subroutine/make_new_stnconfig2.o \
+        ../Subroutine/get_strvector_distinct.o \
+        ../Subroutine/export_stnconfig_lines20200522.o \
+      ../Subroutine/export_last_index20200603.o
+
+echo 'cleared linking'

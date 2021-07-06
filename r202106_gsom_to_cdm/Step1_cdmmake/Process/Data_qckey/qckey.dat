@@ -1,0 +1,38 @@
+Simon Noone qc_mapping_table.docx
+
+Orig C3S  Time_scale    Meaning
+qc   qc   
+flag meth
+     flag
+s-------------------------------
+L    0    subdaily
+o    1    subdaily      odd cluster
+F    2    subdaily      frequent
+U    3    subdaily      diurnal
+D    4    subdaily      distribution
+d    5    subdaily      distribution
+W    6    subdaily      winds?
+K    7    subdaily      streaks
+C    8    subdaily      climatological
+T    9    subdaily
+S    10   subdaily      spike
+H    11   subdaily      humidity?
+V    12   subdaily      variance
+w    13   subdaily      winds?
+N    14   subdaily
+E    15   subdaily
+D    16   daily/monthly
+G    17   daily/monthly
+I    18   daily/monthly
+K    19   daily/monthly
+L    20   daily/monthly
+M    21   daily/monthly
+N    22   daily/monthly
+O    23   daily/monthly
+R    24   daily/monthly
+S    25   daily/monthly
+T    26   daily/monthly
+W    27   daily/monthly
+X    28   daily/monthly
+Z    29   daily/monthly
+e-------------------------------

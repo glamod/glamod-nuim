@@ -1,0 +1,24 @@
+#Script to compile fortran code to assemble stnconfig
+#AJ_Kettle, 08Jan2020
+#13Jan2020: adapted GHCD assembling
+#27Apr2020: adapted for 1May2013 release
+#01Mar2021: adapted from monthly release r202102
+#17Aug2021: adpated for release Jun2021
+
+gfortran -c -o sc20210817.o sc20210817.f
+gfortran -c -o ../Subroutine/import_filename_list.o \
+               ../Subroutine/import_filename_list.f
+gfortran -c -o ../Subroutine/get_lines_append_stnconfig.o \
+               ../Subroutine/get_lines_append_stnconfig.f
+gfortran -c -o ../Subroutine/get_lines_single_receiptfile.o \
+               ../Subroutine/get_lines_single_receiptfile.f
+gfortran -c -o ../Subroutine/export_lines_cumfile.o \
+               ../Subroutine/export_lines_cumfile.f
+
+echo 'cleared compilations'
+
+gfortran -o a.exe sc20210817.o \
+  ../Subroutine/import_filename_list.o \
+  ../Subroutine/get_lines_append_stnconfig.o \
+  ../Subroutine/get_lines_single_receiptfile.o \
+  ../Subroutine/export_lines_cumfile.o

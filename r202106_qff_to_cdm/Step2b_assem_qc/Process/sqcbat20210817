@@ -1,0 +1,25 @@
+#Script to compile fortran code to assemble stnconfig
+#AJ_Kettle, 08Jan2020
+#13Jan2020: adapted GHCD assembling
+#27Apr2020: adapted for 1May2013 release
+#09Feb2021: adapted for assembling qc files
+#12Feb2021: adapted for monthly qc files
+#17Aug2021: used for qff-cdm conversion 202106
+
+gfortran -c -o sqc20210817.o sqc20210817.f
+gfortran -c -o ../Subroutine/import_filename_list.o \
+               ../Subroutine/import_filename_list.f
+gfortran -c -o ../Subroutine/get_lines_append_stnconfig20210817.o \
+               ../Subroutine/get_lines_append_stnconfig20210817.f
+gfortran -c -o ../Subroutine/get_lines_single_qcfile.o \
+               ../Subroutine/get_lines_single_qcfile.f
+gfortran -c -o ../Subroutine/export_assemble20210209.o \
+               ../Subroutine/export_assemble20210209.f
+
+echo 'cleared compilations'
+
+gfortran -o a.exe sqc20210817.o \
+  ../Subroutine/import_filename_list.o \
+  ../Subroutine/get_lines_append_stnconfig20210817.o \
+  ../Subroutine/get_lines_single_qcfile.o \
+  ../Subroutine/export_assemble20210209.o

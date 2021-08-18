@@ -1,0 +1,153 @@
+#Batch program to run qf1 processing program for qff files
+#to run script ./qf1bat
+#AJ_Kettle, 20Aug2019
+#2020Jun05: used for second release
+#2020Jun16: modified for shift in subroutine directory
+#2020Oct08: used for 20q4 conversion
+#2021Jun25: used for 21q2 conversion
+#2021Aug02: updated 21q2 conversion
+
+rm *.o
+rm a.exe
+
+gfortran -c -o qf20210802.o qf20210802.f
+gfortran -c -o Subroutine/get_stnconfig_qff20210714.o \
+               Subroutine/get_stnconfig_qff20210714.f
+gfortran -c -o Subroutine/get_elements_stnconfig_line20201008.o \
+               Subroutine/get_elements_stnconfig_line20201008.f
+gfortran -c -o Subroutine/get_list_qff_files.o \
+               Subroutine/get_list_qff_files.f
+gfortran -c -o Subroutine/get_list_qff_files20210217.o \
+               Subroutine/get_list_qff_files20210217.f
+gfortran -c -o Subroutine/get_qckey.o \
+               Subroutine/get_qckey.f
+gfortran -c -o Subroutine/get_singles_stnconfig_qff20201012.o \
+               Subroutine/get_singles_stnconfig_qff20201012.f
+gfortran -c -o Subroutine/get_singles_stnconfig_qff2.o \
+               Subroutine/get_singles_stnconfig_qff2.f
+gfortran -c -o Subroutine/process_qff_files20210724.o \
+               Subroutine/process_qff_files20210724.f
+gfortran -c -o Subroutine/get_codes_processing_qff.o \
+               Subroutine/get_codes_processing_qff.f
+gfortran -c -o Subroutine/readin_lastfile_number_qff.o \
+               Subroutine/readin_lastfile_number_qff.f
+gfortran -c -o Subroutine/test_qff_file_in_stnconfig.o \
+               Subroutine/test_qff_file_in_stnconfig.f
+gfortran -c -o Subroutine/isolate_single_name.o \
+               Subroutine/isolate_single_name.f
+gfortran -c -o Subroutine/export_file_name.o \
+               Subroutine/export_file_name.f
+gfortran -c -o Subroutine/test_file_segfault.o \
+               Subroutine/test_file_segfault.f
+gfortran -c -o Subroutine/process_single_qff_file20210216.o \
+               Subroutine/process_single_qff_file20210216.f
+gfortran -c -o Subroutine/extract_fields_from_line20210216.o \
+               Subroutine/extract_fields_from_line20210216.f
+gfortran -c -o Subroutine/find_original_precision_qff.o \
+               Subroutine/find_original_precision_qff.f
+gfortran -c -o Subroutine/find_precision_vector_qff20210716.o \
+               Subroutine/find_precision_vector_qff20210716.f
+gfortran -c -o Subroutine/find_number_elements.o \
+               Subroutine/find_number_elements.f
+gfortran -c -o Subroutine/convert_var_string_to_float.o \
+               Subroutine/convert_var_string_to_float.f
+gfortran -c -o Subroutine/string_convert_float_qff.o \
+               Subroutine/string_convert_float_qff.f
+gfortran -c -o Subroutine/convert_units_qff.o \
+               Subroutine/convert_units_qff.f
+gfortran -c -o Subroutine/assess_convprec_pressure.o \
+               Subroutine/assess_convprec_pressure.f
+gfortran -c -o Subroutine/record_number_from_source_number_qff20200617b.o \
+               Subroutine/record_number_from_source_number_qff20200617b.f
+gfortran -c -o Subroutine/find_record_number_qff20200617b.o \
+               Subroutine/find_record_number_qff20200617b.f
+gfortran -c -o Subroutine/export_record_number_problem20201016.o \
+               Subroutine/export_record_number_problem20201016.f
+gfortran -c -o Subroutine/find_cdm_qc_code.o \
+               Subroutine/find_cdm_qc_code.f
+gfortran -c -o Subroutine/find_qc_pivot_table_info.o \
+               Subroutine/find_qc_pivot_table_info.f
+gfortran -c -o Subroutine/qc_c3s_singlevariable.o \
+               Subroutine/qc_c3s_singlevariable.f
+gfortran -c -o Subroutine/header_obs_lite_qff20210218.o \
+               Subroutine/header_obs_lite_qff20210218.f
+gfortran -c -o Subroutine/reconstruct_date_time.o \
+               Subroutine/reconstruct_date_time.f
+gfortran -c -o Subroutine/assemble_vector_qff.o \
+               Subroutine/assemble_vector_qff.f
+gfortran -c -o Subroutine/get_jtime_from_datetime20210218.o \
+               Subroutine/get_jtime_from_datetime20210218.f
+gfortran -c -o Subroutine/str_to_dt_pvwave3.o \
+               Subroutine/str_to_dt_pvwave3.f
+gfortran -c -o Subroutine/find_minmax_datetime20210218.o \
+               Subroutine/find_minmax_datetime20210218.f
+gfortran -c -o Subroutine/count_elements_vector_qff.o \
+               Subroutine/count_elements_vector_qff.f
+gfortran -c -o Subroutine/sample_screenprint_obs.o \
+               Subroutine/sample_screenprint_obs.f
+gfortran -c -o Subroutine/sample_screenprint_qcmethod.o \
+               Subroutine/sample_screenprint_qcmethod.f
+gfortran -c -o Subroutine/sample_screenprint_lite.o \
+               Subroutine/sample_screenprint_lite.f
+gfortran -c -o Subroutine/find_distinct_recnum_qff.o \
+               Subroutine/find_distinct_recnum_qff.f
+gfortran -c -o Subroutine/sample_screenprint_header.o \
+               Subroutine/sample_screenprint_header.f
+gfortran -c -o Subroutine/make_new_stnconfig_qff.o \
+               Subroutine/make_new_stnconfig_qff.f
+gfortran -c -o Subroutine/get_strvector_distinct.o \
+               Subroutine/get_strvector_distinct.f
+gfortran -c -o Subroutine/export_stnconfig_lines.o \
+               Subroutine/export_stnconfig_lines.f
+gfortran -c -o Subroutine/make_receiptfile_linecount.o \
+               Subroutine/make_receiptfile_linecount.f
+gfortran -c -o Subroutine/export_last_index_qff20200612.o \
+               Subroutine/export_last_index_qff20200612.f
+
+gfortran -o a.exe qf20210802.o \
+  Subroutine/get_stnconfig_qff20210714.o \
+    Subroutine/get_elements_stnconfig_line20201008.o \
+  Subroutine/get_list_qff_files.o \
+  Subroutine/get_list_qff_files20210217.o \
+  Subroutine/get_qckey.o \
+  Subroutine/process_qff_files20210724.o \
+    Subroutine/get_codes_processing_qff.o \
+    Subroutine/readin_lastfile_number_qff.o \
+    Subroutine/test_qff_file_in_stnconfig.o \
+    Subroutine/isolate_single_name.o \
+    Subroutine/export_file_name.o \
+    Subroutine/test_file_segfault.o \
+    Subroutine/get_singles_stnconfig_qff20201012.o \
+    Subroutine/get_singles_stnconfig_qff2.o \
+    Subroutine/process_single_qff_file20210216.o \
+      Subroutine/extract_fields_from_line20210216.o \
+    Subroutine/find_original_precision_qff.o \
+      Subroutine/find_precision_vector_qff20210716.o \
+        Subroutine/find_number_elements.o \
+    Subroutine/convert_var_string_to_float.o \
+      Subroutine/string_convert_float_qff.o \
+    Subroutine/convert_units_qff.o \
+      Subroutine/assess_convprec_pressure.o \
+    Subroutine/record_number_from_source_number_qff20200617b.o \
+      Subroutine/find_record_number_qff20200617b.o \
+        Subroutine/export_record_number_problem20201016.o \
+    Subroutine/find_cdm_qc_code.o \
+    Subroutine/find_qc_pivot_table_info.o \
+      Subroutine/qc_c3s_singlevariable.o \
+    Subroutine/header_obs_lite_qff20210218.o \
+      Subroutine/reconstruct_date_time.o \
+      Subroutine/assemble_vector_qff.o \
+      Subroutine/get_jtime_from_datetime20210218.o \
+        Subroutine/str_to_dt_pvwave3.o \
+      Subroutine/find_minmax_datetime20210218.o \
+      Subroutine/count_elements_vector_qff.o \
+      Subroutine/sample_screenprint_obs.o \
+      Subroutine/sample_screenprint_qcmethod.o \
+      Subroutine/sample_screenprint_lite.o \
+      Subroutine/find_distinct_recnum_qff.o \
+      Subroutine/sample_screenprint_header.o \
+      Subroutine/make_new_stnconfig_qff.o \
+        Subroutine/get_strvector_distinct.o \
+        Subroutine/export_stnconfig_lines.o \
+      Subroutine/make_receiptfile_linecount.o \
+    Subroutine/export_last_index_qff20200612.o

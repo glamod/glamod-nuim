@@ -1,0 +1,13 @@
+#Program to erase & shift files
+#AJ_Kettle, 29Mar2020
+#02Jun2021: used for r202106
+
+rm a.exe
+rm *.o
+rm Subroutine/*.o
+
+gfortran -c -o sfr202106.o sfr202106.f
+
+echo 'cleared compilations'
+
+gfortran -o a.exe sfr202106.o

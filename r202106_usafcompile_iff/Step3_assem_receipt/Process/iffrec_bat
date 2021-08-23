@@ -1,0 +1,40 @@
+#Program to do IFF conversion postprocessing
+#AJ_Kettle, 26Mar2020
+#29Mar2020: adapted for iff postprocessing
+
+rm c.exe
+rm *.o
+rm Subroutine/*.o
+
+gfortran -c -o iffrec_f202106.o iffrec_f202106.f
+gfortran -c -o ../Subroutine/import_triplet_filename_list2.o \
+               ../Subroutine/import_triplet_filename_list2.f
+gfortran -c -o ../Subroutine/read_in_triplet_list2.o \
+               ../Subroutine/read_in_triplet_list2.f
+gfortran -c -o ../Subroutine/import_iff_filenames.o \
+               ../Subroutine/import_iff_filenames.f
+gfortran -c -o ../Subroutine/read_in_iff_list.o \
+               ../Subroutine/read_in_iff_list.f
+gfortran -c -o ../Subroutine/find_unique_netplat.o \
+               ../Subroutine/find_unique_netplat.f
+gfortran -c -o ../Subroutine/get_lines_append_stnconfig_new.o \
+               ../Subroutine/get_lines_append_stnconfig_new.f
+gfortran -c -o ../Subroutine/get_triplet_data_single_file4.o \
+               ../Subroutine/get_triplet_data_single_file4.f
+gfortran -c -o ../Subroutine/check_running_latlon.o \
+               ../Subroutine/check_running_latlon.f
+gfortran -c -o ../Subroutine/assemble_triplet_lines_stnconfig2.o \
+               ../Subroutine/assemble_triplet_lines_stnconfig2.f
+
+echo 'cleared compilations'
+
+gfortran -o c.exe iffrec_f202106.o \
+  ../Subroutine/import_triplet_filename_list2.o \
+    ../Subroutine/read_in_triplet_list2.o \
+  ../Subroutine/import_iff_filenames.o \
+   ../Subroutine/read_in_iff_list.o \
+  ../Subroutine/find_unique_netplat.o \
+  ../Subroutine/get_lines_append_stnconfig_new.o \
+    ../Subroutine/get_triplet_data_single_file4.o \
+    ../Subroutine/check_running_latlon.o \
+    ../Subroutine/assemble_triplet_lines_stnconfig2.o

@@ -1,0 +1,104 @@
+#Batch file for creating IFF files
+#AJ_Kettle, 10Mar2020
+
+rm a.exe
+rm *.o
+rm Subroutine/*.o
+
+gfortran -c -o iff1.o iff1.f
+gfortran -c -o ../Subroutine/readin_stnlist.o \
+               ../Subroutine/readin_stnlist.f
+gfortran -c -o ../Subroutine/readin_metadata_info20210522.o \
+               ../Subroutine/readin_metadata_info20210522.f
+gfortran -c -o ../Subroutine/get_cdmcountry_usaffips.o \
+               ../Subroutine/get_cdmcountry_usaffips.f
+gfortran -c -o ../Subroutine/readin_fips_3lett_conversion2.o \
+               ../Subroutine/readin_fips_3lett_conversion2.f
+gfortran -c -o ../Subroutine/readin_countrycode2.o \
+               ../Subroutine/readin_countrycode2.f
+gfortran -c -o ../Subroutine/process_files_prelim20210521.o \
+               ../Subroutine/process_files_prelim20210521.f
+gfortran -c -o ../Subroutine/readin_lastfile_index.o \
+               ../Subroutine/readin_lastfile_index.f
+gfortran -c -o ../Subroutine/get_netplat.o \
+               ../Subroutine/get_netplat.f
+gfortran -c -o ../Subroutine/get_metadata_singlestn.o \
+               ../Subroutine/get_metadata_singlestn.f
+gfortran -c -o ../Subroutine/process_single_file5.o \
+               ../Subroutine/process_single_file5.f
+gfortran -c -o ../Subroutine/get_params_singleline20210527.o \
+               ../Subroutine/get_params_singleline20210527.f
+gfortran -c -o ../Subroutine/find_minmax_string_vec.o \
+               ../Subroutine/find_minmax_string_vec.f
+gfortran -c -o ../Subroutine/find_nelem_present.o \
+               ../Subroutine/find_nelem_present.f
+gfortran -c -o ../Subroutine/convert_variables2.o \
+               ../Subroutine/convert_variables2.f
+gfortran -c -o ../Subroutine/convert_single_string_to_float.o \
+               ../Subroutine/convert_single_string_to_float.f
+gfortran -c -o ../Subroutine/time_processor.o \
+               ../Subroutine/time_processor.f
+gfortran -c -o ../Subroutine/iff_processes.o \
+               ../Subroutine/iff_processes.f
+gfortran -c -o ../Subroutine/std_datetime_fmt.o \
+               ../Subroutine/std_datetime_fmt.f
+gfortran -c -o ../Subroutine/str_to_jtime_pvwave.o \
+               ../Subroutine/str_to_jtime_pvwave.f
+gfortran -c -o ../Subroutine/iff_processes.o \
+               ../Subroutine/iff_processes.f
+gfortran -c -o ../Subroutine/find_distinct_triplet_latlonhgt2.o \
+               ../Subroutine/find_distinct_triplet_latlonhgt2.f
+gfortran -c -o ../Subroutine/find_max_distance_span.o \
+               ../Subroutine/find_max_distance_span.f
+gfortran -c -o ../Subroutine/export_triplet_info5.o \
+               ../Subroutine/export_triplet_info5.f
+gfortran -c -o ../Subroutine/get_key_stats_singlevar.o \
+               ../Subroutine/get_key_stats_singlevar.f
+gfortran -c -o ../Subroutine/get_startend_from_6var3.o \
+               ../Subroutine/get_startend_from_6var3.f
+gfortran -c -o ../Subroutine/make_iff_receipt_file2.o \
+               ../Subroutine/make_iff_receipt_file2.f
+gfortran -c -o ../Subroutine/make_iff_file_singlevar.o \
+               ../Subroutine/make_iff_file_singlevar.f
+gfortran -c -o ../Subroutine/find_number_good.o \
+               ../Subroutine/find_number_good.f
+gfortran -c -o ../Subroutine/iff_write_file.o \
+               ../Subroutine/iff_write_file.f
+gfortran -c -o ../Subroutine/export_triplet_info.o \
+               ../Subroutine/export_triplet_info.f
+gfortran -c -o ../Subroutine/export_last_index.o \
+               ../Subroutine/export_last_index.f
+
+echo 'cleared compilations'
+
+gfortran -o a.exe iff1.o \
+  ../Subroutine/readin_stnlist.o \
+  ../Subroutine/readin_metadata_info20210522.o \
+  ../Subroutine/get_cdmcountry_usaffips.o \
+    ../Subroutine/readin_fips_3lett_conversion2.o \
+    ../Subroutine/readin_countrycode2.o \
+  ../Subroutine/process_files_prelim20210521.o \
+    ../Subroutine/readin_lastfile_index.o \
+    ../Subroutine/get_netplat.o \
+    ../Subroutine/get_metadata_singlestn.o \
+    ../Subroutine/process_single_file5.o \
+      ../Subroutine/get_params_singleline20210527.o \
+      ../Subroutine/find_minmax_string_vec.o \
+      ../Subroutine/find_nelem_present.o \
+      ../Subroutine/convert_variables2.o \
+        ../Subroutine/convert_single_string_to_float.o \
+      ../Subroutine/time_processor.o \
+        ../Subroutine/std_datetime_fmt.o \
+        ../Subroutine/str_to_jtime_pvwave.o \
+      ../Subroutine/iff_processes.o \
+        ../Subroutine/find_distinct_triplet_latlonhgt2.o \
+        ../Subroutine/find_max_distance_span.o \
+        ../Subroutine/export_triplet_info5.o \
+          ../Subroutine/get_key_stats_singlevar.o \
+          ../Subroutine/get_startend_from_6var3.o \
+          ../Subroutine/make_iff_receipt_file2.o \
+        ../Subroutine/make_iff_file_singlevar.o \
+          ../Subroutine/find_number_good.o \
+          ../Subroutine/iff_write_file.o\
+        ../Subroutine/export_triplet_info.o \
+    ../Subroutine/export_last_index.o

@@ -1,0 +1,44 @@
+#Batch file for combining main USAF+update1 with update2
+#AJ_Kettle, 29Apr2021
+
+rm a.exe
+rm *.o
+
+gfortran -c -o cu2.o cu2.f
+gfortran -c -o ../Subroutine/readin_stnlist20210429.o \
+               ../Subroutine/readin_stnlist20210429.f
+gfortran -c -o ../Subroutine/find_single_bigvector20210430.o \
+               ../Subroutine/find_single_bigvector20210430.f
+gfortran -c -o ../Subroutine/export_stnlist20210430.o \
+               ../Subroutine/export_stnlist20210430.f
+gfortran -c -o ../Subroutine/export_compare_header.o \
+               ../Subroutine/export_compare_header.f
+gfortran -c -o ../Subroutine/export_header_columns.o \
+               ../Subroutine/export_header_columns.f
+gfortran -c -o ../Subroutine/get_header_line_single_file.o \
+               ../Subroutine/get_header_line_single_file.f
+gfortran -c -o ../Subroutine/separate_column_headers.o \
+               ../Subroutine/separate_column_headers.f
+gfortran -c -o ../Subroutine/combine_3datasets20210501.o \
+               ../Subroutine/combine_3datasets20210501.f
+gfortran -c -o ../Subroutine/input_lines_1collection20210501.o \
+               ../Subroutine/input_lines_1collection20210501.f
+gfortran -c -o ../Subroutine/output_lines_1collection20210506.o \
+               ../Subroutine/output_lines_1collection20210506.f
+gfortran -c -o ../Subroutine/export_stnlist_linecount20210506.o \
+               ../Subroutine/export_stnlist_linecount20210506.f
+
+echo 'cleared compilations'
+
+gfortran -o a.exe cu2.o \
+  ../Subroutine/readin_stnlist20210429.o \
+  ../Subroutine/find_single_bigvector20210430.o \
+  ../Subroutine/export_stnlist20210430.o \
+  ../Subroutine/export_compare_header.o \
+    ../Subroutine/get_header_line_single_file.o \
+    ../Subroutine/separate_column_headers.o \
+    ../Subroutine/export_header_columns.o \
+  ../Subroutine/combine_3datasets20210501.o \
+    ../Subroutine/input_lines_1collection20210501.o \
+    ../Subroutine/output_lines_1collection20210506.o \
+    ../Subroutine/export_stnlist_linecount20210506.o

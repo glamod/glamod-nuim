@@ -1,0 +1,64 @@
+#Script to compile processor for second USAF update
+#AJ_Kettle, 30Mar2021
+
+rm *.o
+rm a.exe
+
+gfortran -c -o up21.o up21.f
+gfortran -c -o ../Subroutine/get_directory_paths20210412.o \
+               ../Subroutine/get_directory_paths20210412.f
+gfortran -c -o ../Subroutine/get_ascii_list.o \
+               ../Subroutine/get_ascii_list.f
+gfortran -c -o ../Subroutine/import_file_listing20210401.o \
+               ../Subroutine/import_file_listing20210401.f
+gfortran -c -o ../Subroutine/find_vector_path.o \
+               ../Subroutine/find_vector_path.f
+gfortran -c -o ../Subroutine/process_files.o \
+               ../Subroutine/process_files.f
+gfortran -c -o ../Subroutine/get_archive_decide_start.o \
+               ../Subroutine/get_archive_decide_start.f
+gfortran -c -o ../Subroutine/readin_filename_list.o \
+               ../Subroutine/readin_filename_list.f
+gfortran -c -o ../Subroutine/readin_archive_elements.o \
+               ../Subroutine/readin_archive_elements.f
+gfortran -c -o ../Subroutine/get_elements_single_file.o \
+               ../Subroutine/get_elements_single_file.f
+gfortran -c -o ../Subroutine/create_archive_file.o \
+               ../Subroutine/create_archive_file.f
+gfortran -c -o ../Subroutine/get_sfcobs_metadata_files.o \
+               ../Subroutine/get_sfcobs_metadata_files.f
+gfortran -c -o ../Subroutine/separate_one_usaf_file1.o \
+               ../Subroutine/separate_one_usaf_file1.f
+gfortran -c -o ../Subroutine/export_header_titlelist.o \
+               ../Subroutine/export_header_titlelist.f
+gfortran -c -o ../Subroutine/extract_netplat_info.o \
+               ../Subroutine/extract_netplat_info.f
+gfortran -c -o ../Subroutine/test_component_char.o \
+               ../Subroutine/test_component_char.f
+gfortran -c -o ../Subroutine/line_exporter.o \
+               ../Subroutine/line_exporter.f
+gfortran -c -o ../Subroutine/update_archive_file2.o \
+               ../Subroutine/update_archive_file2.f
+
+echo 'cleared compilations'
+
+gfortran -o a.exe up21.o \
+  ../Subroutine/get_directory_paths20210412.o \
+  ../Subroutine/get_ascii_list.o \
+  ../Subroutine/import_file_listing20210401.o \
+    ../Subroutine/find_vector_path.o \
+  ../Subroutine/process_files.o \
+    ../Subroutine/get_archive_decide_start.o \
+      ../Subroutine/readin_filename_list.o \
+      ../Subroutine/readin_archive_elements.o \
+        ../Subroutine/get_elements_single_file.o \
+    ../Subroutine/create_archive_file.o \
+    ../Subroutine/get_sfcobs_metadata_files.o \
+    ../Subroutine/separate_one_usaf_file1.o \
+      ../Subroutine/export_header_titlelist.o \
+      ../Subroutine/extract_netplat_info.o \
+        ../Subroutine/test_component_char.o \
+      ../Subroutine/line_exporter.o \
+    ../Subroutine/update_archive_file2.o
+
+echo 'cleared linking'

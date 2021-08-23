@@ -1,0 +1,34 @@
+#Script to amalgamate second USAF update files
+#AJ_Kettle, 21Apr2021
+
+rm *.o
+rm a.exe
+
+gfortran -c -o am1.o am1.f
+gfortran -c -o ../Subroutine/readin_stnlist.o \
+               ../Subroutine/readin_stnlist.f
+gfortran -c -o ../Subroutine/find_single_bigvector2.o \
+               ../Subroutine/find_single_bigvector2.f
+gfortran -c -o ../Subroutine/export_stnlist.o \
+               ../Subroutine/export_stnlist.f
+gfortran -c -o ../Subroutine/combine_3datasets.o \
+               ../Subroutine/combine_3datasets.f
+gfortran -c -o ../Subroutine/input_lines_1collection.o \
+               ../Subroutine/input_lines_1collection.f
+gfortran -c -o ../Subroutine/output_lines_1collection.o \
+               ../Subroutine/output_lines_1collection.f
+gfortran -c -o ../Subroutine/export_stnlist_linecount.o \
+               ../Subroutine/export_stnlist_linecount.f
+
+echo 'cleared compilations'
+
+gfortran -o a.exe am1.o \
+  ../Subroutine/readin_stnlist.o \
+  ../Subroutine/find_single_bigvector2.o \
+  ../Subroutine/export_stnlist.o \
+  ../Subroutine/combine_3datasets.o \
+    ../Subroutine/input_lines_1collection.o \
+    ../Subroutine/output_lines_1collection.o \
+    ../Subroutine/export_stnlist_linecount.o
+
+echo 'cleared linking'

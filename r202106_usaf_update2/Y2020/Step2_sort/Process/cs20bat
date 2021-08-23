@@ -1,0 +1,42 @@
+#Batch program to run cs1 processing program
+#to run script ./cs1bat
+#AJ_Kettle, 19FEB2020
+
+gfortran -c -o cs20.o cs20.f
+gfortran -c -o ../Subroutine/readin_namelist_all.o \
+               ../Subroutine/readin_namelist_all.f
+gfortran -c -o ../Subroutine/process_stn_files.o \
+               ../Subroutine/process_stn_files.f
+gfortran -c -o ../Subroutine/query_stnfile_for_duplic.o \
+               ../Subroutine/query_stnfile_for_duplic.f
+gfortran -c -o ../Subroutine/get_lines_single_file20210412.o \
+               ../Subroutine/get_lines_single_file20210412.f
+gfortran -c -o ../Subroutine/sort_line_list.o \
+               ../Subroutine/sort_line_list.f
+gfortran -c -o ../Subroutine/std_datetime_fmt2.o \
+               ../Subroutine/std_datetime_fmt2.f
+gfortran -c -o ../Subroutine/str_to_dt_pvwave3.o \
+               ../Subroutine/str_to_dt_pvwave3.f
+gfortran -c -o ../Subroutine/sort_doublelist_pvwave2.o \
+               ../Subroutine/sort_doublelist_pvwave2.f
+gfortran -c -o ../Subroutine/find_stats_linelength_commas.o \
+               ../Subroutine/find_stats_linelength_commas.f
+gfortran -c -o ../Subroutine/export_sorted_list.o \
+               ../Subroutine/export_sorted_list.f
+gfortran -c -o ../Subroutine/export_level2_summaryline.o \
+               ../Subroutine/export_level2_summaryline.f
+
+echo 'cleared compilations'
+
+gfortran -o a.exe cs20.o \
+  ../Subroutine/readin_namelist_all.o \
+   ../Subroutine/process_stn_files.o \
+    ../Subroutine/query_stnfile_for_duplic.o \
+    ../Subroutine/get_lines_single_file20210412.o \
+    ../Subroutine/sort_line_list.o \
+     ../Subroutine/std_datetime_fmt2.o \
+     ../Subroutine/str_to_dt_pvwave3.o \
+     ../Subroutine/sort_doublelist_pvwave2.o \
+     ../Subroutine/find_stats_linelength_commas.o \
+    ../Subroutine/export_sorted_list.o \
+    ../Subroutine/export_level2_summaryline.o

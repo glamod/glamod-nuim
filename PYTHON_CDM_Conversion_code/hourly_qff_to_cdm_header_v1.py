@@ -11,7 +11,8 @@ import pandas as pd
 pd.options.mode.chained_assignment = None  # default='warn'
 
 
-##make header from completed observations table
+##make header from completed observations table directory
+##change directory paths accordingly
 OUTDIR = "D:/Python_CDM_conversion/hourly/qff/cdm_out/header_table"
 os.chdir("D:/Python_CDM_conversion/hourly/qff/cdm_out/observations_table")
 col_list = ["observation_id", "report_id", "longitude", "latitude", "source_id","date_time"]
@@ -29,7 +30,7 @@ for filename in all_filenames:
 #for filename in all_filenames[all_filenames.index('SWM00002338.qff'):] :
     merged_df=pd.read_csv(filename, sep="|", usecols=col_list)
     
-###produce headre table using some of obs table column information 
+###produce header table using some of observations table column information 
     hdf = pd.DataFrame()  
     hdf['observation_id'] = merged_df['observation_id'].str[:11]
     hdf["report_id"]=merged_df["report_id"]
@@ -79,9 +80,7 @@ for filename in all_filenames:
     ##save sttaion id for output fuilename later
     station_id=hdf.iloc[1]["observation_id"]
     
-    #del merged_df
-    
-            
+    ##add in required information from extrenal csv file        
     df2=pd.read_csv("D:/Python_CDM_conversion/new recipe tables/record_id.csv")
     hdf = hdf.astype(str)
     df2 = df2.astype(str)
@@ -114,7 +113,7 @@ for filename in all_filenames:
               "processing_level","processing_codes","source_id","source_record_id",
               "primary_station_id_2", "duplicates_report"]]
     
-    
+    ###remove duplictae timestamps
     hdf=hdf.drop_duplicates(subset=['duplicates_report'])
 
 
@@ -132,6 +131,7 @@ for filename in all_filenames:
               "report_time_reference","profile_id","events_at_station","report_quality",
               "duplicate_status","duplicates","record_timestamp","history",
               "processing_level","processing_codes","source_id","source_record_id"]]
+    ##sort by dates
     hdf.sort_values("report_timestamp")
       
     hdf['region'] = hdf['region'].astype(str).apply(lambda x: x.replace('.0',''))

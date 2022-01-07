@@ -9,7 +9,8 @@ import os
 import glob
 import pandas as pd
 pd.options.mode.chained_assignment = None  # default='warn'
-
+#code converts the QFF processed file to cdm fomratted cdmlite and qc files
+##change directory paths as required
 
 OUTDIR2= "D:/Python_CDM_conversion/hourly/qff/qc_tables"
 OUTDIR = "D:/Python_CDM_conversion/hourly/qff/cdm_out/cdm_lite"
@@ -29,7 +30,7 @@ for filename in all_filenames:
 #for filename in all_filenames[all_filenames.index('SWM00002338.qff'):] :
     df=pd.read_csv(filename, sep="|")
      
-    ##set up master df to extract each variable
+    ##set up master df for cdmlite to extract each variable
     
     df["report_type"]="0"
     df["units"]=""
@@ -63,7 +64,7 @@ for filename in all_filenames:
     df.date_time = df.date_time + '+00'
     
 #=========================================================================================
-##convert temperature    changes for each variable    
+##extract hourly temperature   
     dft = df[["observation_id","report_type","date_time","date_time_meaning",
               "latitude","longitude","observation_height_above_station_surface"
               ,"observed_variable","units","observation_value",
@@ -71,7 +72,7 @@ for filename in all_filenames:
               "station_type","primary_station_id","station_name","quality_flag"
               ,"data_policy_licence","source_id"]]
     
-    ##change for each variable to convertto cdm compliant values
+    ##change for each variable to convert to cdm compliant values
     dft["observation_value"]=df["temperature"]+273.15
     dft["source_id"]=df["temperature_Source_Code"]
     
@@ -101,7 +102,7 @@ for filename in all_filenames:
     dft["observation_value"] = pd.to_numeric(dft["observation_value"],errors='coerce')
     #dft.to_csv("ttest.csv", index=False, sep=",")
     
-     ###add data policy and record number to df
+     ###add data policy and record number information to df from merged extrenal csv
     df2=pd.read_csv("D:/Python_CDM_conversion/new recipe tables/record_id.csv")
     dft = dft.astype(str)
     df2 = df2.astype(str)
@@ -119,10 +120,12 @@ for filename in all_filenames:
     
     dft['observation_id']=dft['primary_station_id'].astype(str)+'-'+dft['record_number'].astype(str)+'-'+dft['date_time'].astype(str)
     dft['observation_id'] = dft['observation_id'].str.replace(r' ', '-')
+    
     ##remove unwanted last twpo characters
     dft['observation_id'] = dft['observation_id'].str[:-6]
     dft["observation_id"]=dft["observation_id"]+'-'+dft['observed_variable'].astype(str)+'-'+dft['value_significance'].astype(str)
-     ##set up qc table
+    
+     ##set up qc table for later on on code
     qct= dft[["primary_station_id","report_id","record_number","qc_method","quality_flag","observed_variable","value_significance"]]
     qct["observation_id"] = qct["primary_station_id"]+"-"+ qct["record_number"] +"-"+ qct["report_id"]+'-'+qct['observed_variable'].astype(str)+'-'+qct['value_significance'].astype(str)
     qct["report_id"] = qct["primary_station_id"]+"-"+ qct["report_id"] 
@@ -566,7 +569,7 @@ for filename in all_filenames:
     merged_df["latitude"]= merged_df["latitude"].round(3)
     merged_df["longitude"]= merged_df["longitude"].round(3)
        
-    ##name the cdm_lite files e.g. cdm_lite _”insert date of run”_EG000062417.psv)
+    ##save cdm lite [merged_df] file and name the cdm_lite files e.g. cdm_lite _”insert date of run”_EG000062417.psv)
     try:
         station_id=merged_df.iloc[1]["primary_station_id"]
         cdm_type=("cdm_lite_202111_test_")
@@ -576,7 +579,8 @@ for filename in all_filenames:
         outname = os.path.join(OUTDIR,cdm_type)
         #with open(filename, "w") as outfile:
         merged_df.to_csv(outname+ station_id+ ".psv", index=False, sep="|")
-        ###save qc table to directory
+        
+        #####merge all qc tables into one df and change flags to c3s flags
         qc_merged_df=pd.concat([qcdpt,qct,qcslp,qcmslp,qcwd,qcws], axis=0)
         qc_merged_df.astype(str)
         qc_merged_df['qc_method'] = qc_merged_df['qc_method'].str.replace("L","0,")
@@ -597,7 +601,7 @@ for filename in all_filenames:
         qc_merged_df['qc_method'] = qc_merged_df['qc_method'].str.replace("E","15,")
         qc_merged_df['qc_method'] = qc_merged_df['qc_method'].str.replace("p","16,")
         qc_merged_df['qc_method'] = qc_merged_df['qc_method'].str.replace("H","17,")
-    ##remove unwnated , from column
+    ##save qc df to qc output file
         qc_merged_df['qc_method'] = qc_merged_df['qc_method'].str[:-1]
         qc_station_id=merged_df.iloc[1]["primary_station_id"]
         cdm_type=("qc_definition_202111_test_")

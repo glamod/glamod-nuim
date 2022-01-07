@@ -12,7 +12,7 @@ import numpy as np
 pd.options.mode.chained_assignment = None  # default='warn'
 
 ##code to convert daily ghnd files to cdm formatted cdmlite and qc tables
-
+###change directory paths as required
 OUTDIR2= "D:/Python_CDM_conversion/daily/qc_out"
 OUTDIR = "D:/Python_CDM_conversion/daily/cdm_out/lite"
 os.chdir("D:/Python_CDM_conversion/daily/.csv/")

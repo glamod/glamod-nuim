@@ -11,8 +11,8 @@ import glob
 import pandas as pd
 pd.options.mode.chained_assignment = None  # default='warn'
 
-
-
+###code converts the hourly qff to cdm obseravytions table format 
+##chnage directories path as required
 
 OUTDIR = "D:/Python_CDM_conversion/hourly/qff/cdm_out/observations_table"
 os.chdir("D:/Python_CDM_conversion/hourly/qff/test")
@@ -30,7 +30,7 @@ for filename in all_filenames:
 #for filename in all_filenames[all_filenames.index('SWM00002338.qff'):] :
     df=pd.read_csv(filename, sep="|")
      
-    ##set up master df to extrcat each variable
+    ##set up master df with each erquired column and extract each variable
     df["report_id"]=""
     df["observation_id"]=""
     df["data_policy_licence"]=""
@@ -90,7 +90,7 @@ for filename in all_filenames:
 
     
 #=========================================================================================
-##convert temperature    changes for each variable    
+##convert temperature  changes for each variable    
     dft = df[["observation_id","report_id","data_policy_licence","date_time",
                "date_time_meaning","observation_duration","longitude","latitude",
                "crs","z_coordinate","z_coordinate_type","observation_height_above_station_surface",
@@ -129,35 +129,31 @@ for filename in all_filenames:
     dft.quality_flag[dft.quality_flag == "Null"] = 0  
     #change for each variable if required
 
-    ##remove unwanted mising data rows
+    ##remove unwanted missing data rows
     dft = dft.fillna("null")
     dft = dft.replace({"null":"-99999"})
     dft = dft[dft.observation_value != -99999]
-    #df = df.astype(str)
     dft["source_id"] = pd.to_numeric(dft["source_id"],errors='coerce')
-    #df = df.astype(str)
+       
     #concatenate columns for joining df for next step
     dft['source_id'] = dft['source_id'].astype(str).apply(lambda x: x.replace('.0',''))
     dft['primary_station_id_2']=dft['primary_station_id'].astype(str)+'-'+dft['source_id'].astype(str)
     dft["observation_value"] = pd.to_numeric(dft["observation_value"],errors='coerce')
-    #dft.to_csv("ttest.csv", index=False, sep=",")
-    
-     ###add data policy and record number to df
+        
+    ###add data policy and record number information to df from external csv file
     df2=pd.read_csv("D:/Python_CDM_conversion/new recipe tables/record_id.csv")
     dft = dft.astype(str)
     df2 = df2.astype(str)
     dft= df2.merge(dft, on=['primary_station_id_2'])
     dft['data_policy_licence'] = dft['data_policy_licence_x']
     dft['data_policy_licence'] = dft['data_policy_licence'].astype(str).apply(lambda x: x.replace('.0',''))
-    
     dft['observation_id']=dft['primary_station_id'].astype(str)+'-'+dft['record_number'].astype(str)+'-'+dft['date_time'].astype(str)
     dft['observation_id'] = dft['observation_id'].str.replace(r' ', '-')
-    ##remove unwanted last twpo characters
+    
+    ##remove unwanted last two characters
     dft['observation_id'] = dft['observation_id'].str[:-6]
     dft["observation_id"]=dft["observation_id"]+'-'+dft['observed_variable'].astype(str)+'-'+dft['value_significance'].astype(str)
     dft["report_id"]=dft["observation_id"].str[:-6]
-     ##set up qc table
-            
     dft = dft[["observation_id","report_id","data_policy_licence","date_time",
                "date_time_meaning","observation_duration","longitude","latitude",
                "crs","z_coordinate","z_coordinate_type","observation_height_above_station_surface",
@@ -179,11 +175,9 @@ for filename in all_filenames:
     dft["observation_value"] = pd.to_numeric(dft["observation_value"],errors='coerce')
     dft["observation_value"]= dft["observation_value"].round(2)
     
-    #dft.to_csv("isuest.csv", index=False, sep=",")
-    
-
+     
     #=================================================================================
-    ##convert dew point temperature   changes for each variable    
+    ##convert dew point temperature changes for each variable    
     dfdpt= df[["observation_id","report_id","data_policy_licence","date_time",
                "date_time_meaning","observation_duration","longitude","latitude",
                "crs","z_coordinate","z_coordinate_type","observation_height_above_station_surface",
@@ -213,14 +207,13 @@ for filename in all_filenames:
     dfdpt["observation_height_above_station_surface"]="2"
     dfdpt["units"]="5"
     dfdpt["observed_variable"]="36"
-    
-    
+        
     ##set quality flag from df master for variable and fill all nan with Null then change all nonnan to 
     dfdpt.loc[dfdpt['quality_flag'].notnull(), "quality_flag"] = 1
     dfdpt= dfdpt.fillna("Null")
     dfdpt.quality_flag[dfdpt.quality_flag == "Null"] = 0  
 
-    ##remove unwanted mising data rows
+    ##remove unwanted missing data rows
     dfdpt= dfdpt.fillna("null")
     dfdpt= dfdpt.replace({"null":"-99999"})
     dfdpt= dfdpt[dfdpt.observation_value != -99999]
@@ -233,22 +226,19 @@ for filename in all_filenames:
     dfdpt["observation_value"] = pd.to_numeric(dfdpt["observation_value"],errors='coerce')
     #dfdpt.to_csv("ttest.csv", index=False, sep=",")
     
-     ###add data policy and record number to df
+    ###add data policy and record number to df from external csv file
     df2=pd.read_csv("D:/Python_CDM_conversion/new recipe tables/record_id.csv")
     dfdpt= dfdpt.astype(str)
     df2 = df2.astype(str)
     dfdpt= df2.merge(dfdpt, on=['primary_station_id_2'])
     dfdpt['data_policy_licence'] = dfdpt['data_policy_licence_x']
     dfdpt['data_policy_licence'] = dfdpt['data_policy_licence'].astype(str).apply(lambda x: x.replace('.0',''))
-    
     dfdpt['observation_id']=dfdpt['primary_station_id'].astype(str)+'-'+dfdpt['record_number'].astype(str)+'-'+dfdpt['date_time'].astype(str)
     dfdpt['observation_id'] = dfdpt['observation_id'].str.replace(r' ', '-')
-    ##remove unwanted last twpo characters
+    ##remove unwanted last two characters
     dfdpt['observation_id'] = dfdpt['observation_id'].str[:-6]
     dfdpt["observation_id"]=dfdpt["observation_id"]+'-'+dfdpt['observed_variable'].astype(str)+'-'+dfdpt['value_significance'].astype(str)
     dfdpt["report_id"]=dfdpt["observation_id"].str[:-6]
-     ##set up qc table
-            
     dfdpt= dfdpt[["observation_id","report_id","data_policy_licence","date_time",
                "date_time_meaning","observation_duration","longitude","latitude",
                "crs","z_coordinate","z_coordinate_type","observation_height_above_station_surface",
@@ -270,10 +260,8 @@ for filename in all_filenames:
     dfdpt["observation_value"] = pd.to_numeric(dfdpt["observation_value"],errors='coerce')
     dfdpt["observation_value"]= dfdpt["observation_value"].round(2)
     
-    
-
     #====================================================================================
-    #convert station level  to cdmlite
+    #convert station level pressure to cdmlite
     dfslp = df[["observation_id","report_id","data_policy_licence","date_time",
                "date_time_meaning","observation_duration","longitude","latitude",
                "crs","z_coordinate","z_coordinate_type","observation_height_above_station_surface",
@@ -303,43 +291,37 @@ for filename in all_filenames:
     dfslp["observation_height_above_station_surface"]="2"
     dfslp["units"]="32"
     dfslp["observed_variable"]="57"
-    
-    
+        
     ##set quality flag from df master for variable and fill all nan with Null then change all nonnan to 
     dfslp.loc[dfslp['quality_flag'].notnull(), "quality_flag"] = 1
     dfslp = dfslp.fillna("Null")
     dfslp.quality_flag[dfslp.quality_flag == "Null"] = 0  
-    #change for each variable if required
 
-    ##remove unwanted mising data rows
+    ##remove unwanted missing data rows
     dfslp = dfslp.fillna("null")
     dfslp = dfslp.replace({"null":"-99999"})
     dfslp = dfslp[dfslp.observation_value != -99999]
-    #df = df.astype(str)
     dfslp["source_id"] = pd.to_numeric(dfslp["source_id"],errors='coerce')
-    #df = df.astype(str)
+   
     #concatenate columns for joining df for next step
     dfslp['source_id'] = dfslp['source_id'].astype(str).apply(lambda x: x.replace('.0',''))
     dfslp['primary_station_id_2']=dfslp['primary_station_id'].astype(str)+'-'+dfslp['source_id'].astype(str)
     dfslp["observation_value"] = pd.to_numeric(dfslp["observation_value"],errors='coerce')
     #dfslp.to_csv("ttest.csv", index=False, sep=",")
     
-     ###add data policy and record number to df
+    ##add data policy and record number to df from external csv file
     df2=pd.read_csv("D:/Python_CDM_conversion/new recipe tables/record_id.csv")
     dfslp = dfslp.astype(str)
     df2 = df2.astype(str)
     dfslp= df2.merge(dfslp, on=['primary_station_id_2'])
     dfslp['data_policy_licence'] = dfslp['data_policy_licence_x']
     dfslp['data_policy_licence'] = dfslp['data_policy_licence'].astype(str).apply(lambda x: x.replace('.0',''))
-    
     dfslp['observation_id']=dfslp['primary_station_id'].astype(str)+'-'+dfslp['record_number'].astype(str)+'-'+dfslp['date_time'].astype(str)
     dfslp['observation_id'] = dfslp['observation_id'].str.replace(r' ', '-')
-    ##remove unwanted last twpo characters
+    ##remove unwanted last two characters
     dfslp['observation_id'] = dfslp['observation_id'].str[:-6]
     dfslp["observation_id"]=dfslp["observation_id"]+'-'+dfslp['observed_variable'].astype(str)+'-'+dfslp['value_significance'].astype(str)
     dfslp["report_id"]=dfslp["observation_id"].str[:-6]
-     ##set up qc table
-            
     dfslp = dfslp[["observation_id","report_id","data_policy_licence","date_time",
                "date_time_meaning","observation_duration","longitude","latitude",
                "crs","z_coordinate","z_coordinate_type","observation_height_above_station_surface",
@@ -355,7 +337,7 @@ for filename in all_filenames:
                "advanced_qc","advanced_uncertainty","advanced_homogenisation",
                "advanced_assimilation_feedback","source_id"]]
 
-##make sure no decimal places an dround value to reuqred decimal places
+##make sure no decimal places and round value to reuqred decimal places
     dfslp['observation_value'] = dfslp['observation_value'].map(float)
     dfslp['observation_value'] = (dfslp['observation_value']*100)
     dfslp['observation_value'] = dfslp['observation_value'].map(int)
@@ -365,9 +347,8 @@ for filename in all_filenames:
     dfslp['observation_value'] = dfslp['observation_value'].astype(str).apply(lambda x: x.replace('.0',''))
     #dfslp.to_csv("slp.csv", index=False, sep=",")
     
-
     #===========================================================================================
-     #convert sea level presure to cdmlite
+    ##convert sea level presure to cdmlite
     dfmslp = df[["observation_id","report_id","data_policy_licence","date_time",
                "date_time_meaning","observation_duration","longitude","latitude",
                "crs","z_coordinate","z_coordinate_type","observation_height_above_station_surface",
@@ -405,7 +386,7 @@ for filename in all_filenames:
     dfmslp.quality_flag[dfmslp.quality_flag == "Null"] = 0  
     #change for each variable if required
 
-    ##remove unwanted mising data rows
+    ##remove unwanted missing data rows
     dfmslp = dfmslp.fillna("null")
     dfmslp = dfmslp.replace({"null":"-99999"})
     dfmslp = dfmslp[dfmslp.observation_value != -99999]
@@ -418,22 +399,20 @@ for filename in all_filenames:
     dfmslp["observation_value"] = pd.to_numeric(dfmslp["observation_value"],errors='coerce')
     #dfmslp.to_csv("ttest.csv", index=False, sep=",")
     
-     ###add data policy and record number to df
+    ###add data policy and record number to df from external csv file
     df2=pd.read_csv("D:/Python_CDM_conversion/new recipe tables/record_id.csv")
     dfmslp = dfmslp.astype(str)
     df2 = df2.astype(str)
     dfmslp= df2.merge(dfmslp, on=['primary_station_id_2'])
     dfmslp['data_policy_licence'] = dfmslp['data_policy_licence_x']
     dfmslp['data_policy_licence'] = dfmslp['data_policy_licence'].astype(str).apply(lambda x: x.replace('.0',''))
-    
     dfmslp['observation_id']=dfmslp['primary_station_id'].astype(str)+'-'+dfmslp['record_number'].astype(str)+'-'+dfmslp['date_time'].astype(str)
     dfmslp['observation_id'] = dfmslp['observation_id'].str.replace(r' ', '-')
+    
     ##remove unwanted last twpo characters
     dfmslp['observation_id'] = dfmslp['observation_id'].str[:-6]
     dfmslp["observation_id"]=dfmslp["observation_id"]+'-'+dfmslp['observed_variable'].astype(str)+'-'+dfmslp['value_significance'].astype(str)
     dfmslp["report_id"]=dfmslp["observation_id"].str[:-6]
-     ##set up qc table
-            
     dfmslp = dfmslp[["observation_id","report_id","data_policy_licence","date_time",
                "date_time_meaning","observation_duration","longitude","latitude",
                "crs","z_coordinate","z_coordinate_type","observation_height_above_station_surface",
@@ -449,7 +428,7 @@ for filename in all_filenames:
                "advanced_qc","advanced_uncertainty","advanced_homogenisation",
                "advanced_assimilation_feedback","source_id"]]
 
-##make sure no decimal places an dround value to reuqred decimal places
+##make sure no decimal places an dround value to required decimal places
     dfmslp['observation_value'] = dfmslp['observation_value'].map(float)
     dfmslp['observation_value'] = (dfmslp['observation_value']*100)
     dfmslp['observation_value'] = dfmslp['observation_value'].map(int)
@@ -458,9 +437,7 @@ for filename in all_filenames:
     dfmslp["source_id"] = pd.to_numeric(dfmslp["source_id"],errors='coerce')
     dfmslp['observation_value'] = dfmslp['observation_value'].astype(str).apply(lambda x: x.replace('.0',''))
     
-    
-
-    #========================================================================================================
+     #========================================================================================================
     #wind direction convert to cdm lite
     dfwd = df[["observation_id","report_id","data_policy_licence","date_time",
                "date_time_meaning","observation_duration","longitude","latitude",
@@ -491,43 +468,39 @@ for filename in all_filenames:
     dfwd["observation_height_above_station_surface"]="10"
     dfwd["units"]="110"
     dfwd["observed_variable"]="106"
-    
-    
+        
     ##set quality flag from df master for variable and fill all nan with Null then change all nonnan to 
     dfwd.loc[dfwd['quality_flag'].notnull(), "quality_flag"] = 1
     dfwd = dfwd.fillna("Null")
     dfwd.quality_flag[dfwd.quality_flag == "Null"] = 0  
     #change for each variable if required
 
-    ##remove unwanted mising data rows
+    ##remove unwanted missing data rows
     dfwd = dfwd.fillna("null")
     dfwd = dfwd.replace({"null":"-99999"})
     dfwd = dfwd[dfwd.observation_value != -99999]
-    #df = df.astype(str)
     dfwd["source_id"] = pd.to_numeric(dfwd["source_id"],errors='coerce')
-    #df = df.astype(str)
+    
     #concatenate columns for joining df for next step
     dfwd['source_id'] = dfwd['source_id'].astype(str).apply(lambda x: x.replace('.0',''))
     dfwd['primary_station_id_2']=dfwd['primary_station_id'].astype(str)+'-'+dfwd['source_id'].astype(str)
     dfwd["observation_value"] = pd.to_numeric(dfwd["observation_value"],errors='coerce')
-    #dfwd.to_csv("ttest.csv", index=False, sep=",")
+   
     
-     ###add data policy and record number to df
+    ###add data policy and record number to df from external csv file
     df2=pd.read_csv("D:/Python_CDM_conversion/new recipe tables/record_id.csv")
     dfwd = dfwd.astype(str)
     df2 = df2.astype(str)
     dfwd= df2.merge(dfwd, on=['primary_station_id_2'])
     dfwd['data_policy_licence'] = dfwd['data_policy_licence_x']
     dfwd['data_policy_licence'] = dfwd['data_policy_licence'].astype(str).apply(lambda x: x.replace('.0',''))
-    
     dfwd['observation_id']=dfwd['primary_station_id'].astype(str)+'-'+dfwd['record_number'].astype(str)+'-'+dfwd['date_time'].astype(str)
     dfwd['observation_id'] = dfwd['observation_id'].str.replace(r' ', '-')
+    
     ##remove unwanted last twpo characters
     dfwd['observation_id'] = dfwd['observation_id'].str[:-6]
     dfwd["observation_id"]=dfwd["observation_id"]+'-'+dfwd['observed_variable'].astype(str)+'-'+dfwd['value_significance'].astype(str)
-    dfwd["report_id"]=dfwd["observation_id"].str[:-7]
-     ##set up qc table
-            
+    dfwd["report_id"]=dfwd["observation_id"].str[:-7]          
     dfwd = dfwd[["observation_id","report_id","data_policy_licence","date_time",
                "date_time_meaning","observation_duration","longitude","latitude",
                "crs","z_coordinate","z_coordinate_type","observation_height_above_station_surface",
@@ -543,16 +516,13 @@ for filename in all_filenames:
                "advanced_qc","advanced_uncertainty","advanced_homogenisation",
                "advanced_assimilation_feedback","source_id"]]
 
-    
-
-##make sure no decimal places an dround value to reuqred decimal places
+##make sure no decimal places and round value to required decimal places
     dfwd.dropna(subset = ["observation_value"], inplace=True)
     dfwd['observation_value'] = dfwd['observation_value'].astype(str).apply(lambda x: x.replace('.0',''))
     dfwd['source_id'] = dfwd['source_id'].astype(str).apply(lambda x: x.replace('.0',''))
     dfwd['data_policy_licence'] = dfwd['data_policy_licence'].astype(str).apply(lambda x: x.replace('.0',''))
     dfwd["source_id"] = pd.to_numeric(dfwd["source_id"],errors='coerce')
-    
-    
+        
     #===========================================================================
     ## wind speed convert to cdm lite
     dfws = df[["observation_id","report_id","data_policy_licence","date_time",
@@ -590,37 +560,33 @@ for filename in all_filenames:
     dfws.loc[dfws['quality_flag'].notnull(), "quality_flag"] = 1
     dfws = dfws.fillna("Null")
     dfws.quality_flag[dfws.quality_flag == "Null"] = 0  
-    #change for each variable if required
-
-    ##remove unwanted mising data rows
+    
+    ##remove unwanted missing data rows
     dfws = dfws.fillna("null")
     dfws = dfws.replace({"null":"-99999"})
     dfws = dfws[dfws.observation_value != -99999]
-    #df = df.astype(str)
     dfws["source_id"] = pd.to_numeric(dfws["source_id"],errors='coerce')
-    #df = df.astype(str)
+ 
     #concatenate columns for joining df for next step
     dfws['source_id'] = dfws['source_id'].astype(str).apply(lambda x: x.replace('.0',''))
     dfws['primary_station_id_2']=dfws['primary_station_id'].astype(str)+'-'+dfws['source_id'].astype(str)
     dfws["observation_value"] = pd.to_numeric(dfws["observation_value"],errors='coerce')
-    #dfws.to_csv("ttest.csv", index=False, sep=",")
+  
     
-     ###add data policy and record number to df
+    ###add data policy and record number to df from external csv file
     df2=pd.read_csv("D:/Python_CDM_conversion/new recipe tables/record_id.csv")
     dfws = dfws.astype(str)
     df2 = df2.astype(str)
     dfws= df2.merge(dfws, on=['primary_station_id_2'])
     dfws['data_policy_licence'] = dfws['data_policy_licence_x']
     dfws['data_policy_licence'] = dfws['data_policy_licence'].astype(str).apply(lambda x: x.replace('.0',''))
-    
     dfws['observation_id']=dfws['primary_station_id'].astype(str)+'-'+dfws['record_number'].astype(str)+'-'+dfws['date_time'].astype(str)
     dfws['observation_id'] = dfws['observation_id'].str.replace(r' ', '-')
-    ##remove unwanted last twpo characters
+    
+    ##remove unwanted last two characters
     dfws['observation_id'] = dfws['observation_id'].str[:-6]
     dfws["observation_id"]=dfws["observation_id"]+'-'+dfws['observed_variable'].astype(str)+'-'+dfws['value_significance'].astype(str)
     dfws["report_id"]=dfws["observation_id"].str[:7]
-     ##set up qc table
-            
     dfws = dfws[["observation_id","report_id","data_policy_licence","date_time",
                "date_time_meaning","observation_duration","longitude","latitude",
                "crs","z_coordinate","z_coordinate_type","observation_height_above_station_surface",
@@ -636,31 +602,31 @@ for filename in all_filenames:
                "advanced_qc","advanced_uncertainty","advanced_homogenisation",
                "advanced_assimilation_feedback","source_id"]]
 
-##make sure no decimal places an dround value to reuqred decimal places
+##make sure no decimal places an dround value to required decimal places
     dfws.dropna(subset = ["observation_value"], inplace=True)
     dfws['source_id'] = dfws['source_id'].astype(str).apply(lambda x: x.replace('.0',''))
     dfws['data_policy_licence'] = dfws['data_policy_licence'].astype(str).apply(lambda x: x.replace('.0',''))
     dfws["source_id"] = pd.to_numeric(dfws["source_id"],errors='coerce')
     dfws["observation_value"] = pd.to_numeric(dfws["observation_value"],errors='coerce')
     dfws["observation_value"]= dfws["observation_value"].round(2)
-    ##merge all df into one cdmlite file
+    
+    ##merge all dfs into one cdmlite file
     merged_df=pd.concat([dfdpt,dft,dfslp,dfmslp,dfwd,dfws], axis=0)
+    #remove unwanted dfs
     del dfdpt
     del dft
     del dfslp
     del dfmslp
     del dfwd
     del dfws
-    
+    ##sort dates
     merged_df.sort_values("date_time")
-    
     merged_df["latitude"] = pd.to_numeric(merged_df["latitude"],errors='coerce')
     merged_df["longitude"] = pd.to_numeric(merged_df["longitude"],errors='coerce')
     merged_df["latitude"]= merged_df["latitude"].round(3)
     merged_df["longitude"]= merged_df["longitude"].round(3)
-    
-          
-    ##name the cdm_lite files e.g. cdm_lite _”insert date of run”_EG000062417.psv)
+              
+    ##save the cdm_lite files and name e.g. cdm_lite _”insert date of run”_EG000062417.psv)
     try:
         station_id=df.iloc[1]["primary_station_id"]
         cdm_type=("cdm_obs_202111_test_")

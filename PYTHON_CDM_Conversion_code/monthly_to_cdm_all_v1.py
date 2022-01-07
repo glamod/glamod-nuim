@@ -9,7 +9,7 @@ import os
 import glob
 import pandas as pd
 pd.options.mode.chained_assignment = None  # default='warn'
-
+###convert monthly gsom files to cdm tables
 OUTDIR3= "D:/Python_CDM_conversion/monthly/cdm_out/cdm_head"
 OUTDIR2= "D:/Python_CDM_conversion/monthly/cdm_out/cdm_obs"
 OUTDIR = "D:/Python_CDM_conversion/monthly/cdm_out/cdm_lite"

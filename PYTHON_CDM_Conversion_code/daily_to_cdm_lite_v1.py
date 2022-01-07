@@ -11,6 +11,7 @@ import pandas as pd
 import numpy as np
 pd.options.mode.chained_assignment = None  # default='warn'
 
+##code to convert daily ghnd files to cdm formatted cdmlite and qc tables
 
 OUTDIR2= "D:/Python_CDM_conversion/daily/qc_out"
 OUTDIR = "D:/Python_CDM_conversion/daily/cdm_out/lite"
@@ -116,7 +117,7 @@ for filename in all_filenames:
                                            df['observation_value'] / 10,
                                            df['observation_value']).round(2)
     
-    ##set the unkts for each variable
+    ##set the units for each variable
     df["units"]=""
     df.loc[df['observed_variable'] == "85", 'units'] = '5' 
     df.loc[df['observed_variable'] == "44", 'units'] = '710'
@@ -190,7 +191,7 @@ for filename in all_filenames:
     df['source_id'] = df['source_id'].astype(str).apply(lambda x: x.replace('.0',''))
     df['primary_station_id_2']=df['primary_station_id'].astype(str)+'-'+df['source_id'].astype(str)
     
-   ##'add in location infromatin ro cdm lite station 
+   ##'add in location information for cdm lite station 
     df2=pd.read_csv("D:/Python_CDM_conversion/daily/config_files/record_id_dy.csv")
     df['primary_station_id_2'] = df['primary_station_id_2'].astype(str)
     df2 = df2.astype(str)
@@ -202,7 +203,7 @@ for filename in all_filenames:
     df = df.replace({"null":""})
     
                                    
-    ##set up master df to extrcat each variable
+    ##set up master df to extract each variable
        
     df["latitude"] = pd.to_numeric(df["latitude"],errors='coerce')
     df["longitude"] = pd.to_numeric(df["longitude"],errors='coerce')
@@ -217,7 +218,7 @@ for filename in all_filenames:
 
     
     
-    #extract qc table imnformation
+    #extract qc table information
    
     qct= df[["primary_station_id","report_id","record_number","qc_method","quality_flag","observed_variable","value_significance"]]
     qct = qct.astype(str)

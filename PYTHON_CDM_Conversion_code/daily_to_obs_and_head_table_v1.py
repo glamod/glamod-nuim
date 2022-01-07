@@ -10,7 +10,7 @@ import glob
 import pandas as pd
 import numpy as np
 pd.options.mode.chained_assignment = None  # default='warn'
-
+##code to convert the daily ghcnd csv files to cdm compliant observations and header tables
 OUTDIR2= "D:/Python_CDM_conversion/daily/cdm_out/head"
 OUTDIR = "D:/Python_CDM_conversion/daily/cdm_out/obs"
 os.chdir("D:/Python_CDM_conversion/daily/.csv/")
@@ -33,7 +33,7 @@ for filename in all_filenames:
     
    # importing pandas as pd
  
-# filtering the rows where Credit-Rating is Fair
+# filtering the rows 
     df = df[df["observed_variable"].isin(["SNWD", "PRCP", "TMIN", "TMAX", "TAVG", "SNOW", "AWND", "AWDR", "WESD"])]
     df["Source_flag"]=df["Source_flag"]. astype(str) 
     df['Source_flag'] = df['Source_flag'].str.replace("0","c")
@@ -74,7 +74,7 @@ for filename in all_filenames:
     
     station_id=df.iloc[1]["Station_ID"]
     
-    ##set the value significnace for each variable
+    ##set the value significance for each variable
     df["value_significance"]="" 
     
     df['observed_variable'] = df['observed_variable'].str.replace("SNWD","53")
@@ -207,7 +207,7 @@ for filename in all_filenames:
     df.loc[df['observed_variable'] == "53", 'original_precision'] = "1"
     
     
-    #add all columns for cdmlite
+    #add all columns for observations table
     df['year'] = df['Date'].str[:4]
     df['month'] = df['Date'].map(lambda x: x[4:6])
     df['day'] = df['Date'].map(lambda x: x[6:8])
@@ -276,7 +276,7 @@ for filename in all_filenames:
                                                       .str.replace('H', '1')\
                                                           .str.replace('P', '1')
     #print (df.dtypes)                       
-    ##add timestamp to df and cerate report id
+    ##add timestamp to df and create report id
     df["Timestamp2"] = df["year"].map(str) + "-" + df["month"].map(str)+ "-" + df["day"].map(str)  
     df["Seconds"]="00"
     df["offset"]="+00"
@@ -291,7 +291,7 @@ for filename in all_filenames:
     df['source_id'] = df['source_id'].astype(str).apply(lambda x: x.replace('.0',''))
     df['primary_station_id_2']=df['primary_station_id'].astype(str)+'-'+df['source_id'].astype(str)
     
-   ##'add in location infromatin ro cdm lite station 
+    ###add in required information from a merged external file
     df2=pd.read_csv("D:/Python_CDM_conversion/daily/config_files/record_id_dy.csv")
     df['primary_station_id_2'] = df['primary_station_id_2'].astype(str)
     df2 = df2.astype(str)
@@ -303,7 +303,7 @@ for filename in all_filenames:
     df = df.replace({"null":""})
     
                                    
-    ##set up master df to extrcat each variable
+    ##set up master df to extract each variable
        
     df["latitude"] = pd.to_numeric(df["latitude"],errors='coerce')
     df["longitude"] = pd.to_numeric(df["longitude"],errors='coerce')
@@ -336,11 +336,13 @@ for filename in all_filenames:
                "processing_code","processing_level","adjustment_id","traceability",
                "advanced_qc","advanced_uncertainty","advanced_homogenisation",
                "advanced_assimilation_feedback","source_id"]]
+    
+    ## create header table from observations table
     col_list=df [["observation_id","latitude","longitude","report_id","source_id","date_time"]]
     hdf=col_list.copy()
     
     
-    ##add required columns and set up values etc
+    ##add required columns and set up values for header table 
     hdf[['primary_station_id', 'station_record_number', '1',"2,","3"]] = hdf['report_id'].str.split('-', expand=True)                                                    
     #hdf["observation_id"]=merged_df["observation_id"]                                                  
     hdf["report_id"]=df["report_id"]
@@ -383,7 +385,7 @@ for filename in all_filenames:
     hdf["duplicates_report"]=hdf["report_id"]+'-'+hdf["station_record_number"].astype(str)
     station_id=hdf.iloc[1]["primary_station_id"]
         
-          
+     ###add in required information from a merged external file
     df2=pd.read_csv("D:/Python_CDM_conversion/daily/config_files/record_id_dy.csv")
     hdf = hdf.astype(str)
     df2 = df2.astype(str)
@@ -409,6 +411,7 @@ for filename in all_filenames:
               "duplicate_status","duplicates","record_timestamp","history",
               "processing_level","processing_codes","source_id","source_record_id",
               "primary_station_id_2", "duplicates_report"]]
+    #remove duplicated timestamps
     hdf=hdf.drop_duplicates(subset=['duplicates_report'])
     hdf = hdf[["report_id","region","sub_region","application_area",
               "observing_programme","report_type","station_name",
@@ -423,8 +426,9 @@ for filename in all_filenames:
               "report_time_reference","profile_id","events_at_station","report_quality",
               "duplicate_status","duplicates","record_timestamp","history",
               "processing_level","processing_codes","source_id","source_record_id"]]
-    
+    ##sort table based on  dates
     hdf.sort_values("report_timestamp")
+    ##remove blank spaces
     hdf['report_id'] = hdf['report_id'].str.strip()
   
     hdf['region'] = hdf['region'].astype(str).apply(lambda x: x.replace('.0',''))

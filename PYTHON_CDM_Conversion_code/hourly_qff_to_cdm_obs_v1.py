@@ -23,12 +23,14 @@ extension = 'qff'
 ##use  alist of file name sto run 5000 parallel
 #with open("D:/Python_CDM_conversion/hourly/qff/ls.txt", "r") as f:
 #    all_filenames = f.read().splitlines()
+#print(all_filenames)
 all_filenames = [i for i in glob.glob('*.{}'.format(extension))]
 ##to start at begining of files
 for filename in all_filenames:
 ##to start at next file after last processe 
 #for filename in all_filenames[all_filenames.index('SWM00002338.qff'):] :
     df=pd.read_csv(filename, sep="|")
+    #print(all_filenames)
      
     ##set up master df with each erquired column and extract each variable
     df["report_id"]=""

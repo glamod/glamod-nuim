@@ -16,13 +16,13 @@ OUTDIR2= "D:/Python_CDM_conversion/hourly/qff/qc_tables"
 OUTDIR = "D:/Python_CDM_conversion/hourly/qff/cdm_out/cdm_lite"
 os.chdir("D:/Python_CDM_conversion/hourly/qff/test")
 extension = 'qff'
-##use a list to process the files 
-#my_file = open("D:/Python_CDM_conversion/hourly/qff/ls1.txt", "r")
-#all_filenames = my_file.readlines()
-#print(all_filenames)
+
 ##use  alist of file name sto run 5000 parallel
 #with open("D:/Python_CDM_conversion/hourly/qff/ls1.txt", "r") as f:
 #all_filenames = f.read().splitlines()
+#for filename in all_filenames:
+#df=pd.read_csv(filename, sep="|")
+#print(all_filenames)
 ##to start at begining of all files
 all_filenames = [i for i in glob.glob('*.{}'.format(extension))]
 for filename in all_filenames:

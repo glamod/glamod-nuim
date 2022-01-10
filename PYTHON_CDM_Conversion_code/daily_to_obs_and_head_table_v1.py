@@ -22,11 +22,14 @@ extension = 'csv'
 #with open("D:/Python_CDM_conversion/hourly/qff/ls1.txt", "r") as f:
 #all_filenames = f.read().splitlines()
 all_filenames = [i for i in glob.glob('*.{}'.format(extension))]
+#print(all_filenames)
 ##to start at begining of files
 for filename in all_filenames:
 ##to start at next file after last processe 
 #for filename in all_filenames[all_filenames.index('SWM00002338.qff'):] :
     df=pd.read_csv(filename, sep=",")
+    #print(all_filenames)
+    
     ##add column headers
     df.columns=["Station_ID", "Date", "observed_variable", "observation_value","quality_flag","Measurement_flag","Source_flag","hour"]
     df = df.astype(str)

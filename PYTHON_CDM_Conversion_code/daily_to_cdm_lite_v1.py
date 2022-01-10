@@ -23,19 +23,21 @@ extension = 'csv'
 ##use  a list of file name sto run 5000 parallel
 #with open("D:/Python_CDM_conversion/hourly/qff/ls1.txt", "r") as f:
 #all_filenames = f.read().splitlines()
+#print(all_filenames)
 all_filenames = [i for i in glob.glob('*.{}'.format(extension))]
 ##to start at begining of files
 for filename in all_filenames:
 ##to start at next file after last processe 
 #for filename in all_filenames[all_filenames.index('SWM00002338.qff'):] :
     df=pd.read_csv(filename, sep=",")
+    #print(all_filenames)
     ##add column headers
     df.columns=["Station_ID", "Date", "observed_variable", "observation_value","quality_flag","Measurement_flag","Source_flag","hour"]
     df = df.astype(str)
     
    # importing pandas as pd
  
-# filtering the rows where Credit-Rating is Fair
+# filtering the rows for variables required
     df = df[df["observed_variable"].isin(["SNWD", "PRCP", "TMIN", "TMAX", "TAVG", "SNOW", "AWND", "AWDR", "WESD"])]
     df["Source_flag"]=df["Source_flag"]. astype(str) 
     df['Source_flag'] = df['Source_flag'].str.replace("0","c")

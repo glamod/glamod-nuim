@@ -9,7 +9,7 @@ import os
 import glob
 import pandas as pd
 pd.options.mode.chained_assignment = None  # default='warn'
-#code converts the QFF processed file to cdm fomratted cdmlite and qc files
+#code converts the QFF processed file to cdm formatted cdmlite and qc files
 ##change directory paths as required
 
 OUTDIR2= "D:/Python_CDM_conversion/hourly/qff/qc_tables"

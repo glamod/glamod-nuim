@@ -29,6 +29,8 @@ for filename in all_filenames:
 #for filename in all_filenames[all_filenames.index('SWM00002338.qff'):] :
     usecols = ["STATION","LATITUDE","LONGITUDE","ELEVATION","DATE","NAME", "PRCP", "TMIN", "TMAX", "TAVG", "SNOW", "AWND"]
     df=pd.read_csv(filename, sep=",",usecols=lambda c: c in set(usecols))
+    #print(all_filenames)
+    
     #add required columnns
     df["report_type"]="2"
     df["units"]=""

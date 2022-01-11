@@ -26,7 +26,7 @@ all_filenames = [i for i in glob.glob('*.{}'.format(extension))]
 ##to start at begining of files
 for filename in all_filenames:
 ##to start at next file after last processe 
-#for filename in all_filenames[all_filenames.index('SWM00002338.qff'):] :
+#for filename in all_filenames[all_filenames.index('SWM00002338.csv'):] :
     usecols = ["STATION","LATITUDE","LONGITUDE","ELEVATION","DATE","NAME", "PRCP", "TMIN", "TMAX", "TAVG", "SNOW", "AWND"]
     df=pd.read_csv(filename, sep=",",usecols=lambda c: c in set(usecols))
     #print(all_filenames)

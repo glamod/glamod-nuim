@@ -13,17 +13,16 @@ pd.options.mode.chained_assignment = None  # default='warn'
 
 
 
-
-OUTDIR = "D:/Python_CDM_conversion/hourly/qff/cdm_out/observations_table"
-os.chdir("D:/Python_CDM_conversion/hourly/qff/test")
-extension = 'qff'
+OUTDIR = "/work/scratch-pw/snoone/qff_cdm_test_2021/cdmobs_out_sbdy_202111"
+os.chdir("/gws/nopw/j04/c3s311a_lot2/data/level1/land/level1c_sub_daily_data/v20210728")
+#extension = 'qff'
 #my_file = open("D:/Python_CDM_conversion/hourly/qff/ls1.txt", "r")
 #all_filenames = my_file.readlines()
 #print(all_filenames)
 ##use  alist of file name sto run 5000 parallel
-#with open("D:/Python_CDM_conversion/hourly/qff/ls.txt", "r") as f:
-#    all_filenames = f.read().splitlines()
-all_filenames = [i for i in glob.glob('*.{}'.format(extension))]
+with open("/work/scratch-pw/snoone/qff_cdm_test_2021/station_list/ls1.txt", "r") as f:
+    all_filenames = f.read().splitlines()
+#all_filenames = [i for i in glob.glob('*.{}'.format(extension))]
 ##to start at begining of files
 for filename in all_filenames:
 ##to start at next file after last processe 
@@ -77,6 +76,7 @@ for filename in all_filenames:
     df["advanced_uncertainty"]=""
     df["advanced_homogenisation"]=""
     df["advanced_assimilation_feedback"]=""
+    df["secondary_id"]=""  
     df["source_id"]=""
     df["source_record_id"]=""
     df["primary_station_id"]=df["Station_ID"]
@@ -104,10 +104,12 @@ for filename in all_filenames:
                "original_code_table","original_value","conversion_method",
                "processing_code","processing_level","adjustment_id","traceability",
                "advanced_qc","advanced_uncertainty","advanced_homogenisation",
-               "advanced_assimilation_feedback","source_id","primary_station_id"]]
+               "advanced_assimilation_feedback","source_id","primary_station_id","secondary_id"]]
     
     ##change for each variable to convert to cdm compliant values
     dft["observation_value"]=df["temperature"]+273.15
+    dft["secondary_id"]=df["temperature_Source_Station_ID"].astype('str')
+    dft['secondary_id'] = dft['secondary_id'].astype(str).apply(lambda x: x.replace('.0',''))
     dft["source_id"]=df["temperature_Source_Code"]
     dft["Seconds"]="00"
     dft["quality_flag"]=df["temperature_QC_flag"]
@@ -133,17 +135,19 @@ for filename in all_filenames:
     dft = dft.fillna("null")
     dft = dft.replace({"null":"-99999"})
     dft = dft[dft.observation_value != -99999]
+    dft = dft.dropna(subset=['secondary_id'])
+    dft = dft.dropna(subset=['observation_value'])
     #df = df.astype(str)
     dft["source_id"] = pd.to_numeric(dft["source_id"],errors='coerce')
     #df = df.astype(str)
     #concatenate columns for joining df for next step
     dft['source_id'] = dft['source_id'].astype(str).apply(lambda x: x.replace('.0',''))
-    dft['primary_station_id_2']=dft['primary_station_id'].astype(str)+'-'+dft['source_id'].astype(str)
+    dft['primary_station_id_2']=dft['secondary_id'].astype(str)+'-'+dft['source_id'].astype(str)
     dft["observation_value"] = pd.to_numeric(dft["observation_value"],errors='coerce')
     #dft.to_csv("ttest.csv", index=False, sep=",")
     
      ###add data policy and record number to df
-    df2=pd.read_csv("D:/Python_CDM_conversion/new recipe tables/record_id.csv")
+    df2=pd.read_csv("/work/scratch-pw/snoone/qff_cdm_test_2021/station_list/record_id.csv", encoding='latin-1')
     dft = dft.astype(str)
     df2 = df2.astype(str)
     dft= df2.merge(dft, on=['primary_station_id_2'])
@@ -197,10 +201,12 @@ for filename in all_filenames:
                "original_code_table","original_value","conversion_method",
                "processing_code","processing_level","adjustment_id","traceability",
                "advanced_qc","advanced_uncertainty","advanced_homogenisation",
-               "advanced_assimilation_feedback","source_id","primary_station_id"]]
+               "advanced_assimilation_feedback","source_id","primary_station_id","secondary_id"]]
     
     ##change for each variable to convert to cdm compliant values
     dfdpt["observation_value"]=df["dew_point_temperature"]+273.15
+    dfdpt["secondary_id"]=df["dew_point_temperature_Source_Station_ID"].astype(str)
+    dfdpt['secondary_id'] = dfdpt['secondary_id'].astype(str).apply(lambda x: x.replace('.0',''))
     dfdpt["source_id"]=df["dew_point_temperature_Source_Code"]
     dfdpt["Seconds"]="00"
     dfdpt["quality_flag"]=df["dew_point_temperature_QC_flag"]
@@ -224,17 +230,19 @@ for filename in all_filenames:
     dfdpt= dfdpt.fillna("null")
     dfdpt= dfdpt.replace({"null":"-99999"})
     dfdpt= dfdpt[dfdpt.observation_value != -99999]
+    dfdpt = dfdpt.dropna(subset=['secondary_id'])
+    dfdpt = dfdpt.dropna(subset=['observation_value'])
     #df = df.astype(str)
     dfdpt["source_id"] = pd.to_numeric(dfdpt["source_id"],errors='coerce')
     #df = df.astype(str)
     #concatenate columns for joining df for next step
     dfdpt['source_id'] = dfdpt['source_id'].astype(str).apply(lambda x: x.replace('.0',''))
-    dfdpt['primary_station_id_2']=dfdpt['primary_station_id'].astype(str)+'-'+dfdpt['source_id'].astype(str)
+    dfdpt['primary_station_id_2']=dfdpt['secondary_id'].astype(str)+'-'+dfdpt['source_id'].astype(str)
     dfdpt["observation_value"] = pd.to_numeric(dfdpt["observation_value"],errors='coerce')
     #dfdpt.to_csv("ttest.csv", index=False, sep=",")
     
      ###add data policy and record number to df
-    df2=pd.read_csv("D:/Python_CDM_conversion/new recipe tables/record_id.csv")
+    df2=pd.read_csv("/work/scratch-pw/snoone/qff_cdm_test_2021/station_list/record_id.csv", encoding='latin-1')
     dfdpt= dfdpt.astype(str)
     df2 = df2.astype(str)
     dfdpt= df2.merge(dfdpt, on=['primary_station_id_2'])
@@ -287,9 +295,11 @@ for filename in all_filenames:
                "original_code_table","original_value","conversion_method",
                "processing_code","processing_level","adjustment_id","traceability",
                "advanced_qc","advanced_uncertainty","advanced_homogenisation",
-               "advanced_assimilation_feedback","source_id","primary_station_id"]]
+               "advanced_assimilation_feedback","source_id","primary_station_id","secondary_id"]]
     
     ##change for each variable to convert to cdm compliant values
+    dfslp["secondary_id"]=df["station_level_pressure_Source_Station_ID"].astype(str)
+    dfslp['secondary_id'] = dfslp['secondary_id'].astype(str).apply(lambda x: x.replace('.0',''))
     dfslp["observation_value"]=df["station_level_pressure"].map(float)
     dfslp = dfslp.dropna(subset=['observation_value'])
     dfslp["source_id"]=df["station_level_pressure_Source_Code"]
@@ -316,17 +326,19 @@ for filename in all_filenames:
     dfslp = dfslp.fillna("null")
     dfslp = dfslp.replace({"null":"-99999"})
     dfslp = dfslp[dfslp.observation_value != -99999]
+    dfslp = dfslp.dropna(subset=['secondary_id'])
+    dfslp = dfslp.dropna(subset=['observation_value'])
     #df = df.astype(str)
     dfslp["source_id"] = pd.to_numeric(dfslp["source_id"],errors='coerce')
     #df = df.astype(str)
     #concatenate columns for joining df for next step
     dfslp['source_id'] = dfslp['source_id'].astype(str).apply(lambda x: x.replace('.0',''))
-    dfslp['primary_station_id_2']=dfslp['primary_station_id'].astype(str)+'-'+dfslp['source_id'].astype(str)
+    dfslp['primary_station_id_2']=dfslp['secondary_id'].astype(str)+'-'+dfslp['source_id'].astype(str)
     #dfslp["observation_value"] = pd.to_numeric(dfslp["observation_value"],errors='coerce')
     #dfslp.to_csv("ttest.csv", index=False, sep=",")
     
      ###add data policy and record number to df
-    df2=pd.read_csv("D:/Python_CDM_conversion/new recipe tables/record_id.csv")
+    df2=pd.read_csv("/work/scratch-pw/snoone/qff_cdm_test_2021/station_list/record_id.csv", encoding='latin-1')
     dfslp = dfslp.astype(str)
     df2 = df2.astype(str)
     dfslp= df2.merge(dfslp, on=['primary_station_id_2'])
@@ -385,9 +397,11 @@ for filename in all_filenames:
                "original_code_table","original_value","conversion_method",
                "processing_code","processing_level","adjustment_id","traceability",
                "advanced_qc","advanced_uncertainty","advanced_homogenisation",
-               "advanced_assimilation_feedback","source_id","primary_station_id"]]
+               "advanced_assimilation_feedback","source_id","primary_station_id","secondary_id"]]
     
     ##change for each variable to convert to cdm compliant values
+    dfmslp["secondary_id"]=df["sea_level_pressure_Source_Station_ID"].astype(str)
+    dfmslp['secondary_id'] = dfmslp['secondary_id'].astype(str).apply(lambda x: x.replace('.0',''))
     dfmslp["observation_value"]=df["sea_level_pressure"].map(float)
     dfmslp = dfmslp.dropna(subset=['observation_value'])
     dfmslp["source_id"]=df["sea_level_pressure_Source_Code"]
@@ -414,17 +428,19 @@ for filename in all_filenames:
     dfmslp = dfmslp.fillna("null")
     dfmslp = dfmslp.replace({"null":"-99999"})
     dfmslp = dfmslp[dfmslp.observation_value != -99999]
+    dfmslp = dfmslp.dropna(subset=['secondary_id'])
+    dfmslp = dfmslp.dropna(subset=['observation_value'])
     #df = df.astype(str)
     dfmslp["source_id"] = pd.to_numeric(dfmslp["source_id"],errors='coerce')
     #df = df.astype(str)
     #concatenate columns for joining df for next step
     dfmslp['source_id'] = dfmslp['source_id'].astype(str).apply(lambda x: x.replace('.0',''))
-    dfmslp['primary_station_id_2']=dfmslp['primary_station_id'].astype(str)+'-'+dfmslp['source_id'].astype(str)
+    dfmslp['primary_station_id_2']=dfmslp['secondary_id'].astype(str)+'-'+dfmslp['source_id'].astype(str)
    # dfmslp["observation_value"] = pd.to_numeric(dfmslp["observation_value"],errors='coerce')
     #dfmslp.to_csv("ttest.csv", index=False, sep=",")
     
      ###add data policy and record number to df
-    df2=pd.read_csv("D:/Python_CDM_conversion/new recipe tables/record_id.csv")
+    df2=pd.read_csv("/work/scratch-pw/snoone/qff_cdm_test_2021/station_list/record_id.csv", encoding='latin-1')
     dfmslp = dfmslp.astype(str)
     df2 = df2.astype(str)
     dfmslp= df2.merge(dfmslp, on=['primary_station_id_2'])
@@ -482,9 +498,11 @@ for filename in all_filenames:
                "original_code_table","original_value","conversion_method",
                "processing_code","processing_level","adjustment_id","traceability",
                "advanced_qc","advanced_uncertainty","advanced_homogenisation",
-               "advanced_assimilation_feedback","source_id","primary_station_id"]]
+               "advanced_assimilation_feedback","source_id","primary_station_id","secondary_id"]]
     
     ##change for each variable to convert to cdm compliant values
+    dfwd["secondary_id"]=df["wind_direction_Source_Station_ID"].astype(str)
+    dfwd['secondary_id'] = dfwd['secondary_id'].astype(str).apply(lambda x: x.replace('.0',''))
     dfwd["observation_value"]=df["wind_direction"]
     dfwd["source_id"]=df["wind_direction_Source_Code"]
     dfwd["Seconds"]="00"
@@ -510,17 +528,19 @@ for filename in all_filenames:
     dfwd = dfwd.fillna("null")
     dfwd = dfwd.replace({"null":"-99999"})
     dfwd = dfwd[dfwd.observation_value != -99999]
+    dfwd = dfwd.dropna(subset=['secondary_id'])
+    dfwd = dfwd.dropna(subset=['observation_value'])
     #df = df.astype(str)
     dfwd["source_id"] = pd.to_numeric(dfwd["source_id"],errors='coerce')
     #df = df.astype(str)
     #concatenate columns for joining df for next step
     dfwd['source_id'] = dfwd['source_id'].astype(str).apply(lambda x: x.replace('.0',''))
-    dfwd['primary_station_id_2']=dfwd['primary_station_id'].astype(str)+'-'+dfwd['source_id'].astype(str)
+    dfwd['primary_station_id_2']=dfwd['secondary_id'].astype(str)+'-'+dfwd['source_id'].astype(str)
     dfwd["observation_value"] = pd.to_numeric(dfwd["observation_value"],errors='coerce')
     #dfwd.to_csv("ttest.csv", index=False, sep=",")
     
      ###add data policy and record number to df
-    df2=pd.read_csv("D:/Python_CDM_conversion/new recipe tables/record_id.csv")
+    df2=pd.read_csv("/work/scratch-pw/snoone/qff_cdm_test_2021/station_list/record_id.csv", encoding='latin-1')
     dfwd = dfwd.astype(str)
     df2 = df2.astype(str)
     dfwd= df2.merge(dfwd, on=['primary_station_id_2'])
@@ -575,9 +595,11 @@ for filename in all_filenames:
                "original_code_table","original_value","conversion_method",
                "processing_code","processing_level","adjustment_id","traceability",
                "advanced_qc","advanced_uncertainty","advanced_homogenisation",
-               "advanced_assimilation_feedback","source_id","primary_station_id"]]
+               "advanced_assimilation_feedback","source_id","primary_station_id","secondary_id"]]
     
     ##change for each variable to convert to cdm compliant values
+    dfws["secondary_id"]=df["wind_speed_Source_Station_ID"].astype(str)
+    dfws['secondary_id'] = dfws['secondary_id'].astype(str).apply(lambda x: x.replace('.0',''))
     dfws["observation_value"]=df["wind_speed"]
     dfws["source_id"]=df["wind_speed_Source_Code"]
     dfws["Seconds"]="00"
@@ -603,17 +625,19 @@ for filename in all_filenames:
     dfws = dfws.fillna("null")
     dfws = dfws.replace({"null":"-99999"})
     dfws = dfws[dfws.observation_value != -99999]
+    dfws = dfws.dropna(subset=['secondary_id'])
+    dfws = dfws.dropna(subset=['observation_value'])
     #df = df.astype(str)
     dfws["source_id"] = pd.to_numeric(dfws["source_id"],errors='coerce')
     #df = df.astype(str)
     #concatenate columns for joining df for next step
     dfws['source_id'] = dfws['source_id'].astype(str).apply(lambda x: x.replace('.0',''))
-    dfws['primary_station_id_2']=dfws['primary_station_id'].astype(str)+'-'+dfws['source_id'].astype(str)
+    dfws['primary_station_id_2']=dfws['secondary_id'].astype(str)+'-'+dfws['source_id'].astype(str)
     dfws["observation_value"] = pd.to_numeric(dfws["observation_value"],errors='coerce')
     #dfws.to_csv("ttest.csv", index=False, sep=",")
     
      ###add data policy and record number to df
-    df2=pd.read_csv("D:/Python_CDM_conversion/new recipe tables/record_id.csv")
+    df2=pd.read_csv("/work/scratch-pw/snoone/qff_cdm_test_2021/station_list/record_id.csv", encoding='latin-1')
     dfws = dfws.astype(str)
     df2 = df2.astype(str)
     dfws= df2.merge(dfws, on=['primary_station_id_2'])

@@ -11,26 +11,26 @@ import pandas as pd
 pd.options.mode.chained_assignment = None  # default='warn'
 
 
-##make header from completed observations table directory
-##change directory paths accordingly
-OUTDIR = "D:/Python_CDM_conversion/hourly/qff/cdm_out/header_table"
-os.chdir("D:/Python_CDM_conversion/hourly/qff/cdm_out/observations_table")
+##make header from completed observations table
+OUTDIR = "/work/scratch-pw/snoone/qff_cdm_test_2021/cdmhead_out_sbdy_202111"
+os.chdir("/work/scratch-pw/snoone/qff_cdm_test_2021/cdmobs_out_sbdy_202111")
+
 col_list = ["observation_id", "report_id", "longitude", "latitude", "source_id","date_time"]
-extension = 'psv'
+#extension = 'psv'
 #my_file = open("D:/Python_CDM_conversion/hourly/qff/ls1.txt", "r")
 #all_filenames = my_file.readlines()
 #print(all_filenames)
 ##use  alist of file name sto run 5000 parallel
-#with open("D:/Python_CDM_conversion/hourly/qff/test/ls.txt", "r") as f:
-  #  all_filenames = f.read().splitlines()
-all_filenames = [i for i in glob.glob('*.{}'.format(extension))]
+with open("/work/scratch-pw/snoone/qff_cdm_test_2021/station_list/obs_ls1.txt", "r") as f:
+    all_filenames = f.read().splitlines()
+#all_filenames = [i for i in glob.glob('*.{}'.format(extension))]
 ##to start at begining of files
 for filename in all_filenames:
 ##to start at next file after last processe 
 #for filename in all_filenames[all_filenames.index('SWM00002338.qff'):] :
-    merged_df=pd.read_csv(filename, sep="|", usecols=col_list)
+    merged_df=pd.read_csv(filename, sep="|", usecols=col_list, low_memory=False)
     
-###produce header table using some of observations table column information 
+###produce headre table using some of obs table column information 
     hdf = pd.DataFrame()  
     hdf['observation_id'] = merged_df['observation_id'].str[:11]
     hdf["report_id"]=merged_df["report_id"]
@@ -73,25 +73,27 @@ for filename in all_filenames:
     hdf["history"]=""
     hdf["processing_level"]="0"
     hdf["report_timestamp"]=merged_df["date_time"]
-    hdf['primary_station_id_2']=hdf['observation_id'].astype(str)+'-'+hdf['source_id'].astype(str)
+    hdf['primary_station_id_3']=hdf['observation_id'].astype(str)+'-'+hdf['source_id'].astype(str)
     hdf["station_record_number"]=hdf["report_id"].str.slice(start=-18)
     hdf["station_record_number"]=hdf["station_record_number"].str[0:1:1]
     hdf["duplicates_report"]=hdf["report_id"]+'-'+hdf["station_record_number"].astype(str)
     ##save sttaion id for output fuilename later
     station_id=hdf.iloc[1]["observation_id"]
     
-    ##add in required information from extrenal csv file        
-    df2=pd.read_csv("D:/Python_CDM_conversion/new recipe tables/record_id.csv")
+    #del merged_df
+    
+            
+    df2=pd.read_csv("/work/scratch-pw/snoone/qff_cdm_test_2021/station_list/record_id.csv", encoding='latin-1')
     hdf = hdf.astype(str)
     df2 = df2.astype(str)
-    hdf= df2.merge(hdf, on=['primary_station_id_2'])
+    hdf= df2.merge(hdf, on=['primary_station_id_3'])
     hdf["station_name"]=hdf["Station_name"]
     hdf["station_record_number"]=hdf["record_number"]
     hdf['report_id']=hdf['primary_station_id'].astype(str)+'-'+hdf['station_record_number'].astype(str)+'-'+hdf['report_timestamp'].astype(str)
     hdf['report_id'] = hdf['report_id'].str.replace(r' ', '-')
     ##remove unwanted last twpo characters
     hdf['report_id'] = hdf['report_id'].str[:-6]
-    hdf['height_of_station_above_sea_level'] = hdf['height_of_station_above_sea_level'].astype(str).apply(lambda x: x.replace('.0',''))
+    hdf['height_of_station_above_sea_level'] = hdf['elevation'].astype(str).apply(lambda x: x.replace('.0',''))
     hdf["latitude"] = pd.to_numeric(hdf["latitude"],errors='coerce')
     hdf["longitude"] = pd.to_numeric(hdf["longitude"],errors='coerce')
     hdf["latitude"]= hdf["latitude"].round(3)
@@ -111,9 +113,9 @@ for filename in all_filenames:
               "report_time_reference","profile_id","events_at_station","report_quality",
               "duplicate_status","duplicates","record_timestamp","history",
               "processing_level","processing_codes","source_id","source_record_id",
-              "primary_station_id_2", "duplicates_report"]]
+              "primary_station_id_3", "duplicates_report"]]
     
-    ###remove duplictae timestamps
+    
     hdf=hdf.drop_duplicates(subset=['duplicates_report'])
 
 
@@ -131,7 +133,6 @@ for filename in all_filenames:
               "report_time_reference","profile_id","events_at_station","report_quality",
               "duplicate_status","duplicates","record_timestamp","history",
               "processing_level","processing_codes","source_id","source_record_id"]]
-    ##sort by dates
     hdf.sort_values("report_timestamp")
       
     hdf['region'] = hdf['region'].astype(str).apply(lambda x: x.replace('.0',''))

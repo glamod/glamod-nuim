@@ -15,7 +15,6 @@ pd.options.mode.chained_assignment = None  # default='warn'
 OUTDIR = "/work/scratch-pw/snoone/qff_cdm_test_2021/cdmhead_out_sbdy_202111"
 os.chdir("/work/scratch-pw/snoone/qff_cdm_test_2021/cdmobs_out_sbdy_202111")
 
-col_list = ["observation_id", "report_id", "longitude", "latitude", "source_id","date_time"]
 #extension = 'psv'
 #my_file = open("D:/Python_CDM_conversion/hourly/qff/ls1.txt", "r")
 #all_filenames = my_file.readlines()
@@ -28,24 +27,23 @@ with open("/work/scratch-pw/snoone/qff_cdm_test_2021/station_list/obs_ls1.txt", 
 for filename in all_filenames:
 ##to start at next file after last processe 
 #for filename in all_filenames[all_filenames.index('SWM00002338.qff'):] :
-    merged_df=pd.read_csv(filename, sep="|", usecols=col_list, low_memory=False)
+    col_list = ["observation_id", "report_id", "latitude","longitude","source_id","date_time"]
+    merged_df=pd.read_csv(filename, sep="|", usecols=col_list)
     
-###produce headre table using some of obs table column information 
     hdf = pd.DataFrame()  
-    hdf['observation_id'] = merged_df['observation_id'].str[:11]
+    hdf['extract_record'] = merged_df['report_id'].str[:-17]
+    hdf['station_record_number'] = hdf['extract_record'].str[12:]
+    hdf['primary_station_id'] = hdf['extract_record'].str[:11]
     hdf["report_id"]=merged_df["report_id"]
     hdf["application_area"]=""
     hdf["observing_programme"]=""
-    hdf["report_type"]="0"
+    hdf["report_type"]="3"
     hdf["station_type"]="1"
     hdf["platform_type"]=""
-    hdf["primary_station_id"]=merged_df["report_id"].str[:-19]
     hdf["primary_station_id_scheme"]="13"
     hdf["location_accuracy"]="0.1"
     hdf["location_method"]=""
     hdf["location_quality"]="3"
-    hdf["longitude"]=merged_df["longitude"]
-    hdf["latitude"]=merged_df["latitude"]
     hdf["crs"]="0"
     hdf["station_speed"]=""  
     hdf["station_course"]=""
@@ -53,9 +51,9 @@ for filename in all_filenames:
     hdf["height_of_station_above_local_ground"]=""
     hdf["height_of_station_above_sea_level_accuracy"]=""
     hdf["sea_level_datum"]=""
-    hdf["report_meaning_of_timestamp"]="2"
+    hdf["report_meaning_of_timestamp"]="1"
     hdf["report_timestamp"]=""
-    hdf["report_duration"]="0"
+    hdf["report_duration"]="13"
     hdf["report_time_accuracy"]=""
     hdf["report_time_quality"]=""
     hdf["report_time_reference"]="0"
@@ -67,59 +65,37 @@ for filename in all_filenames:
     hdf["duplicates"]=""
     hdf["source_record_id"]=""
     hdf ["processing_codes"]=""
+    hdf["longitude"]=merged_df["longitude"]
+    hdf["latitude"]=merged_df["latitude"]
     hdf["source_id"]=merged_df["source_id"]
     hdf['record_timestamp'] = pd.to_datetime('now').strftime("%Y-%m-%d %H:%M:%S")
     hdf.record_timestamp = hdf.record_timestamp + '+00'
     hdf["history"]=""
     hdf["processing_level"]="0"
     hdf["report_timestamp"]=merged_df["date_time"]
-    hdf['primary_station_id_3']=hdf['observation_id'].astype(str)+'-'+hdf['source_id'].astype(str)
-    hdf["station_record_number"]=hdf["report_id"].str.slice(start=-18)
-    hdf["station_record_number"]=hdf["station_record_number"].str[0:1:1]
-    hdf["duplicates_report"]=hdf["report_id"]+'-'+hdf["station_record_number"].astype(str)
-    ##save sttaion id for output fuilename later
-    station_id=hdf.iloc[1]["observation_id"]
+    hdf['primary_station_id_3']=hdf['primary_station_id'].astype(str)+'-'+hdf['source_id'].astype(str)+'-'+hdf['station_record_number'].astype(str)
+    hdf["duplicates_report"]=hdf["report_id"]
     
-    #del merged_df
-    
+    station_id=hdf.iloc[1]["primary_station_id"]
+    del merged_df
+       
+         
+    hdf["duplicates_report"]=hdf["report_id"]
+              
             
-    df2=pd.read_csv("/work/scratch-pw/snoone/qff_cdm_test_2021/station_list/record_id.csv", encoding='latin-1')
+    df2=pd.read_csv("/work/scratch-pw/snoone/qff_cdm_test_2021/station_list/record_id_head.csv", encoding='latin-1')
     hdf = hdf.astype(str)
     df2 = df2.astype(str)
-    hdf= df2.merge(hdf, on=['primary_station_id_3'])
-    hdf["station_name"]=hdf["Station_name"]
-    hdf["station_record_number"]=hdf["record_number"]
-    hdf['report_id']=hdf['primary_station_id'].astype(str)+'-'+hdf['station_record_number'].astype(str)+'-'+hdf['report_timestamp'].astype(str)
-    hdf['report_id'] = hdf['report_id'].str.replace(r' ', '-')
-    ##remove unwanted last twpo characters
-    hdf['report_id'] = hdf['report_id'].str[:-6]
-    hdf['height_of_station_above_sea_level'] = hdf['elevation'].astype(str).apply(lambda x: x.replace('.0',''))
+    hdf= df2.merge(hdf, on=['primary_station_id_3'])      
+    hdf['height_of_station_above_sea_level'] = hdf['height_of_station_above_sea_level'].astype(str).apply(lambda x: x.replace('.0',''))
     hdf["latitude"] = pd.to_numeric(hdf["latitude"],errors='coerce')
     hdf["longitude"] = pd.to_numeric(hdf["longitude"],errors='coerce')
     hdf["latitude"]= hdf["latitude"].round(3)
     hdf["longitude"]= hdf["longitude"].round(3)
     
-    
-    hdf = hdf[["report_id","region","sub_region","application_area",
-              "observing_programme","report_type","station_name",
-              "station_type","platform_type","platform_subtype","primary_station_id","station_record_number",
-              "primary_station_id_scheme","longitude","latitude","location_accuracy","location_method",
-              "location_quality","crs","station_speed","station_course",
-              "station_heading","height_of_station_above_local_ground",
-              "height_of_station_above_sea_level",
-              "height_of_station_above_sea_level_accuracy",
-              "sea_level_datum","report_meaning_of_timestamp","report_timestamp",
-              "report_duration","report_time_accuracy","report_time_quality",
-              "report_time_reference","profile_id","events_at_station","report_quality",
-              "duplicate_status","duplicates","record_timestamp","history",
-              "processing_level","processing_codes","source_id","source_record_id",
-              "primary_station_id_3", "duplicates_report"]]
-    
-    
+    del df2
     hdf=hdf.drop_duplicates(subset=['duplicates_report'])
-
-
-    
+   
     hdf = hdf[["report_id","region","sub_region","application_area",
               "observing_programme","report_type","station_name",
               "station_type","platform_type","platform_subtype","primary_station_id",
@@ -133,11 +109,14 @@ for filename in all_filenames:
               "report_time_reference","profile_id","events_at_station","report_quality",
               "duplicate_status","duplicates","record_timestamp","history",
               "processing_level","processing_codes","source_id","source_record_id"]]
+    
     hdf.sort_values("report_timestamp")
-      
+    
+    hdf['report_id'] = hdf['report_id'].str.strip()
+  
     hdf['region'] = hdf['region'].astype(str).apply(lambda x: x.replace('.0',''))
     hdf['sub_region'] = hdf['sub_region'].astype(str).apply(lambda x: x.replace('.0',''))
-    #hdf.to_csv("hdf7.csv", index=False, sep=",")
+     
     
     ##name the cdm_lite files e.g. cdm_lite _”insert date of run”_EG000062417.psv)
     try:

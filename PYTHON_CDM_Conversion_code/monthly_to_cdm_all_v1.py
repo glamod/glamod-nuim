@@ -9,11 +9,11 @@ import os
 import glob
 import pandas as pd
 pd.options.mode.chained_assignment = None  # default='warn'
-###convert monthly gsom files to cdm tables
-OUTDIR3= "D:/Python_CDM_conversion/monthly/cdm_out/cdm_head"
-OUTDIR2= "D:/Python_CDM_conversion/monthly/cdm_out/cdm_obs"
-OUTDIR = "D:/Python_CDM_conversion/monthly/cdm_out/cdm_lite"
-os.chdir("D:/Python_CDM_conversion/monthly/.csv/")
+
+OUTDIR3= "/work/scratch-pw/snoone/csv_cdm_test_2021/cdm_head_out_mnth_202111"
+OUTDIR2= "/work/scratch-pw/snoone/csv_cdm_test_2021/cdm_obs_out_mnth_202111"
+OUTDIR = "/work/scratch-pw/snoone/csv_cdm_test_2021/cdmlite_out_mnth_202111"
+os.chdir("/gws/nopw/j04/c3s311a_lot2/data/incoming/GSOM_r30062021/csv_files")
 extension = 'csv'
 #my_file = open("D:/Python_CDM_conversion/hourly/qff/ls1.txt", "r")
 #all_filenames = my_file.readlines()
@@ -26,11 +26,9 @@ all_filenames = [i for i in glob.glob('*.{}'.format(extension))]
 ##to start at begining of files
 for filename in all_filenames:
 ##to start at next file after last processe 
-#for filename in all_filenames[all_filenames.index('SWM00002338.csv'):] :
+#for filename in all_filenames[all_filenames.index('SWM00002338.qff'):] :
     usecols = ["STATION","LATITUDE","LONGITUDE","ELEVATION","DATE","NAME", "PRCP", "TMIN", "TMAX", "TAVG", "SNOW", "AWND"]
     df=pd.read_csv(filename, sep=",",usecols=lambda c: c in set(usecols))
-    #print(all_filenames)
-    
     #add required columnns
     df["report_type"]="2"
     df["units"]=""
@@ -85,7 +83,7 @@ for filename in all_filenames:
         dfprc["report_id"]=dfprc["date_time"]
         
         ##merge with record_id_mnth.csv to add source id
-        df2=pd.read_csv("D:/Python_CDM_conversion/monthly/config_files/record_id_mnth.csv")
+        df2=pd.read_csv("/work/scratch-pw/snoone/csv_cdm_test_2021/station_list/record_id_mnth.csv")
         dfprc = dfprc.astype(str)
         df2 = df2.astype(str)
         dfprc= df2.merge(dfprc, on=['primary_station_id_2'])
@@ -131,7 +129,7 @@ for filename in all_filenames:
         dfsnow["report_id"]=dfsnow["date_time"]
         
         ##merge with record_id_mnth.csv to add source id
-        df2=pd.read_csv("D:/Python_CDM_conversion/monthly/config_files/record_id_mnth.csv")
+        df2=pd.read_csv("/work/scratch-pw/snoone/csv_cdm_test_2021/station_list/record_id_mnth.csv")
         dfsnow = dfsnow.astype(str)
         df2 = df2.astype(str)
         dfsnow= df2.merge(dfsnow, on=['primary_station_id_2'])
@@ -181,7 +179,7 @@ for filename in all_filenames:
         dftmax["report_id"]=dftmax["date_time"]
         
         ##merge with record_id_mnth.csv to add source id
-        df2=pd.read_csv("D:/Python_CDM_conversion/monthly/config_files/record_id_mnth.csv")
+        df2=pd.read_csv("/work/scratch-pw/snoone/csv_cdm_test_2021/station_list/record_id_mnth.csv")
         dftmax = dftmax.astype(str)
         df2 = df2.astype(str)
         dftmax= df2.merge(dftmax, on=['primary_station_id_2'])
@@ -231,7 +229,7 @@ for filename in all_filenames:
          dftmin["report_id"]=dftmin["date_time"]
          
          ##merge with record_id_mnth.csv to add source id
-         df2=pd.read_csv("D:/Python_CDM_conversion/monthly/config_files/record_id_mnth.csv")
+         df2=pd.read_csv("/work/scratch-pw/snoone/csv_cdm_test_2021/station_list/record_id_mnth.csv")
          dftmin = dftmin.astype(str)
          df2 = df2.astype(str)
          dftmin= df2.merge(dftmin, on=['primary_station_id_2'])
@@ -281,7 +279,7 @@ for filename in all_filenames:
         dftavg["report_id"]=dftavg["date_time"]
         
         ##merge with record_id_mnth.csv to add source id
-        df2=pd.read_csv("D:/Python_CDM_conversion/monthly/config_files/record_id_mnth.csv")
+        df2=pd.read_csv("/work/scratch-pw/snoone/csv_cdm_test_2021/station_list/record_id_mnth.csv")
         dftavg = dftavg.astype(str)
         df2 = df2.astype(str)
         dftavg= df2.merge(dftavg, on=['primary_station_id_2'])
@@ -331,7 +329,7 @@ for filename in all_filenames:
         dftws["report_id"]=dftws["date_time"]
         
         ##merge with record_id_mnth.csv to add source id
-        df2=pd.read_csv("D:/Python_CDM_conversion/monthly/config_files/record_id_mnth.csv")
+        df2=pd.read_csv("/work/scratch-pw/snoone/csv_cdm_test_2021/station_list/record_id_mnth.csv")
         dftws = dftws.astype(str)
         df2 = df2.astype(str)
         dftws= df2.merge(dftws, on=['primary_station_id_2'])
@@ -377,7 +375,7 @@ for filename in all_filenames:
               ,"data_policy_licence","source_id","primary_station_id_2"]]
     
     ##add region and sub region
-    df2=pd.read_csv("D:/Python_CDM_conversion/monthly/config_files/record_id_mnth.csv")
+    df2=pd.read_csv("/work/scratch-pw/snoone/csv_cdm_test_2021/station_list/record_id_mnth.csv")
     dfobs = dfobs.astype(str)
     df2 = df2.astype(str)
     dfobs= df2.merge(dfobs, on=['primary_station_id_2'])
@@ -520,7 +518,7 @@ for filename in all_filenames:
         
             
               
-        df2=pd.read_csv("D:/Python_CDM_conversion/monthly/config_files/record_id_mnth_head.csv")
+        df2=pd.read_csv("/work/scratch-pw/snoone/csv_cdm_test_2021/station_list/record_id_mnth_head.csv")
         hdf = hdf.astype(str)
         df2 = df2.astype(str)
         hdf= df2.merge(hdf, on=['primary_station_id_2'])

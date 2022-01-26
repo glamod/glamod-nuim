@@ -15,6 +15,7 @@ pd.options.mode.chained_assignment = None  # default='warn'
 
 OUTDIR = "/work/scratch-pw/snoone/csv_cdm_test_2021/cdmhead_out_dy_202111"
 os.chdir("/work/scratch-pw/snoone/csv_cdm_test_2021/cdmobs_out_dy_202111")
+
 col_list = ["observation_id", "report_id", "longitude", "latitude", "source_id","date_time"]
 extension = 'psv'
 #my_file = open("D:/Python_CDM_conversion/hourly/qff/ls_dy.txt", "r")

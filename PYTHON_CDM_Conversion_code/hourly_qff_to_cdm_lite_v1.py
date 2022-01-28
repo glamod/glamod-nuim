@@ -591,7 +591,7 @@ for filename in all_filenames:
       
     ##merge all df into one cdmlite file
     merged_df=pd.concat([dfdpt,dft,dfslp,dfmslp,dfwd,dfws], axis=0)
-    merged_df.sort_values("date_time")
+    merged_df.sort_values("date_time", inplace=True)
     merged_df["latitude"] = pd.to_numeric(merged_df["latitude"],errors='coerce')
     merged_df["longitude"] = pd.to_numeric(merged_df["longitude"],errors='coerce')
     merged_df["latitude"]= merged_df["latitude"].round(3)

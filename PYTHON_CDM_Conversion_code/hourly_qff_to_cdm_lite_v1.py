@@ -16,9 +16,12 @@ pd.options.mode.chained_assignment = None  # default='warn'
 
 
 # Set the paths
-OUTDIR2= "/work/scratch-pw/snoone/qff_cdm_test_2021/qc_tables_sbdy_202111"
-OUTDIR = "/work/scratch-pw/snoone/qff_cdm_test_2021/cdmLite_out_sbdy_202111"
-os.chdir("/gws/nopw/j04/c3s311a_lot2/data/level1/land/level1c_sub_daily_data/v20210728")
+QC_OUT_DIR= "/work/scratch-pw/snoone/qff_cdm_test_2021/qc_tables_sbdy_202111"
+CDMLITE_OUT_DIR = "/work/scratch-pw/snoone/qff_cdm_test_2021/cdmLite_out_sbdy_202111"
+QFF_IN_DIR = "/gws/nopw/j04/c3s311a_lot2/data/level1/land/level1c_sub_daily_data/v20210728"
+
+# Station record entries
+STATION_RECORD_ENTRIES = "/work/scratch-pw/snoone/qff_cdm_test_2021/station_list/record_id.csv"
 
 # Read in either single file, list of files or run all
 #extension = 'qff'
@@ -31,7 +34,7 @@ for filename in all_filenames:
 
 # To start at next file after last processes 
 #for filename in all_filenames[all_filenames.index('FRI0000LFBF.qff'):] :
-    df=pd.read_csv(filename, sep="|",low_memory=False)
+    df=pd.read_csv(os.path.join(QFF_IN_DIR, filename), sep="|",low_memory=False)
      
     ##set up master dataframe to extract each variable
     
@@ -116,10 +119,10 @@ for filename in all_filenames:
     #dft.to_csv("ttest.csv", index=False, sep=",")
     
     # Add data policy and record number to dataframe
-    df2=pd.read_csv("/work/scratch-pw/snoone/qff_cdm_test_2021/station_list/record_id.csv", encoding='latin-1')
+    df2 = pd.read_csv(STATION_RECORD_ENTRIES, encoding='latin-1')
     dft = dft.astype(str)
     df2 = df2.astype(str)
-    dft= df2.merge(dft, on=['primary_station_id_2'])
+    dft = df2.merge(dft, on=['primary_station_id_2'])
     dft['data_policy_licence'] = dft['data_policy_licence_x']
     dft['data_policy_licence'] = dft['data_policy_licence'].astype(str).apply(lambda x: x.replace('.0',''))
 
@@ -215,7 +218,7 @@ for filename in all_filenames:
     #dft.to_csv("ttest.csv", index=False, sep=",")
     
     # Add data policy and record numbers to dataframe
-    df2=pd.read_csv("/work/scratch-pw/snoone/qff_cdm_test_2021/station_list/record_id.csv", encoding='latin-1')
+    df2 = pd.read_csv(STATION_RECORD_ENTRIES, encoding='latin-1')
     dfdpt = dfdpt.astype(str)
     df2 = df2.astype(str)
     dfdpt= df2.merge(dfdpt, on=['primary_station_id_2'])
@@ -312,7 +315,7 @@ for filename in all_filenames:
     #dft.to_csv("ttest.csv", index=False, sep=",")
     
     # Add data policy and record numbers to dataframe
-    df2=pd.read_csv("/work/scratch-pw/snoone/qff_cdm_test_2021/station_list/record_id.csv", encoding='latin-1')
+    df2 = pd.read_csv(STATION_RECORD_ENTRIES, encoding='latin-1')
     dfslp = dfslp.astype(str)
     df2 = df2.astype(str)
     dfslp= df2.merge(dfslp, on=['primary_station_id_2'])
@@ -414,7 +417,7 @@ for filename in all_filenames:
     #dft.to_csv("ttest.csv", index=False, sep=",")
     
     # Add data policy and record numbers to dataframe
-    df2=pd.read_csv("/work/scratch-pw/snoone/qff_cdm_test_2021/station_list/record_id.csv", encoding='latin-1')
+    df2 = pd.read_csv(STATION_RECORD_ENTRIES, encoding='latin-1')
     dfmslp = dfmslp.astype(str)
     df2 = df2.astype(str)
     dfmslp= df2.merge(dfmslp, on=['primary_station_id_2'])
@@ -517,7 +520,7 @@ for filename in all_filenames:
     #dft.to_csv("ttest.csv", index=False, sep=",")
     
     # Add data policy and record numbers to datframe
-    df2=pd.read_csv("/work/scratch-pw/snoone/qff_cdm_test_2021/station_list/record_id.csv", encoding='latin-1')
+    df2 = pd.read_csv(STATION_RECORD_ENTRIES, encoding='latin-1')
     dfwd = dfwd.astype(str)
     df2 = df2.astype(str)
     dfwd= df2.merge(dfwd, on=['primary_station_id_2'])
@@ -613,7 +616,7 @@ for filename in all_filenames:
     #dft.to_csv("ttest.csv", index=False, sep=",")
     
     # Add data policy and record numbers to datafram
-    df2=pd.read_csv("/work/scratch-pw/snoone/qff_cdm_test_2021/station_list/record_id.csv", encoding='latin-1')
+    df2 = pd.read_csv(STATION_RECORD_ENTRIES, encoding='latin-1')
     dfws = dfws.astype(str)
     df2 = df2.astype(str)
     dfws= df2.merge(dfws, on=['primary_station_id_2'])
@@ -686,7 +689,7 @@ for filename in all_filenames:
         print(station_id+"_lite")
         a = merged_df['observed_variable'].unique()
         print (a)
-        outname = os.path.join(OUTDIR,cdm_type)
+        outname = os.path.join(CDMLITE_OUT_DIR, cdm_type)
         #with open(filename, "w") as outfile:
         merged_df.to_csv(outname+ station_id+ ".psv", index=False, sep="|")
 
@@ -719,7 +722,7 @@ for filename in all_filenames:
         print(qc_station_id+"_qc")
         b = qc_merged_df['qc_method'].unique()
         print (b)
-        outname2= os.path.join(OUTDIR2,cdm_type)
+        outname2= os.path.join(QC_OUT_DIR, cdm_type)
         qc_merged_df.to_csv(outname2 + qc_station_id+ ".psv", index=False, sep="|")
         
     except:

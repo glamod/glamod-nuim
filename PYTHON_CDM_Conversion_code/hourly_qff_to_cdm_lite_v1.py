@@ -724,10 +724,4 @@ for filename in all_filenames:
         
     except:
         # Continue to next iteration.
-        continue      
-    
-    break
-    
-    
-    
-
+        continue

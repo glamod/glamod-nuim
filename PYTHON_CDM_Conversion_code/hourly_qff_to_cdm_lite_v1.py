@@ -670,8 +670,8 @@ for filename in all_filenames:
     # Merge all dataframes into one CDMlite frame
     merged_df=pd.concat([dfdpt,dft,dfslp,dfmslp,dfwd,dfws], axis=0)
 
-    # Sort by date/times [not working] and fix metadata
-    merged_df.sort_values("date_time")
+    # Sort by date/times and fix metadata
+    merged_df.sort_values("date_time", inplace=True)
     merged_df["latitude"] = pd.to_numeric(merged_df["latitude"],errors='coerce')
     merged_df["longitude"] = pd.to_numeric(merged_df["longitude"],errors='coerce')
     merged_df["latitude"]= merged_df["latitude"].round(3)

@@ -22,18 +22,10 @@ import os
 import glob
 import pandas as pd
 pd.options.mode.chained_assignment = None  # default='warn'
+import utils
 
-
-# Set the paths
-QC_OUT_DIR= "/work/scratch-pw/snoone/qff_cdm_test_2021/qc_tables_sbdy_202111"
-CDMLITE_OUT_DIR = "/work/scratch-pw/snoone/qff_cdm_test_2021/cdmLite_out_sbdy_202111"
-QFF_IN_DIR = "/gws/nopw/j04/c3s311a_lot2/data/level1/land/level1c_sub_daily_data/v20210728"
-
-CDM_FILE_ROOT = "cdm_lite_202111_test_"
-QC_FILE_ROOT = "qc_definition_202111_test_"
-
-# Station record entries
-STATION_RECORD_ENTRIES = "/work/scratch-pw/snoone/qff_cdm_test_2021/station_list/record_id.csv"
+# Set the file extension for the subdaily psv files
+EXTENSION = 'qff'
 
 def main(station="", subset="", run_all=False):
     """
@@ -49,7 +41,7 @@ def main(station="", subset="", run_all=False):
         Path to file containing subset of IDs to process
 
     run_all : `bool`
-        Run all files in the QFF_IN_DIR
+        Run all files in the directory defined in the configu file
     """
     # Read in either single file, list of files or run all
 
@@ -64,14 +56,20 @@ def main(station="", subset="", run_all=False):
     # Obtain list of station(s) to process (single/subset/all)
     if station != "":
         print(f"Single station run: {station}")
-        all_filenames = [station]
+        all_filenames = [os.path.join(utils.SUBDAILY_QFF_IN_DIR, f"{station}.{EXTENSION}")]
     elif subset != "":
         print(f"Subset of stations run defined in: {subset}")
         # Read filenames form a list of 5000 to parallel
         try:
             # e.g. "/work/scratch-pw/snoone/qff_cdm_test_2021/station_list/ls1.txt"
             with open(subset, "r") as f:
-                all_filenames = f.read().splitlines()
+                filenames = f.read().splitlines()
+
+                # now add the path to the front
+                all_filenames = []
+                for infile in filenames:
+                    all_filenames += [os.path.join(utils.SUBDAILY_QFF_IN_DIR, f"{infile}")]
+
             print(f"   N = {len(all_filenames)}")
         except IOError:
             print(f"Subset file {subset} cannot be found")
@@ -80,9 +78,8 @@ def main(station="", subset="", run_all=False):
             print(f"Subset file {subset} cannot be found")
             return
     elif all:
-        print(f"All stations run in {QFF_IN_DIR}")
-        extension = 'qff'
-        all_filenames = [i for i in glob.glob(os.path.join(QFF_IN_DIR, '*.{}'.format(extension)))]    
+        print(f"All stations run in {utils.SUBDAILY_QFF_IN_DIR}")
+        all_filenames = [i for i in glob.glob(os.path.join(utils.SUBDAILY_QFF_IN_DIR, f'*.{EXTENSION}'))]    
         print(f"   N = {len(all_filenames)}")
               
     # To start at next file after last processes 
@@ -93,7 +90,7 @@ def main(station="", subset="", run_all=False):
         print(f"Processing {filename}")
 
         # Read in the dataframe
-        df=pd.read_csv(os.path.join(QFF_IN_DIR, filename), sep="|",low_memory=False)
+        df=pd.read_csv(os.path.join(utils.SUBDAILY_QFF_IN_DIR, filename), sep="|",low_memory=False)
 
         # Set up master dataframe to extract each variable
         #  Globally set some entries to 
@@ -178,7 +175,7 @@ def main(station="", subset="", run_all=False):
         #dft.to_csv("ttest.csv", index=False, sep=",")
 
         # Add data policy and record number to dataframe
-        df2 = pd.read_csv(STATION_RECORD_ENTRIES, encoding='latin-1')
+        df2 = pd.read_csv(utils.STATION_RECORD_ENTRIES, encoding='latin-1')
         dft = dft.astype(str)
         df2 = df2.astype(str)
         dft = df2.merge(dft, on=['primary_station_id_2'])
@@ -277,7 +274,7 @@ def main(station="", subset="", run_all=False):
         #dft.to_csv("ttest.csv", index=False, sep=",")
 
         # Add data policy and record numbers to dataframe
-        df2 = pd.read_csv(STATION_RECORD_ENTRIES, encoding='latin-1')
+        df2 = pd.read_csv(utils.STATION_RECORD_ENTRIES, encoding='latin-1')
         dfdpt = dfdpt.astype(str)
         df2 = df2.astype(str)
         dfdpt= df2.merge(dfdpt, on=['primary_station_id_2'])
@@ -374,7 +371,7 @@ def main(station="", subset="", run_all=False):
         #dft.to_csv("ttest.csv", index=False, sep=",")
 
         # Add data policy and record numbers to dataframe
-        df2 = pd.read_csv(STATION_RECORD_ENTRIES, encoding='latin-1')
+        df2 = pd.read_csv(utils.STATION_RECORD_ENTRIES, encoding='latin-1')
         dfslp = dfslp.astype(str)
         df2 = df2.astype(str)
         dfslp= df2.merge(dfslp, on=['primary_station_id_2'])
@@ -476,7 +473,7 @@ def main(station="", subset="", run_all=False):
         #dft.to_csv("ttest.csv", index=False, sep=",")
 
         # Add data policy and record numbers to dataframe
-        df2 = pd.read_csv(STATION_RECORD_ENTRIES, encoding='latin-1')
+        df2 = pd.read_csv(utils.STATION_RECORD_ENTRIES, encoding='latin-1')
         dfmslp = dfmslp.astype(str)
         df2 = df2.astype(str)
         dfmslp= df2.merge(dfmslp, on=['primary_station_id_2'])
@@ -579,7 +576,7 @@ def main(station="", subset="", run_all=False):
         #dft.to_csv("ttest.csv", index=False, sep=",")
 
         # Add data policy and record numbers to datframe
-        df2 = pd.read_csv(STATION_RECORD_ENTRIES, encoding='latin-1')
+        df2 = pd.read_csv(utils.STATION_RECORD_ENTRIES, encoding='latin-1')
         dfwd = dfwd.astype(str)
         df2 = df2.astype(str)
         dfwd= df2.merge(dfwd, on=['primary_station_id_2'])
@@ -675,7 +672,7 @@ def main(station="", subset="", run_all=False):
         #dft.to_csv("ttest.csv", index=False, sep=",")
 
         # Add data policy and record numbers to datafram
-        df2 = pd.read_csv(STATION_RECORD_ENTRIES, encoding='latin-1')
+        df2 = pd.read_csv(utils.STATION_RECORD_ENTRIES, encoding='latin-1')
         dfws = dfws.astype(str)
         df2 = df2.astype(str)
         dfws= df2.merge(dfws, on=['primary_station_id_2'])
@@ -747,7 +744,7 @@ def main(station="", subset="", run_all=False):
             cdm_type=("cdm_lite_202111_test_")
             unique_variables = merged_df['observed_variable'].unique()
             print(unique_variables)
-            outroot_cdmlite = os.path.join(CDMLITE_OUT_DIR, CDM_FILE_ROOT)
+            outroot_cdmlite = os.path.join(utils.SUBDAILY_CDMLITE_OUT_DIR, utils.SUBDAILY_CDMLITE_FILE_ROOT)
             #with open(filename, "w") as outfile:
             merged_df.to_csv(f"{outroot_cdmlite}{station_id}.psv", index=False, sep="|")
             print(f"   {outroot_cdmlite}{station_id}.psv")
@@ -779,7 +776,7 @@ def main(station="", subset="", run_all=False):
             qc_station_id=merged_df.iloc[1]["primary_station_id"]
             unique_qc_methods = qc_merged_df['qc_method'].unique()
             print(unique_qc_methods)
-            outroot_qc= os.path.join(QC_OUT_DIR, QC_FILE_ROOT)
+            outroot_qc= os.path.join(utils.SUBDAILY_QC_OUT_DIR, utils.SUBDAILY_QC_FILE_ROOT)
             qc_merged_df.to_csv(f"{outroot_qc}{qc_station_id}.psv", index=False, sep="|")
             print(f"   {outroot_qc}{qc_station_id}.psv")
             print("    Done")

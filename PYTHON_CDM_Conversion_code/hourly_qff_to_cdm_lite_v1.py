@@ -4,9 +4,18 @@ Convert QFF files to CDM Lite .psv files (one per station).
 
 CDM Lite files have all variables, one after another.
 
+Call in one of three ways using:
+
+>python hourly_qff_to_cdm_lite_v1.py --station STATIONID
+>python hourly_qff_to_cdm_lite_v1.py --subset FILENAME
+>python hourly_qff_to_cdm_lite_v1.py --run_all
+>python hourly_qff_to_cdm_lite_v1.py --help
+
 Created on Thu Nov 11 16:31:58 2021
 
 @author: snoone
+
+Edited: rjhd2, February 2022
 """
 
 import os

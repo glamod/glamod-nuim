@@ -27,7 +27,7 @@ import utils
 # Set the file extension for the subdaily psv files
 EXTENSION = 'qff'
 
-def main(station="", subset="", run_all=False):
+def main(station="", subset="", run_all=False, clobber=False):
     """
     Run processing of hourly QFF to CDM lite & QC tables
 
@@ -41,7 +41,10 @@ def main(station="", subset="", run_all=False):
         Path to file containing subset of IDs to process
 
     run_all : `bool`
-        Run all files in the directory defined in the configu file
+        Run all files in the directory defined in the config file
+
+    clobber : `bool`
+        Overwrite existing files if they exist.  If False, will skip existing ones
     """
     # Read in either single file, list of files or run all
 
@@ -91,6 +94,25 @@ def main(station="", subset="", run_all=False):
 
         # Read in the dataframe
         df=pd.read_csv(os.path.join(utils.SUBDAILY_QFF_IN_DIR, filename), sep="|",low_memory=False)
+
+        # Set up the output filenames, and check if they exist
+        station_id=df.iloc[1]["Station_ID"] # NOTE: this is renamed below to "primary_station_id"
+
+        outroot_cdmlite = os.path.join(utils.SUBDAILY_CDMLITE_OUT_DIR, utils.SUBDAILY_CDMLITE_FILE_ROOT)
+        cdmlite_outfile = f"{outroot_cdmlite}{station_id}.psv"
+
+        outroot_qc= os.path.join(utils.SUBDAILY_QC_OUT_DIR, utils.SUBDAILY_QC_FILE_ROOT)
+        qc_outfile = f"{outroot_qc}{station_id}.psv"
+
+        # if not overwriting
+        if not clobber:
+            # and both output files exist
+            if os.path.exists(cdmlite_outfile) and os.path.exists(qc_outfile):
+                print(f"   Output files for {filename} already exist:")
+                print(f"     {cdmlite_outfile}")
+                print(f"     {qc_outfile}")
+                print("   Skipping to next station")
+                continue #  to next file in the loop
 
         # Set up master dataframe to extract each variable
         #  Globally set some entries to 
@@ -737,17 +759,15 @@ def main(station="", subset="", run_all=False):
         merged_df["longitude"]= merged_df["longitude"].round(3)
 
         # Write the output files
-        #   name the cdm_lite files e.g. cdm_lite _”insert date of run”_EG000062417.psv)
+        #   name the cdm_lite files e.g. cdm_lite _"insert date of run"_EG000062417.psv)
         try:
             # Save CDM lite table to directory
-            station_id=merged_df.iloc[1]["primary_station_id"]
-            cdm_type=("cdm_lite_202111_test_")
             unique_variables = merged_df['observed_variable'].unique()
             print(unique_variables)
-            outroot_cdmlite = os.path.join(utils.SUBDAILY_CDMLITE_OUT_DIR, utils.SUBDAILY_CDMLITE_FILE_ROOT)
+
             #with open(filename, "w") as outfile:
-            merged_df.to_csv(f"{outroot_cdmlite}{station_id}.psv", index=False, sep="|")
-            print(f"   {outroot_cdmlite}{station_id}.psv")
+            merged_df.to_csv(cdmlite_outfile, index=False, sep="|")
+            print(f"    {cdmlite_outfile}")
 
             # Save QC table to directory
             qc_merged_df=pd.concat([qcdpt,qct,qcslp,qcmslp,qcwd,qcws], axis=0)
@@ -776,9 +796,8 @@ def main(station="", subset="", run_all=False):
             qc_station_id=merged_df.iloc[1]["primary_station_id"]
             unique_qc_methods = qc_merged_df['qc_method'].unique()
             print(unique_qc_methods)
-            outroot_qc= os.path.join(utils.SUBDAILY_QC_OUT_DIR, utils.SUBDAILY_QC_FILE_ROOT)
-            qc_merged_df.to_csv(f"{outroot_qc}{qc_station_id}.psv", index=False, sep="|")
-            print(f"   {outroot_qc}{qc_station_id}.psv")
+            qc_merged_df.to_csv(qc_outfile, index=False, sep="|")
+            print(f"   {qc_outfile}")
             print("    Done")
         except:
             # Continue to next iteration.
@@ -793,13 +812,15 @@ if __name__ == "__main__":
 
     # set up keyword arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('--station', dest='station', action='store', default="", 
+    parser.add_argument('--station', dest='station', action='store', default="",
                         help='Root of station ID to run')
-    parser.add_argument('--subset', dest='subset', action='store', default="", 
+    parser.add_argument('--subset', dest='subset', action='store', default="",
                         help='File containing subsets of stations to run (full path only)')
-    parser.add_argument('--run_all', dest='run_all', action='store_true', default=False, 
+    parser.add_argument('--run_all', dest='run_all', action='store_true', default=False,
                         help='Run all stations in QFF directory')
+    parser.add_argument('--clobber', dest='clobber', action='store_true', default=False,
+                        help='Overwrite existing files')
 
     args = parser.parse_args()
 
-    main(station=args.station, subset=args.subset, run_all=args.run_all)
+    main(station=args.station, subset=args.subset, run_all=args.run_all, clobber=args.clobber)

@@ -76,8 +76,10 @@ for filename in all_filenames:
     hdf["report_timestamp"]=merged_df["date_time"]
     hdf['primary_station_id_2']=hdf['primary_station_id'].astype(str)+'-'+hdf['source_id'].astype(str)
     hdf["duplicates_report"]=hdf["report_id"]+'-'+hdf["station_record_number"].astype(str)
-    
-    station_id=hdf.iloc[1]["primary_station_id"]
+    try:
+     station_id=hdf.iloc[1]["primary_station_id"]
+    except:
+      pass
     
     #del merged_df
     

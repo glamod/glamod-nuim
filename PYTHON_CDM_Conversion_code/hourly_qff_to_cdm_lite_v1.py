@@ -119,7 +119,6 @@ def main(station="", subset="", run_all=False, clobber=False):
         df["report_type"]="0"
         df["units"]=""
         df["source_id"]=""
-        df["Minute"]="00"
         df["observation_height_above_station_surface"]=""
         df["date_time_meaning"]="1"
         df["latitude"]=df["Latitude"]

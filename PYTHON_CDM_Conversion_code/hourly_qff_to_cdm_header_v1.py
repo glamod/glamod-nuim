@@ -37,7 +37,6 @@ for filename in all_filenames:
     hdf["report_id"]=merged_df["report_id"]
     hdf["application_area"]=""
     hdf["observing_programme"]=""
-    hdf["report_type"]="3"
     hdf["station_type"]="1"
     hdf["platform_type"]=""
     hdf["primary_station_id_scheme"]="13"

@@ -21,6 +21,7 @@ Edited: rjhd2, February 2022
 import os
 import glob
 import pandas as pd
+import numpy as np
 pd.options.mode.chained_assignment = None  # default='warn'
 import utils
 
@@ -156,6 +157,13 @@ def main(station="", subset="", run_all=False, clobber=False):
                   "station_type","primary_station_id","station_name","quality_flag"
                   ,"data_policy_licence","source_id","secondary_id"]]
 
+        # set report type to 4 for ICAO or 0 for all other hourly stations
+        dft["report_type"]=df["temperature_Source_Station_ID"]
+        dft['report_type'] = dft['report_type'].fillna("NULL")
+        dft["report_type"]=df["report_type"].str[:4].astype('str')
+        dft['report_type'] = np.where(dft['report_type'].isin(["ICAO"]), dft['report_type'],"0")
+        dft['report_type'] = dft['report_type'].replace({'ICAO':'4',}) 
+
         # Change for each variable to convert to CDM compliant values
         dft["observation_value"]=df["temperature"]+273.15
         dft["source_id"]=df["temperature_Source_Code"]
@@ -256,6 +264,13 @@ def main(station="", subset="", run_all=False, clobber=False):
                   "station_type","primary_station_id","station_name","quality_flag"
                   ,"data_policy_licence","source_id","secondary_id"]]
 
+        # set report type to 4 for ICAO or 0 for all other hourly stations
+        dfdpt["report_type"]=df["dew_point_temperature_Source_Station_ID"]
+        dfdpt['report_type'] = dfdpt['report_type'].fillna("NULL")
+        dfdpt["report_type"]=dfdpt["report_type"].str[:4].astype('str')
+        dfdpt['report_type'] = np.where(dfdpt['report_type'].isin(["ICAO"]), dfdpt['report_type'],"0")
+        dfdpt['report_type'] = dfdpt['report_type'].replace({'ICAO':'4',})
+
         # Change for each variable to convert to CDM compliant values
         dfdpt["secondary_id"]=df["dew_point_temperature_Source_Station_ID"].astype(str)
         dfdpt['secondary_id'] = dfdpt['secondary_id'].astype(str).apply(lambda x: x.replace('.0',''))
@@ -351,6 +366,13 @@ def main(station="", subset="", run_all=False, clobber=False):
                   "value_significance","observation_duration","platform_type",
                   "station_type","primary_station_id","station_name","quality_flag"
                   ,"data_policy_licence","source_id","secondary_id"]]
+
+        # set report type to 4 for ICAO or 0 for all other hourly stations
+        dfslp["report_type"]=df["station_level_pressure_Source_Station_ID"]
+        dfslp['report_type'] = dfslp['report_type'].fillna("NULL")
+        dfslp["report_type"]=dfslp["report_type"].str[:4].astype('str')
+        dfslp['report_type'] = np.where(dfslp['report_type'].isin(["ICAO"]), dfslp['report_type'],"0")
+        dfslp['report_type'] = dfslp['report_type'].replace({'ICAO':'4',})
 
         # Change for each variable to convert to CDM compliant values
         dfslp["secondary_id"]=df["station_level_pressure_Source_Station_ID"].astype(str)
@@ -453,6 +475,13 @@ def main(station="", subset="", run_all=False, clobber=False):
                   "value_significance","observation_duration","platform_type",
                   "station_type","primary_station_id","station_name","quality_flag"
                   ,"data_policy_licence","source_id","secondary_id"]]
+
+        # set report type to 4 for ICAO or 0 for all other hourly stations
+        dfmslp["report_type"]=df["sea_level_pressure_Source_Station_ID"]
+        dfmslp['report_type'] = dfmslp['report_type'].fillna("NULL")
+        dfmslp["report_type"]=dfmslp["report_type"].str[:4].astype('str')
+        dfmslp['report_type'] = np.where(dfmslp['report_type'].isin(["ICAO"]), dfmslp['report_type'],"0")
+        dfmslp['report_type'] = dfmslp['report_type'].replace({'ICAO':'4',})
 
         # Change for each variable to convert to CDM compliant values
         dfmslp["secondary_id"]=df["sea_level_pressure_Source_Station_ID"].astype(str)
@@ -557,6 +586,13 @@ def main(station="", subset="", run_all=False, clobber=False):
                   "station_type","primary_station_id","station_name","quality_flag"
                   ,"data_policy_licence","source_id","secondary_id"]]
 
+        # set report type to 4 for ICAO or 0 for all other hourly stations
+        dfwd["report_type"]=df["wind_direction_Source_Station_ID"]
+        dfwd['report_type'] = dfwd['report_type'].fillna("NULL")
+        dfwd["report_type"]=dfwd["report_type"].str[:4].astype('str')
+        dfwd['report_type'] = np.where(dfwd['report_type'].isin(["ICAO"]), dfwd['report_type'],"0")
+        dfwd['report_type'] = dfwd['report_type'].replace({'ICAO':'4',})
+
         # Change for each variable to convert to CDM compliant values
         dfwd["secondary_id"]=df["wind_direction_Source_Station_ID"].astype(str)
         dfwd['secondary_id'] = dfwd['secondary_id'].astype(str).apply(lambda x: x.replace('.0',''))
@@ -652,6 +688,13 @@ def main(station="", subset="", run_all=False, clobber=False):
                   "value_significance","observation_duration","platform_type",
                   "station_type","primary_station_id","station_name","quality_flag"
                   ,"data_policy_licence","source_id","secondary_id"]]
+
+        # set report type to 4 for ICAO or 0 for all other hourly stations
+        dfws["report_type"]=df["wind_speed_Source_Station_ID"]
+        dfws['report_type'] = dfws['report_type'].fillna("NULL")
+        dfws["report_type"]=dfws["report_type"].str[:4].astype('str')
+        dfws['report_type'] = np.where(dfws['report_type'].isin(["ICAO"]), dfws['report_type'],"0")
+        dfws['report_type'] = dfws['report_type'].replace({'ICAO':'4',})
 
         # Change for each variable to convert to CDM compliant values
         dfws["secondary_id"]=df["wind_speed_Source_Station_ID"].astype(str)

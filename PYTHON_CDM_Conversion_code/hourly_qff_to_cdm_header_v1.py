@@ -1,35 +1,109 @@
+ #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Wed Nov 24 10:26:06 2021
+Convert OBS files to CDM HEADER .psv files (one per station).
+
+
+Call in one of three ways using:
+
+>python hourly_qff_to_cdm_head_v1.py --station STATIONID
+>python hourly_qff_to_cdm_head_v1.py --subset FILENAME
+>python hourly_qff_to_cdm_head_v1.py --run_all
+>python hourly_qff_to_cdm_head_v1.py --help
+
+#Created on Thu Nov 11 16:31:58 2021
 
 @author: snoone
+
+edited: snoone, February 2022
 """
 
-import glob
 import os
+import glob
 import pandas as pd
 pd.options.mode.chained_assignment = None  # default='warn'
+import utils
 
+# Set the file extension for the subdaily obs psv files
+EXTENSION = 'psv'
 
-##make header from completed observations table
-OUTDIR = "/work/scratch-pw/snoone/qff_cdm_test_2021/cdmhead_out_sbdy_202111"
-os.chdir("/work/scratch-pw/snoone/qff_cdm_test_2021/cdmobs_out_sbdy_202111")
+def main(station="", subset="", run_all=False, clobber=False):
+    """
+    Run processing of hourly cdm obs to CDM header file
 
-#extension = 'psv'
-#my_file = open("D:/Python_CDM_conversion/hourly/qff/ls1.txt", "r")
-#all_filenames = my_file.readlines()
-#print(all_filenames)
-##use  alist of file name sto run 5000 parallel
-with open("/work/scratch-pw/snoone/qff_cdm_test_2021/station_list/obs_ls1.txt", "r") as f:
-    all_filenames = f.read().splitlines()
-#all_filenames = [i for i in glob.glob('*.{}'.format(extension))]
-##to start at begining of files
-for filename in all_filenames:
-##to start at next file after last processe 
-#for filename in all_filenames[all_filenames.index('SWM00002338.qff'):] :
-    col_list = ["observation_id", "report_id", "latitude","longitude","source_id","date_time"]
-    merged_df=pd.read_csv(filename, sep="|", usecols=col_list)
+    Parameters
+    ----------
+
+    station : `str` 
+        Single station ID to process
+
+    subset : `str`
+        Path to file containing subset of IDs to process
+
+    run_all : `bool`
+        Run all files in the directory defined in the config file
+
+    clobber : `bool`
+        Overwrite existing files if they exist.  If False, will skip existing ones
+    """
+    # Read in either single file, list of files or run all
+
+    # Check for sensible inputs
+    if station != "" and subset != "" and all:
+        print("Please select either single station, list of stations run or to run all")
+        return
+    elif station == "" and subset == "" and not all:
+        print("Please select either single station, list of stations run or to run all")
+        return
+
+    # Obtain list of station(s) to process (single/subset/all)
+    if station != "":
+        print(f"Single station run: {station}")
+        all_filenames = [os.path.join(utils.SUBDAILY_HEAD_IN_DIR, f"{station}.{EXTENSION}")]
+    elif subset != "":
+        print(f"Subset of stations run defined in: {subset}")
+        # Allows for parallelisation
+        try:
+            with open(subset, "r") as f:
+                filenames = f.read().splitlines()
+
+                # now add the path to the front
+                all_filenames = []
+                for infile in filenames:
+                    all_filenames += [os.path.join(utils.SUBDAILY_HEAD_IN_DIR, f"{infile}")]
+
+            print(f"   N = {len(all_filenames)}")
+        except IOError:
+            print(f"Subset file {subset} cannot be found")
+            return
+        except OSError:
+            print(f"Subset file {subset} cannot be found")
+            return
+    elif all:
+        print(f"All stations run in {utils.SUBDAILY_HEAD_IN_DIR}")
+        all_filenames = [i for i in glob.glob(os.path.join(utils.SUBDAILY_HEAD_IN_DIR, f'*.{EXTENSION}'))]    
+        print(f"   N = {len(all_filenames)}")
+              
     
+    # To start at begining of files
+    for filename in all_filenames:
+        print(f"Processing {filename}") 
+        
+        col_list = ["observation_id", "report_id", "latitude","longitude","source_id","date_time"] 
+        merged_df=pd.read_csv(filename, sep="|", usecols=col_list)
+        # extract Station_ID from report_ID in obs table
+        merged_df['Station_ID'] = merged_df['report_id'].str[:11]
+        station_id=merged_df.iloc[1]["Station_ID"] # NOTE: this is renamed below to "primary_station_id" 
+        outroot_cdmhead = os.path.join(utils.SUBDAILY_CDM_HEAD_OUT_DIR, utils.SUBDAILY_CDM_HEAD_FILE_ROOT) 
+        cdmhead_outfile = f"{outroot_cdmhead}{station_id}.psv"
+        if not clobber:
+       # and output file exists
+            if os.path.exists(cdmhead_outfile):
+                print(f"   Output files for {filename} already exist:")
+                print(f"     {cdmhead_outfile}")
+                print("   Skipping to next station")  
+                continue #to next file in the loop
+
     hdf = pd.DataFrame()  
     hdf['extract_record'] = merged_df['report_id'].str[:-17]
     hdf['station_record_number'] = hdf['extract_record'].str[12:]
@@ -75,14 +149,14 @@ for filename in all_filenames:
     hdf['primary_station_id_3']=hdf['primary_station_id'].astype(str)+'-'+hdf['source_id'].astype(str)+'-'+hdf['station_record_number'].astype(str)
     hdf["duplicates_report"]=hdf["report_id"]
     
-    station_id=hdf.iloc[1]["primary_station_id"]
+    
     del merged_df
        
          
     hdf["duplicates_report"]=hdf["report_id"]
               
-            
-    df2=pd.read_csv("/work/scratch-pw/snoone/qff_cdm_test_2021/station_list/record_id_head.csv", encoding='latin-1')
+    # add in required information from external .csv file specific for header tables       
+    df2 = pd.read_csv(utils.STATION_RECORD_ENTRIES_H, encoding='latin-1')
     hdf = hdf.astype(str)
     df2 = df2.astype(str)
     hdf= df2.merge(hdf, on=['primary_station_id_3'])      
@@ -115,20 +189,42 @@ for filename in all_filenames:
   
     hdf['region'] = hdf['region'].astype(str).apply(lambda x: x.replace('.0',''))
     hdf['sub_region'] = hdf['sub_region'].astype(str).apply(lambda x: x.replace('.0',''))
+
+    # Save CDM head table to directory
+            try:
+
+                    #with open(filename, "w") as outfile:
+                hdf.to_csv(cdmhead_outfile, index=False, sep="|")
+                print(f"    {cdmhead_outfile}")
+            except:
+                  continue
+
+
+                        #  to next file in the loop
+
+
+
+#    return # main
+
+#***************************************
+if __name__ == "__main__":
+
+    import argparse
+
+    # set up keyword arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--station', dest='station', action='store', default="",
+                                        help='Root of station ID to run')
+    parser.add_argument('--subset', dest='subset', action='store', default="",
+                                        help='File containing subsets of stations to run (full path only)')
+    parser.add_argument('--run_all', dest='run_all', action='store_true', default=False,
+                                        help='Run all stations in QFF directory')
+    parser.add_argument('--clobber', dest='clobber', action='store_true', default=False,
+                                        help='Overwrite existing files')
+
+    args = parser.parse_args()
+
+    main(station=args.station, subset=args.subset, run_all=args.run_all, clobber=args.clobber)
      
     
-    ##name the cdm_lite files e.g. cdm_lite _”insert date of run”_EG000062417.psv)
-    try:
-        ## table output
-       ##header table output
-        
-        cdm_type=("cdm_head_202111_test_")
-        print(station_id+"_"+"header")
-        outname = os.path.join(OUTDIR,cdm_type)
-        #with open(filename, "w") as outfile:
-        hdf.to_csv(outname+ station_id+ ".psv", index=False, sep="|")
-              
-    except:
-        # Continue to next iteration.
-        continue   
-    
+   

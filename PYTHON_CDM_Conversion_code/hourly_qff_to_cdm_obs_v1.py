@@ -1,34 +1,112 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Thu Nov 11 16:31:58 2021
+Convert QFF files to CDM obs .psv files (one per station).
+
+CDM obs files have all variables, one after another.
+
+Call in one of three ways using:
+
+>python hourly_qff_to_cdm_obs_v1.py --station STATIONID
+>python hourly_qff_to_cdm_obs_v1.py --subset FILENAME
+>python hourly_qff_to_cdm_obs_v1.py --run_all
+>python hourly_qff_to_cdm_obs_v1.py --help
+#Created on Thu Nov 11 16:31:58 2021
 
 @author: snoone
+
+edited: snoone, February 2022
 """
 
 import os
 import glob
 import pandas as pd
 pd.options.mode.chained_assignment = None  # default='warn'
+import utils
 
+# Set the file extension for the subdaily psv files
+EXTENSION = 'qff'
 
+def main(station="", subset="", run_all=False, clobber=False):
+    """
+    Run processing of hourly QFF to CDM obs
 
-OUTDIR = "/work/scratch-pw/snoone/qff_cdm_test_2021/cdmobs_out_sbdy_202111"
-os.chdir("/gws/nopw/j04/c3s311a_lot2/data/level1/land/level1c_sub_daily_data/v20210728")
-#extension = 'qff'
-#my_file = open("D:/Python_CDM_conversion/hourly/qff/ls1.txt", "r")
-#all_filenames = my_file.readlines()
-#print(all_filenames)
-##use  alist of file name sto run 5000 parallel
-with open("/work/scratch-pw/snoone/qff_cdm_test_2021/station_list/ls1.txt", "r") as f:
-    all_filenames = f.read().splitlines()
-#all_filenames = [i for i in glob.glob('*.{}'.format(extension))]
-##to start at begining of files
-for filename in all_filenames:
-##to start at next file after last processe 
-#for filename in all_filenames[all_filenames.index('SWM00002338.qff'):] :
-    df=pd.read_csv(filename, sep="|", low_memory=False)
-     
+    Parameters
+    ----------
+
+    station : `str` 
+        Single station ID to process
+
+    subset : `str`
+        Path to file containing subset of IDs to process
+
+    run_all : `bool`
+        Run all files in the directory defined in the config file
+
+    clobber : `bool`
+        Overwrite existing files if they exist.  If False, will skip existing ones
+    """
+    # Read in either single file, list of files or run all
+
+    # Check for sensible inputs
+    if station != "" and subset != "" and all:
+        print("Please select either single station, list of stations run or to run all")
+        return
+    elif station == "" and subset == "" and not all:
+        print("Please select either single station, list of stations run or to run all")
+        return
+
+    # Obtain list of station(s) to process (single/subset/all)
+    if station != "":
+        print(f"Single station run: {station}")
+        all_filenames = [os.path.join(utils.SUBDAILY_QFF_IN_DIR, f"{station}.{EXTENSION}")]
+    elif subset != "":
+        print(f"Subset of stations run defined in: {subset}")
+        # Read filenames form a list of 5000 to parallel
+        try:
+            # e.g. "/work/scratch-pw/snoone/qff_cdm_test_2021/station_list/ls1.txt"
+            with open(subset, "r") as f:
+                filenames = f.read().splitlines()
+
+                # now add the path to the front
+                all_filenames = []
+                for infile in filenames:
+                    all_filenames += [os.path.join(utils.SUBDAILY_QFF_IN_DIR, f"{infile}")]
+
+            print(f"   N = {len(all_filenames)}")
+        except IOError:
+            print(f"Subset file {subset} cannot be found")
+            return
+        except OSError:
+            print(f"Subset file {subset} cannot be found")
+            return
+    elif all:
+        print(f"All stations run in {utils.SUBDAILY_QFF_IN_DIR}")
+        all_filenames = [i for i in glob.glob(os.path.join(utils.SUBDAILY_QFF_IN_DIR, f'*.{EXTENSION}'))]    
+        print(f"   N = {len(all_filenames)}")
+              
+    # To start at next file after last processes 
+    #for filename in all_filenames[all_filenames.index('FRI0000LFBF.qff'):] :
+
+    # To start at begining of files
+    for filename in all_filenames:
+        print(f"Processing {filename}")
+        df=pd.read_csv(os.path.join(utils.SUBDAILY_QFF_IN_DIR, filename), sep="|",low_memory=False)
+       # Set up the output filenames, and check if they exist
+        station_id=df.iloc[1]["Station_ID"] # NOTE: this is renamed below to "primary_station_id"
+        outroot_cdmobs = os.path.join(utils.SUBDAILY_CDMOBS_OUT_DIR, utils.SUBDAILY_CDMOBS_FILE_ROOT)
+        cdmobs_outfile = f"{outroot_cdmobs}{station_id}.psv"
+
+       # if not overwriting
+        if not clobber:
+            # and both output files exist
+            if os.path.exists(cdmobs_outfile):
+                print(f"   Output files for {filename} already exist:")
+                print(f"     {cdmobs_outfile}")
+                print("   Skipping to next station")  
+                continue#  to next file in the loop
+
+ 
     ##set up master df to extrcat each variable
     df["report_id"]=""
     df["observation_id"]=""
@@ -147,7 +225,7 @@ for filename in all_filenames:
     #dft.to_csv("ttest.csv", index=False, sep=",")
     
      ###add data policy and record number to df
-    df2=pd.read_csv("/work/scratch-pw/snoone/qff_cdm_test_2021/station_list/record_id.csv", encoding='latin-1')
+    df2 = pd.read_csv(utils.STATION_RECORD_ENTRIES, encoding='latin-1')
     dft = dft.astype(str)
     df2 = df2.astype(str)
     dft= df2.merge(dft, on=['primary_station_id_2'])
@@ -183,7 +261,7 @@ for filename in all_filenames:
     dft["observation_value"] = pd.to_numeric(dft["observation_value"],errors='coerce')
     dft["observation_value"]= dft["observation_value"].round(2)
     
-    #dft.to_csv("isuest.csv", index=False, sep=",")
+    
     
 
     #=================================================================================
@@ -242,7 +320,7 @@ for filename in all_filenames:
     #dfdpt.to_csv("ttest.csv", index=False, sep=",")
     
      ###add data policy and record number to df
-    df2=pd.read_csv("/work/scratch-pw/snoone/qff_cdm_test_2021/station_list/record_id.csv", encoding='latin-1')
+    df2 = pd.read_csv(utils.STATION_RECORD_ENTRIES, encoding='latin-1')
     dfdpt= dfdpt.astype(str)
     df2 = df2.astype(str)
     dfdpt= df2.merge(dfdpt, on=['primary_station_id_2'])
@@ -338,7 +416,7 @@ for filename in all_filenames:
     #dfslp.to_csv("ttest.csv", index=False, sep=",")
     
      ###add data policy and record number to df
-    df2=pd.read_csv("/work/scratch-pw/snoone/qff_cdm_test_2021/station_list/record_id.csv", encoding='latin-1')
+    df2 = pd.read_csv(utils.STATION_RECORD_ENTRIES, encoding='latin-1')
     dfslp = dfslp.astype(str)
     df2 = df2.astype(str)
     dfslp= df2.merge(dfslp, on=['primary_station_id_2'])
@@ -440,7 +518,7 @@ for filename in all_filenames:
     #dfmslp.to_csv("ttest.csv", index=False, sep=",")
     
      ###add data policy and record number to df
-    df2=pd.read_csv("/work/scratch-pw/snoone/qff_cdm_test_2021/station_list/record_id.csv", encoding='latin-1')
+    df2 = pd.read_csv(utils.STATION_RECORD_ENTRIES, encoding='latin-1')
     dfmslp = dfmslp.astype(str)
     df2 = df2.astype(str)
     dfmslp= df2.merge(dfmslp, on=['primary_station_id_2'])
@@ -540,7 +618,7 @@ for filename in all_filenames:
     #dfwd.to_csv("ttest.csv", index=False, sep=",")
     
      ###add data policy and record number to df
-    df2=pd.read_csv("/work/scratch-pw/snoone/qff_cdm_test_2021/station_list/record_id.csv", encoding='latin-1')
+    df2 = pd.read_csv(utils.STATION_RECORD_ENTRIES, encoding='latin-1')
     dfwd = dfwd.astype(str)
     df2 = df2.astype(str)
     dfwd= df2.merge(dfwd, on=['primary_station_id_2'])
@@ -637,7 +715,7 @@ for filename in all_filenames:
     #dfws.to_csv("ttest.csv", index=False, sep=",")
     
      ###add data policy and record number to df
-    df2=pd.read_csv("/work/scratch-pw/snoone/qff_cdm_test_2021/station_list/record_id.csv", encoding='latin-1')
+    df2 = pd.read_csv(utils.STATION_RECORD_ENTRIES, encoding='latin-1')
     dfws = dfws.astype(str)
     df2 = df2.astype(str)
     dfws= df2.merge(dfws, on=['primary_station_id_2'])
@@ -689,22 +767,44 @@ for filename in all_filenames:
     merged_df["longitude"] = pd.to_numeric(merged_df["longitude"],errors='coerce')
     merged_df["latitude"]= merged_df["latitude"].round(3)
     merged_df["longitude"]= merged_df["longitude"].round(3)
-    
-          
-    ##name the cdm_lite files e.g. cdm_lite _”insert date of run”_EG000062417.psv)
-    try:
-        station_id=df.iloc[1]["primary_station_id"]
-        cdm_type=("cdm_obs_202111_test_")
-        print(station_id+"_obs")
-        a = merged_df['observed_variable'].unique()
-        print (a)
-        outname = os.path.join(OUTDIR,cdm_type)
-        #with open(filename, "w") as outfile:
-        merged_df.to_csv(outname+ station_id+ ".psv", index=False, sep="|")
-        ###save qc table to directory
-    except:
-        # Continue to next iteration.
-        continue   
+
+     # Save CDM obs table to directory
+            try:
+                unique_variables = merged_df['observed_variable'].unique()
+                print(unique_variables)
+                #with open(filename, "w") as outfile:
+                merged_df.to_csv(cdmobs_outfile, index=False, sep="|")
+                print(f"    {cdmobs_outfile}")
+            except:
+                    continue
+
+
+            #  to next file in the loop
+
+
+
+
+#    return # main
+
+    #****************************************
+if __name__ == "__main__":
+
+    import argparse
+
+    # set up keyword arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--station', dest='station', action='store', default="",
+                            help='Root of station ID to run')
+    parser.add_argument('--subset', dest='subset', action='store', default="",
+                            help='File containing subsets of stations to run (full path only)')
+    parser.add_argument('--run_all', dest='run_all', action='store_true', default=False,
+                            help='Run all stations in QFF directory')
+    parser.add_argument('--clobber', dest='clobber', action='store_true', default=False,
+                            help='Overwrite existing files')
+
+    args = parser.parse_args()
+
+    main(station=args.station, subset=args.subset, run_all=args.run_all, clobber=args.clobber)
     
     
     

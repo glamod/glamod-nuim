@@ -62,13 +62,12 @@ def main(station="", subset="", run_all=False, clobber=False):
         all_filenames = [os.path.join(utils.SUBDAILY_QFF_IN_DIR, f"{station}.{EXTENSION}")]
     elif subset != "":
         print(f"Subset of stations run defined in: {subset}")
-        # Read filenames form a list of 5000 to parallel
+        # Allows for parallelisation
         try:
-            # e.g. "/work/scratch-pw/snoone/qff_cdm_test_2021/station_list/ls1.txt"
             with open(subset, "r") as f:
                 filenames = f.read().splitlines()
 
-                # now add the path to the front
+                #now add the path to the front
                 all_filenames = []
                 for infile in filenames:
                     all_filenames += [os.path.join(utils.SUBDAILY_QFF_IN_DIR, f"{infile}")]
@@ -85,29 +84,27 @@ def main(station="", subset="", run_all=False, clobber=False):
         all_filenames = [i for i in glob.glob(os.path.join(utils.SUBDAILY_QFF_IN_DIR, f'*.{EXTENSION}'))]    
         print(f"   N = {len(all_filenames)}")
               
-    # To start at next file after last processes 
-    #for filename in all_filenames[all_filenames.index('FRI0000LFBF.qff'):] :
-
     # To start at begining of files
     for filename in all_filenames:
         print(f"Processing {filename}")
         df=pd.read_csv(os.path.join(utils.SUBDAILY_QFF_IN_DIR, filename), sep="|",low_memory=False)
-       # Set up the output filenames, and check if they exist
+    # Set up the output filenames, and check if they exist
         station_id=df.iloc[1]["Station_ID"] # NOTE: this is renamed below to "primary_station_id"
-        outroot_cdmobs = os.path.join(utils.SUBDAILY_CDMOBS_OUT_DIR, utils.SUBDAILY_CDMOBS_FILE_ROOT)
+        outroot_cdmobs = os.path.join(utils.SUBDAILY_CDM_OBS_OUT_DIR, utils.SUBDAILY_CDM_OBS_FILE_ROOT)
         cdmobs_outfile = f"{outroot_cdmobs}{station_id}.psv"
 
-       # if not overwriting
+    # if not overwriting
         if not clobber:
             # and both output files exist
             if os.path.exists(cdmobs_outfile):
                 print(f"   Output files for {filename} already exist:")
                 print(f"     {cdmobs_outfile}")
                 print("   Skipping to next station")  
-                continue#  to next file in the loop
+                continue
+    #  to next file in the loop
 
  
-    ##set up master df to extrcat each variable
+    # set up master df to extrcat each variable
     df["report_id"]=""
     df["observation_id"]=""
     df["data_policy_licence"]=""
@@ -168,7 +165,7 @@ def main(station="", subset="", run_all=False, clobber=False):
 
     
 #=========================================================================================
-##convert temperature    changes for each variable    
+    #convert temperature changes for each variable    
     dft = df[["observation_id","report_id","data_policy_licence","date_time",
                "date_time_meaning","observation_duration","longitude","latitude",
                "crs","z_coordinate","z_coordinate_type","observation_height_above_station_surface",
@@ -184,7 +181,7 @@ def main(station="", subset="", run_all=False, clobber=False):
                "advanced_qc","advanced_uncertainty","advanced_homogenisation",
                "advanced_assimilation_feedback","source_id","primary_station_id","secondary_id"]]
     
-    ##change for each variable to convert to cdm compliant values
+    # change for each variable to convert to cdm compliant values
     dft["observation_value"]=df["temperature"]+273.15
     dft["secondary_id"]=df["temperature_Source_Station_ID"].astype('str')
     dft['secondary_id'] = dft['secondary_id'].astype(str).apply(lambda x: x.replace('.0',''))
@@ -203,43 +200,39 @@ def main(station="", subset="", run_all=False, clobber=False):
     dft["observed_variable"]="85"
     
     
-    ##set quality flag from df master for variable and fill all nan with Null then change all nonnan to 
+    # set quality flag from df master for variable and fill all nan with Null then change all nonnan to 
     dft.loc[dft['quality_flag'].notnull(), "quality_flag"] = 1
     dft = dft.fillna("Null")
     dft.quality_flag[dft.quality_flag == "Null"] = 0  
-    #change for each variable if required
+    # change for each variable if required
 
-    ##remove unwanted mising data rows
+    # remove unwanted mising data rows
     dft = dft.fillna("null")
     dft = dft.replace({"null":"-99999"})
     dft = dft[dft.observation_value != -99999]
     dft = dft.dropna(subset=['secondary_id'])
     dft = dft.dropna(subset=['observation_value'])
-    #df = df.astype(str)
     dft["source_id"] = pd.to_numeric(dft["source_id"],errors='coerce')
-    #df = df.astype(str)
+    
     #concatenate columns for joining df for next step
     dft['source_id'] = dft['source_id'].astype(str).apply(lambda x: x.replace('.0',''))
     dft['primary_station_id_2']=dft['secondary_id'].astype(str)+'-'+dft['source_id'].astype(str)
     dft["observation_value"] = pd.to_numeric(dft["observation_value"],errors='coerce')
-    #dft.to_csv("ttest.csv", index=False, sep=",")
-    
-     ###add data policy and record number to df
-    df2 = pd.read_csv(utils.STATION_RECORD_ENTRIES, encoding='latin-1')
+        
+    # add data policy and record number to df
+    df2 = pd.read_csv(utils.STATION_RECORD_ENTRIES_OBS_LITE, encoding='latin-1')
     dft = dft.astype(str)
     df2 = df2.astype(str)
     dft= df2.merge(dft, on=['primary_station_id_2'])
     dft['data_policy_licence'] = dft['data_policy_licence_x']
     dft['data_policy_licence'] = dft['data_policy_licence'].astype(str).apply(lambda x: x.replace('.0',''))
-    
     dft['observation_id']=dft['primary_station_id'].astype(str)+'-'+dft['record_number'].astype(str)+'-'+dft['date_time'].astype(str)
     dft['observation_id'] = dft['observation_id'].str.replace(r' ', '-')
     ##remove unwanted last twpo characters
     dft['observation_id'] = dft['observation_id'].str[:-6]
     dft["observation_id"]=dft["observation_id"]+'-'+dft['observed_variable'].astype(str)+'-'+dft['value_significance'].astype(str)
     dft["report_id"]=dft["observation_id"].str[:-6]
-     ##set up qc table
-            
+                 
     dft = dft[["observation_id","report_id","data_policy_licence","date_time",
                "date_time_meaning","observation_duration","longitude","latitude",
                "crs","z_coordinate","z_coordinate_type","observation_height_above_station_surface",
@@ -265,7 +258,7 @@ def main(station="", subset="", run_all=False, clobber=False):
     
 
     #=================================================================================
-    ##convert dew point temperature   changes for each variable    
+    # convert dew point temperature changes for each variable    
     dfdpt= df[["observation_id","report_id","data_policy_licence","date_time",
                "date_time_meaning","observation_duration","longitude","latitude",
                "crs","z_coordinate","z_coordinate_type","observation_height_above_station_surface",
@@ -281,7 +274,7 @@ def main(station="", subset="", run_all=False, clobber=False):
                "advanced_qc","advanced_uncertainty","advanced_homogenisation",
                "advanced_assimilation_feedback","source_id","primary_station_id","secondary_id"]]
     
-    ##change for each variable to convert to cdm compliant values
+    # change for each variable to convert to cdm compliant values
     dfdpt["observation_value"]=df["dew_point_temperature"]+273.15
     dfdpt["secondary_id"]=df["dew_point_temperature_Source_Station_ID"].astype(str)
     dfdpt['secondary_id'] = dfdpt['secondary_id'].astype(str).apply(lambda x: x.replace('.0',''))
@@ -299,41 +292,38 @@ def main(station="", subset="", run_all=False, clobber=False):
     dfdpt["observed_variable"]="36"
     
     
-    ##set quality flag from df master for variable and fill all nan with Null then change all nonnan to 
+    # set quality flag from df master for variable and fill all nan with Null then change all nonnan to 
     dfdpt.loc[dfdpt['quality_flag'].notnull(), "quality_flag"] = 1
     dfdpt= dfdpt.fillna("Null")
     dfdpt.quality_flag[dfdpt.quality_flag == "Null"] = 0  
 
-    ##remove unwanted mising data rows
+    # remove unwanted mising data rows
     dfdpt= dfdpt.fillna("null")
     dfdpt= dfdpt.replace({"null":"-99999"})
     dfdpt= dfdpt[dfdpt.observation_value != -99999]
     dfdpt = dfdpt.dropna(subset=['secondary_id'])
     dfdpt = dfdpt.dropna(subset=['observation_value'])
-    #df = df.astype(str)
     dfdpt["source_id"] = pd.to_numeric(dfdpt["source_id"],errors='coerce')
-    #df = df.astype(str)
+    
     #concatenate columns for joining df for next step
     dfdpt['source_id'] = dfdpt['source_id'].astype(str).apply(lambda x: x.replace('.0',''))
     dfdpt['primary_station_id_2']=dfdpt['secondary_id'].astype(str)+'-'+dfdpt['source_id'].astype(str)
     dfdpt["observation_value"] = pd.to_numeric(dfdpt["observation_value"],errors='coerce')
-    #dfdpt.to_csv("ttest.csv", index=False, sep=",")
-    
-     ###add data policy and record number to df
-    df2 = pd.read_csv(utils.STATION_RECORD_ENTRIES, encoding='latin-1')
+       
+    # add data policy and record number to df
+    df2 = pd.read_csv(utils.STATION_RECORD_ENTRIES_OBS_LITE, encoding='latin-1')
     dfdpt= dfdpt.astype(str)
     df2 = df2.astype(str)
     dfdpt= df2.merge(dfdpt, on=['primary_station_id_2'])
     dfdpt['data_policy_licence'] = dfdpt['data_policy_licence_x']
     dfdpt['data_policy_licence'] = dfdpt['data_policy_licence'].astype(str).apply(lambda x: x.replace('.0',''))
-    
     dfdpt['observation_id']=dfdpt['primary_station_id'].astype(str)+'-'+dfdpt['record_number'].astype(str)+'-'+dfdpt['date_time'].astype(str)
     dfdpt['observation_id'] = dfdpt['observation_id'].str.replace(r' ', '-')
-    ##remove unwanted last twpo characters
+    # remove unwanted last twpo characters
     dfdpt['observation_id'] = dfdpt['observation_id'].str[:-6]
     dfdpt["observation_id"]=dfdpt["observation_id"]+'-'+dfdpt['observed_variable'].astype(str)+'-'+dfdpt['value_significance'].astype(str)
     dfdpt["report_id"]=dfdpt["observation_id"].str[:-6]
-     ##set up qc table
+    
             
     dfdpt= dfdpt[["observation_id","report_id","data_policy_licence","date_time",
                "date_time_meaning","observation_duration","longitude","latitude",
@@ -359,7 +349,8 @@ def main(station="", subset="", run_all=False, clobber=False):
     
 
     #====================================================================================
-    #convert station level  to cdmlite
+    # convert station level  
+
     dfslp = df[["observation_id","report_id","data_policy_licence","date_time",
                "date_time_meaning","observation_duration","longitude","latitude",
                "crs","z_coordinate","z_coordinate_type","observation_height_above_station_surface",
@@ -375,7 +366,7 @@ def main(station="", subset="", run_all=False, clobber=False):
                "advanced_qc","advanced_uncertainty","advanced_homogenisation",
                "advanced_assimilation_feedback","source_id","primary_station_id","secondary_id"]]
     
-    ##change for each variable to convert to cdm compliant values
+    # change for each variable to convert to cdm compliant values
     dfslp["secondary_id"]=df["station_level_pressure_Source_Station_ID"].astype(str)
     dfslp['secondary_id'] = dfslp['secondary_id'].astype(str).apply(lambda x: x.replace('.0',''))
     dfslp["observation_value"]=df["station_level_pressure"].map(float)
@@ -394,43 +385,38 @@ def main(station="", subset="", run_all=False, clobber=False):
     dfslp["observed_variable"]="57"
     
     
-    ##set quality flag from df master for variable and fill all nan with Null then change all nonnan to 
+    # set quality flag from df master for variable and fill all nan with Null then change all nonnan to 
     dfslp.loc[dfslp['quality_flag'].notnull(), "quality_flag"] = 1
     dfslp = dfslp.fillna("Null")
     dfslp.quality_flag[dfslp.quality_flag == "Null"] = 0  
-    #change for each variable if required
+    # change for each variable if required
 
-    ##remove unwanted mising data rows
+    # remove unwanted mising data rows
     dfslp = dfslp.fillna("null")
     dfslp = dfslp.replace({"null":"-99999"})
     dfslp = dfslp[dfslp.observation_value != -99999]
     dfslp = dfslp.dropna(subset=['secondary_id'])
     dfslp = dfslp.dropna(subset=['observation_value'])
-    #df = df.astype(str)
     dfslp["source_id"] = pd.to_numeric(dfslp["source_id"],errors='coerce')
-    #df = df.astype(str)
-    #concatenate columns for joining df for next step
+    
+    # concatenate columns for joining df for next step
     dfslp['source_id'] = dfslp['source_id'].astype(str).apply(lambda x: x.replace('.0',''))
     dfslp['primary_station_id_2']=dfslp['secondary_id'].astype(str)+'-'+dfslp['source_id'].astype(str)
-    #dfslp["observation_value"] = pd.to_numeric(dfslp["observation_value"],errors='coerce')
-    #dfslp.to_csv("ttest.csv", index=False, sep=",")
-    
-     ###add data policy and record number to df
-    df2 = pd.read_csv(utils.STATION_RECORD_ENTRIES, encoding='latin-1')
+            
+    # add data policy and record number to df
+    df2 = pd.read_csv(utils.STATION_RECORD_ENTRIES_OBS_LITE, encoding='latin-1')
     dfslp = dfslp.astype(str)
     df2 = df2.astype(str)
     dfslp= df2.merge(dfslp, on=['primary_station_id_2'])
     dfslp['data_policy_licence'] = dfslp['data_policy_licence_x']
     dfslp['data_policy_licence'] = dfslp['data_policy_licence'].astype(str).apply(lambda x: x.replace('.0',''))
-    
     dfslp['observation_id']=dfslp['primary_station_id'].astype(str)+'-'+dfslp['record_number'].astype(str)+'-'+dfslp['date_time'].astype(str)
     dfslp['observation_id'] = dfslp['observation_id'].str.replace(r' ', '-')
-    ##remove unwanted last twpo characters
+    # remove unwanted last twpo characters
     dfslp['observation_id'] = dfslp['observation_id'].str[:-6]
     dfslp["observation_id"]=dfslp["observation_id"]+'-'+dfslp['observed_variable'].astype(str)+'-'+dfslp['value_significance'].astype(str)
     dfslp["report_id"]=dfslp["observation_id"].str[:-6]
-     ##set up qc table
-            
+                
     dfslp = dfslp[["observation_id","report_id","data_policy_licence","date_time",
                "date_time_meaning","observation_duration","longitude","latitude",
                "crs","z_coordinate","z_coordinate_type","observation_height_above_station_surface",
@@ -447,7 +433,7 @@ def main(station="", subset="", run_all=False, clobber=False):
                "advanced_assimilation_feedback","source_id"]]
 
 
-##make sure no decimal places an dround value to reuqred decimal places
+    # make sure no decimal places an dround value to reuqred decimal places
     dfslp['observation_value'] = dfslp['observation_value'].map(float)
     dfslp['observation_value'] = (dfslp['observation_value']*100)
     dfslp['observation_value'] = dfslp['observation_value'].map(int)
@@ -456,12 +442,12 @@ def main(station="", subset="", run_all=False, clobber=False):
     dfslp["source_id"] = pd.to_numeric(dfslp["source_id"],errors='coerce')
     dfslp["observation_value"] = pd.to_numeric(dfslp["observation_value"],errors='coerce')
     dfslp['observation_value'] = dfslp['observation_value'].astype(str).apply(lambda x: x.replace('.0',''))
-    dfslp.to_csv("slp.csv", index=False, sep=",")
-   
+      
     
 
     #===========================================================================================
-     #convert sea level presure to cdmlite
+    # convert sea level presure 
+
     dfmslp = df[["observation_id","report_id","data_policy_licence","date_time",
                "date_time_meaning","observation_duration","longitude","latitude",
                "crs","z_coordinate","z_coordinate_type","observation_height_above_station_surface",
@@ -477,7 +463,7 @@ def main(station="", subset="", run_all=False, clobber=False):
                "advanced_qc","advanced_uncertainty","advanced_homogenisation",
                "advanced_assimilation_feedback","source_id","primary_station_id","secondary_id"]]
     
-    ##change for each variable to convert to cdm compliant values
+    # change for each variable to convert to cdm compliant values
     dfmslp["secondary_id"]=df["sea_level_pressure_Source_Station_ID"].astype(str)
     dfmslp['secondary_id'] = dfmslp['secondary_id'].astype(str).apply(lambda x: x.replace('.0',''))
     dfmslp["observation_value"]=df["sea_level_pressure"].map(float)
@@ -496,29 +482,26 @@ def main(station="", subset="", run_all=False, clobber=False):
     dfmslp["observed_variable"]="58"
     
     
-    ##set quality flag from df master for variable and fill all nan with Null then change all nonnan to 
+    # set quality flag from df master for variable and fill all nan with Null then change all nonnan to 
     dfmslp.loc[dfmslp['quality_flag'].notnull(), "quality_flag"] = 1
     dfmslp = dfmslp.fillna("Null")
     dfmslp.quality_flag[dfmslp.quality_flag == "Null"] = 0  
-    #change for each variable if required
+    # change for each variable if required
 
-    ##remove unwanted mising data rows
+    # remove unwanted mising data rows
     dfmslp = dfmslp.fillna("null")
     dfmslp = dfmslp.replace({"null":"-99999"})
     dfmslp = dfmslp[dfmslp.observation_value != -99999]
     dfmslp = dfmslp.dropna(subset=['secondary_id'])
     dfmslp = dfmslp.dropna(subset=['observation_value'])
-    #df = df.astype(str)
     dfmslp["source_id"] = pd.to_numeric(dfmslp["source_id"],errors='coerce')
-    #df = df.astype(str)
-    #concatenate columns for joining df for next step
+    
+    # concatenate columns for joining df for next step
     dfmslp['source_id'] = dfmslp['source_id'].astype(str).apply(lambda x: x.replace('.0',''))
     dfmslp['primary_station_id_2']=dfmslp['secondary_id'].astype(str)+'-'+dfmslp['source_id'].astype(str)
-   # dfmslp["observation_value"] = pd.to_numeric(dfmslp["observation_value"],errors='coerce')
-    #dfmslp.to_csv("ttest.csv", index=False, sep=",")
-    
-     ###add data policy and record number to df
-    df2 = pd.read_csv(utils.STATION_RECORD_ENTRIES, encoding='latin-1')
+        
+    # add data policy and record number to df
+    df2 = pd.read_csv(utils.STATION_RECORD_ENTRIES_OBS_LITE, encoding='latin-1')
     dfmslp = dfmslp.astype(str)
     df2 = df2.astype(str)
     dfmslp= df2.merge(dfmslp, on=['primary_station_id_2'])
@@ -527,11 +510,11 @@ def main(station="", subset="", run_all=False, clobber=False):
     
     dfmslp['observation_id']=dfmslp['primary_station_id'].astype(str)+'-'+dfmslp['record_number'].astype(str)+'-'+dfmslp['date_time'].astype(str)
     dfmslp['observation_id'] = dfmslp['observation_id'].str.replace(r' ', '-')
-    ##remove unwanted last twpo characters
+    # remove unwanted last twpo characters
     dfmslp['observation_id'] = dfmslp['observation_id'].str[:-6]
     dfmslp["observation_id"]=dfmslp["observation_id"]+'-'+dfmslp['observed_variable'].astype(str)+'-'+dfmslp['value_significance'].astype(str)
     dfmslp["report_id"]=dfmslp["observation_id"].str[:-6]
-     ##set up qc table
+    
             
     dfmslp = dfmslp[["observation_id","report_id","data_policy_licence","date_time",
                "date_time_meaning","observation_duration","longitude","latitude",
@@ -548,7 +531,7 @@ def main(station="", subset="", run_all=False, clobber=False):
                "advanced_qc","advanced_uncertainty","advanced_homogenisation",
                "advanced_assimilation_feedback","source_id"]]
 
-##make sure no decimal places and round value to required decimal places
+    # make sure no decimal places and round value to required decimal places
     
     dfmslp['observation_value'] = dfmslp['observation_value'].map(float)
     dfmslp['observation_value'] = (dfmslp['observation_value']*100)
@@ -562,7 +545,8 @@ def main(station="", subset="", run_all=False, clobber=False):
     
 
     #========================================================================================================
-    #wind direction convert to cdm lite
+    # wind direction convert 
+
     dfwd = df[["observation_id","report_id","data_policy_licence","date_time",
                "date_time_meaning","observation_duration","longitude","latitude",
                "crs","z_coordinate","z_coordinate_type","observation_height_above_station_surface",
@@ -578,7 +562,7 @@ def main(station="", subset="", run_all=False, clobber=False):
                "advanced_qc","advanced_uncertainty","advanced_homogenisation",
                "advanced_assimilation_feedback","source_id","primary_station_id","secondary_id"]]
     
-    ##change for each variable to convert to cdm compliant values
+    # change for each variable to convert to cdm compliant values
     dfwd["secondary_id"]=df["wind_direction_Source_Station_ID"].astype(str)
     dfwd['secondary_id'] = dfwd['secondary_id'].astype(str).apply(lambda x: x.replace('.0',''))
     dfwd["observation_value"]=df["wind_direction"]
@@ -596,29 +580,27 @@ def main(station="", subset="", run_all=False, clobber=False):
     dfwd["observed_variable"]="106"
     
     
-    ##set quality flag from df master for variable and fill all nan with Null then change all nonnan to 
+    # set quality flag from df master for variable and fill all nan with Null then change all nonnan to 
     dfwd.loc[dfwd['quality_flag'].notnull(), "quality_flag"] = 1
     dfwd = dfwd.fillna("Null")
     dfwd.quality_flag[dfwd.quality_flag == "Null"] = 0  
-    #change for each variable if required
+    # change for each variable if required
 
-    ##remove unwanted mising data rows
+    # remove unwanted mising data rows
     dfwd = dfwd.fillna("null")
     dfwd = dfwd.replace({"null":"-99999"})
     dfwd = dfwd[dfwd.observation_value != -99999]
     dfwd = dfwd.dropna(subset=['secondary_id'])
     dfwd = dfwd.dropna(subset=['observation_value'])
-    #df = df.astype(str)
     dfwd["source_id"] = pd.to_numeric(dfwd["source_id"],errors='coerce')
-    #df = df.astype(str)
-    #concatenate columns for joining df for next step
+    
+    # concatenate columns for joining df for next step
     dfwd['source_id'] = dfwd['source_id'].astype(str).apply(lambda x: x.replace('.0',''))
     dfwd['primary_station_id_2']=dfwd['secondary_id'].astype(str)+'-'+dfwd['source_id'].astype(str)
     dfwd["observation_value"] = pd.to_numeric(dfwd["observation_value"],errors='coerce')
-    #dfwd.to_csv("ttest.csv", index=False, sep=",")
-    
-     ###add data policy and record number to df
-    df2 = pd.read_csv(utils.STATION_RECORD_ENTRIES, encoding='latin-1')
+       
+    # add data policy and record number to df
+    df2 = pd.read_csv(utils.STATION_RECORD_ENTRIES_OBS_LITE, encoding='latin-1')
     dfwd = dfwd.astype(str)
     df2 = df2.astype(str)
     dfwd= df2.merge(dfwd, on=['primary_station_id_2'])
@@ -627,12 +609,12 @@ def main(station="", subset="", run_all=False, clobber=False):
     
     dfwd['observation_id']=dfwd['primary_station_id'].astype(str)+'-'+dfwd['record_number'].astype(str)+'-'+dfwd['date_time'].astype(str)
     dfwd['observation_id'] = dfwd['observation_id'].str.replace(r' ', '-')
-    ##remove unwanted last twpo characters
+    
+    # remove unwanted last two characters
     dfwd['observation_id'] = dfwd['observation_id'].str[:-6]
     dfwd["observation_id"]=dfwd["observation_id"]+'-'+dfwd['observed_variable'].astype(str)+'-'+dfwd['value_significance'].astype(str)
     dfwd["report_id"]=dfwd["observation_id"].str[:-7]
-     ##set up qc table
-            
+                
     dfwd = dfwd[["observation_id","report_id","data_policy_licence","date_time",
                "date_time_meaning","observation_duration","longitude","latitude",
                "crs","z_coordinate","z_coordinate_type","observation_height_above_station_surface",
@@ -650,7 +632,7 @@ def main(station="", subset="", run_all=False, clobber=False):
 
     
 
-##make sure no decimal places an dround value to reuqred decimal places
+    # make sure no decimal places an dround value to reuqred decimal places
     dfwd.dropna(subset = ["observation_value"], inplace=True)
     dfwd['observation_value'] = dfwd['observation_value'].astype(str).apply(lambda x: x.replace('.0',''))
     dfwd['source_id'] = dfwd['source_id'].astype(str).apply(lambda x: x.replace('.0',''))
@@ -659,7 +641,8 @@ def main(station="", subset="", run_all=False, clobber=False):
     
     
     #===========================================================================
-    ## wind speed convert to cdm lite
+    # wind speed convert 
+
     dfws = df[["observation_id","report_id","data_policy_licence","date_time",
                "date_time_meaning","observation_duration","longitude","latitude",
                "crs","z_coordinate","z_coordinate_type","observation_height_above_station_surface",
@@ -675,7 +658,7 @@ def main(station="", subset="", run_all=False, clobber=False):
                "advanced_qc","advanced_uncertainty","advanced_homogenisation",
                "advanced_assimilation_feedback","source_id","primary_station_id","secondary_id"]]
     
-    ##change for each variable to convert to cdm compliant values
+    # change for each variable to convert to cdm compliant values
     dfws["secondary_id"]=df["wind_speed_Source_Station_ID"].astype(str)
     dfws['secondary_id'] = dfws['secondary_id'].astype(str).apply(lambda x: x.replace('.0',''))
     dfws["observation_value"]=df["wind_speed"]
@@ -693,42 +676,40 @@ def main(station="", subset="", run_all=False, clobber=False):
     dfws["observed_variable"]="107"
     
     
-    ##set quality flag from df master for variable and fill all nan with Null then change all non-nan to 
+    # set quality flag from df master for variable and fill all nan with Null then change all non-nan to 
     dfws.loc[dfws['quality_flag'].notnull(), "quality_flag"] = 1
     dfws = dfws.fillna("Null")
     dfws.quality_flag[dfws.quality_flag == "Null"] = 0  
-    #change for each variable if required
+    # change for each variable if required
 
-    ##remove unwanted mising data rows
+    # remove unwanted mising data rows
     dfws = dfws.fillna("null")
     dfws = dfws.replace({"null":"-99999"})
     dfws = dfws[dfws.observation_value != -99999]
     dfws = dfws.dropna(subset=['secondary_id'])
     dfws = dfws.dropna(subset=['observation_value'])
-    #df = df.astype(str)
     dfws["source_id"] = pd.to_numeric(dfws["source_id"],errors='coerce')
-    #df = df.astype(str)
-    #concatenate columns for joining df for next step
+    
+    # concatenate columns for joining df for next step
     dfws['source_id'] = dfws['source_id'].astype(str).apply(lambda x: x.replace('.0',''))
     dfws['primary_station_id_2']=dfws['secondary_id'].astype(str)+'-'+dfws['source_id'].astype(str)
     dfws["observation_value"] = pd.to_numeric(dfws["observation_value"],errors='coerce')
-    #dfws.to_csv("ttest.csv", index=False, sep=",")
-    
-     ###add data policy and record number to df
-    df2 = pd.read_csv(utils.STATION_RECORD_ENTRIES, encoding='latin-1')
+      
+    # add data policy and record number to df
+    df2 = pd.read_csv(utils.STATION_RECORD_ENTRIES_OBS_LITE, encoding='latin-1')
     dfws = dfws.astype(str)
     df2 = df2.astype(str)
     dfws= df2.merge(dfws, on=['primary_station_id_2'])
     dfws['data_policy_licence'] = dfws['data_policy_licence_x']
     dfws['data_policy_licence'] = dfws['data_policy_licence'].astype(str).apply(lambda x: x.replace('.0',''))
-    
     dfws['observation_id']=dfws['primary_station_id'].astype(str)+'-'+dfws['record_number'].astype(str)+'-'+dfws['date_time'].astype(str)
     dfws['observation_id'] = dfws['observation_id'].str.replace(r' ', '-')
-    ##remove unwanted last twpo characters
+    
+    # remove unwanted last twpo characters
     dfws['observation_id'] = dfws['observation_id'].str[:-6]
     dfws["observation_id"]=dfws["observation_id"]+'-'+dfws['observed_variable'].astype(str)+'-'+dfws['value_significance'].astype(str)
     dfws["report_id"]=dfws["observation_id"].str[:-7]
-     ##set up qc table
+    
             
     dfws = dfws[["observation_id","report_id","data_policy_licence","date_time",
                "date_time_meaning","observation_duration","longitude","latitude",
@@ -745,14 +726,14 @@ def main(station="", subset="", run_all=False, clobber=False):
                "advanced_qc","advanced_uncertainty","advanced_homogenisation",
                "advanced_assimilation_feedback","source_id"]]
 
-##make sure no decimal places an dround value to reuqred decimal places
+    # make sure no decimal places an dround value to reuqred decimal places
     dfws.dropna(subset = ["observation_value"], inplace=True)
     dfws['source_id'] = dfws['source_id'].astype(str).apply(lambda x: x.replace('.0',''))
     dfws['data_policy_licence'] = dfws['data_policy_licence'].astype(str).apply(lambda x: x.replace('.0',''))
     dfws["source_id"] = pd.to_numeric(dfws["source_id"],errors='coerce')
     dfws["observation_value"] = pd.to_numeric(dfws["observation_value"],errors='coerce')
     dfws["observation_value"]= dfws["observation_value"].round(2)
-    ##merge all df into one cdmlite file
+    # merge all df into one cdmlite file
     merged_df=pd.concat([dfdpt,dft,dfslp,dfmslp,dfwd,dfws], axis=0)
     del dfdpt
     del dft
@@ -768,18 +749,17 @@ def main(station="", subset="", run_all=False, clobber=False):
     merged_df["latitude"]= merged_df["latitude"].round(3)
     merged_df["longitude"]= merged_df["longitude"].round(3)
 
-     # Save CDM obs table to directory
+    # Save CDM obs table to directory
             try:
                 unique_variables = merged_df['observed_variable'].unique()
                 print(unique_variables)
-                #with open(filename, "w") as outfile:
                 merged_df.to_csv(cdmobs_outfile, index=False, sep="|")
                 print(f"    {cdmobs_outfile}")
             except:
                     continue
 
 
-            #  to next file in the loop
+    #  to next file in the loop
 
 
 

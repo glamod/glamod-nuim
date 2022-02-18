@@ -62,9 +62,8 @@ def main(station="", subset="", run_all=False, clobber=False):
         all_filenames = [os.path.join(utils.SUBDAILY_QFF_IN_DIR, f"{station}.{EXTENSION}")]
     elif subset != "":
         print(f"Subset of stations run defined in: {subset}")
-        # Read filenames form a list of 5000 to parallel
+        # Allows for parallelisation
         try:
-            # e.g. "/work/scratch-pw/snoone/qff_cdm_test_2021/station_list/ls1.txt"
             with open(subset, "r") as f:
                 filenames = f.read().splitlines()
 
@@ -85,9 +84,6 @@ def main(station="", subset="", run_all=False, clobber=False):
         all_filenames = [i for i in glob.glob(os.path.join(utils.SUBDAILY_QFF_IN_DIR, f'*.{EXTENSION}'))]    
         print(f"   N = {len(all_filenames)}")
               
-    # To start at next file after last processes 
-    #for filename in all_filenames[all_filenames.index('FRI0000LFBF.qff'):] :
-
     # To start at begining of files
     for filename in all_filenames:
         print(f"Processing {filename}")
@@ -98,7 +94,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         # Set up the output filenames, and check if they exist
         station_id=df.iloc[1]["Station_ID"] # NOTE: this is renamed below to "primary_station_id"
 
-        outroot_cdmlite = os.path.join(utils.SUBDAILY_CDMLITE_OUT_DIR, utils.SUBDAILY_CDMLITE_FILE_ROOT)
+        outroot_cdmlite = os.path.join(utils.SUBDAILY_CDM_LITE_OUT_DIR, utils.SUBDAILY_CDM_LITE_FILE_ROOT)
         cdmlite_outfile = f"{outroot_cdmlite}{station_id}.psv"
 
         outroot_qc= os.path.join(utils.SUBDAILY_QC_OUT_DIR, utils.SUBDAILY_QC_FILE_ROOT)
@@ -112,7 +108,8 @@ def main(station="", subset="", run_all=False, clobber=False):
                 print(f"     {cdmlite_outfile}")
                 print(f"     {qc_outfile}")
                 print("   Skipping to next station")
-                continue #  to next file in the loop
+                continue 
+            #  to next file in the loop
 
         # Set up master dataframe to extract each variable
         #  Globally set some entries to 
@@ -184,19 +181,15 @@ def main(station="", subset="", run_all=False, clobber=False):
         dft = dft[dft.observation_value != -99999]
         dft = dft.dropna(subset=['secondary_id'])
         dft = dft.dropna(subset=['observation_value'])
-        #df = df.astype(str)
         dft["source_id"] = pd.to_numeric(dft["source_id"],errors='coerce')
-        #df = df.astype(str)
-
+        
         # Concatenate columns for joining dataframe in next step
-        dft['source_id'] = dft['source_id'].astype(str).apply(
-            lambda x: x.replace('.0',''))
+        dft['source_id'] = dft['source_id'].astype(str).apply(lambda x: x.replace('.0',''))
         dft['primary_station_id_2']=dft['secondary_id'].astype(str)+'-'+dft['source_id'].astype(str)
         dft["observation_value"] = pd.to_numeric(dft["observation_value"], errors='coerce')
-        #dft.to_csv("ttest.csv", index=False, sep=",")
-
+        
         # Add data policy and record number to dataframe
-        df2 = pd.read_csv(utils.STATION_RECORD_ENTRIES, encoding='latin-1')
+        df2 = pd.read_csv(utils.STATION_RECORD_ENTRIES_OBS_LITE, encoding='latin-1')
         dft = dft.astype(str)
         df2 = df2.astype(str)
         dft = df2.merge(dft, on=['primary_station_id_2'])
@@ -268,7 +261,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         dfdpt["report_id"]=dfdpt["date_time"]
 
         # Set quality flag from master dataframe for variable
-        #    and fill all nan with Null then change all nonnan to 1
+        # and fill all nan with Null then change all nonnan to 1
         dfdpt.loc[dfdpt['quality_flag'].notnull(), "quality_flag"] = 1
         dfdpt = dfdpt.fillna("Null")
         dfdpt.quality_flag[dfdpt.quality_flag == "Null"] = 0  
@@ -284,18 +277,15 @@ def main(station="", subset="", run_all=False, clobber=False):
         dfdpt = dfdpt[dfdpt.observation_value != -99999]
         dfdpt = dfdpt.dropna(subset=['secondary_id'])
         dfdpt = dfdpt.dropna(subset=['observation_value'])
-        #df = df.astype(str)
         dfdpt["source_id"] = pd.to_numeric(dfdpt["source_id"],errors='coerce')
-        #df = df.astype(str)
-
+        
         # Concatenate columns for joining dataframe for next step
         dfdpt['source_id'] = dfdpt['source_id'].astype(str).apply(lambda x: x.replace('.0',''))
         dfdpt['primary_station_id_2']=dfdpt['secondary_id'].astype(str)+'-'+dfdpt['source_id'].astype(str)
         dfdpt["observation_value"] = pd.to_numeric(dfdpt["observation_value"],errors='coerce')
-        #dft.to_csv("ttest.csv", index=False, sep=",")
-
+        
         # Add data policy and record numbers to dataframe
-        df2 = pd.read_csv(utils.STATION_RECORD_ENTRIES, encoding='latin-1')
+        df2 = pd.read_csv(utils.STATION_RECORD_ENTRIES_OBS_LITE, encoding='latin-1')
         dfdpt = dfdpt.astype(str)
         df2 = df2.astype(str)
         dfdpt= df2.merge(dfdpt, on=['primary_station_id_2'])
@@ -381,18 +371,14 @@ def main(station="", subset="", run_all=False, clobber=False):
         dfslp = dfslp[dfslp.observation_value != -99999]
         dfslp = dfslp.dropna(subset=['secondary_id'])
         dfslp = dfslp.dropna(subset=['observation_value'])
-        #df = df.astype(str)
         dfslp["source_id"] = pd.to_numeric(dfslp["source_id"],errors='coerce')
-        #df = df.astype(str)
-
+        
         # Concatenate columns for joining dataframe for next step
         dfslp['source_id'] = dfslp['source_id'].astype(str).apply(lambda x: x.replace('.0',''))
         dfslp['primary_station_id_2']=dfslp['secondary_id'].astype(str)+'-'+dfslp['source_id'].astype(str)
-        #dfslp["observation_value"] = pd.to_numeric(dfslp["observation_value"],errors='coerce')
-        #dft.to_csv("ttest.csv", index=False, sep=",")
-
+        
         # Add data policy and record numbers to dataframe
-        df2 = pd.read_csv(utils.STATION_RECORD_ENTRIES, encoding='latin-1')
+        df2 = pd.read_csv(utils.STATION_RECORD_ENTRIES_OBS_LITE, encoding='latin-1')
         dfslp = dfslp.astype(str)
         df2 = df2.astype(str)
         dfslp= df2.merge(dfslp, on=['primary_station_id_2'])
@@ -483,18 +469,14 @@ def main(station="", subset="", run_all=False, clobber=False):
         dfmslp = dfmslp[dfmslp.observation_value != -99999]
         dfmslp = dfmslp.dropna(subset=['secondary_id'])
         dfmslp = dfmslp.dropna(subset=['observation_value'])
-        #df = df.astype(str)
         dfmslp["source_id"] = pd.to_numeric(dfmslp["source_id"],errors='coerce')
-        #df = df.astype(str)
-
+        
         # Concatenate columns for joining dataframe for next step
         dfmslp['source_id'] = dfmslp['source_id'].astype(str).apply(lambda x: x.replace('.0',''))
         dfmslp['primary_station_id_2']=dfmslp['secondary_id'].astype(str)+'-'+dfmslp['source_id'].astype(str)
-        #dfmslp["observation_value"] = pd.to_numeric(dfmslp["observation_value"],errors='coerce')
-        #dft.to_csv("ttest.csv", index=False, sep=",")
-
+        
         # Add data policy and record numbers to dataframe
-        df2 = pd.read_csv(utils.STATION_RECORD_ENTRIES, encoding='latin-1')
+        df2 = pd.read_csv(utils.STATION_RECORD_ENTRIES_OBS_LITE, encoding='latin-1')
         dfmslp = dfmslp.astype(str)
         df2 = df2.astype(str)
         dfmslp= df2.merge(dfmslp, on=['primary_station_id_2'])
@@ -586,18 +568,14 @@ def main(station="", subset="", run_all=False, clobber=False):
         dfwd = dfwd[dfwd.observation_value != -999]
         dfwd = dfwd.dropna(subset=['secondary_id'])
         dfwd = dfwd.dropna(subset=['observation_value'])
-        #df = df.astype(str)
         dfwd["source_id"] = pd.to_numeric(dfwd["source_id"],errors='coerce')
-        #df = df.astype(str)
-
+        
         # Concatenate columns for joining dataframe for next step
         dfwd['source_id'] = dfwd['source_id'].astype(str).apply(lambda x: x.replace('.0',''))
         dfwd['primary_station_id_2']=dfwd['secondary_id'].astype(str)+'-'+dfwd['source_id'].astype(str)
-        #dfwd["observation_value"] = pd.to_numeric(dfwd["observation_value"],errors='coerce')
-        #dft.to_csv("ttest.csv", index=False, sep=",")
-
+        
         # Add data policy and record numbers to datframe
-        df2 = pd.read_csv(utils.STATION_RECORD_ENTRIES, encoding='latin-1')
+        df2 = pd.read_csv(utils.STATION_RECORD_ENTRIES_OBS_LITE, encoding='latin-1')
         dfwd = dfwd.astype(str)
         df2 = df2.astype(str)
         dfwd= df2.merge(dfwd, on=['primary_station_id_2'])
@@ -693,7 +671,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         #dft.to_csv("ttest.csv", index=False, sep=",")
 
         # Add data policy and record numbers to datafram
-        df2 = pd.read_csv(utils.STATION_RECORD_ENTRIES, encoding='latin-1')
+        df2 = pd.read_csv(utils.STATION_RECORD_ENTRIES_OBS_LITE, encoding='latin-1')
         dfws = dfws.astype(str)
         df2 = df2.astype(str)
         dfws= df2.merge(dfws, on=['primary_station_id_2'])
@@ -763,8 +741,6 @@ def main(station="", subset="", run_all=False, clobber=False):
             # Save CDM lite table to directory
             unique_variables = merged_df['observed_variable'].unique()
             print(unique_variables)
-
-            #with open(filename, "w") as outfile:
             merged_df.to_csv(cdmlite_outfile, index=False, sep="|")
             print(f"    {cdmlite_outfile}")
 

@@ -189,17 +189,83 @@ def construct_obs_id(var_frame):
         Dataframe for variable
     """
 
-    var_frame['observation_id'] = "{}-{}-{}".format(var_frame['primary_station_id'].astype(str),
-                                                    var_frame['record_number'].astype(str),
-                                                    var_frame['date_time'].astype(str))
+    # concatenate columns
+    var_frame['observation_id'] = var_frame['primary_station_id'].astype(str) + "-" + \
+                                  var_frame['record_number'].astype(str) + "-" + \
+                                  var_frame['date_time'].astype(str)
+
     var_frame['observation_id'] = var_frame['observation_id'].str.replace(r' ', '-')
     
     # Remove unwanted last two characters
     var_frame['observation_id'] = var_frame['observation_id'].str[:-6]
-    var_frame["observation_id"] = "{}-{}-{}".format(var_frame["observation_id"],
-                                                    var_frame['observed_variable'].astype(str),
-                                                    var_frame['value_significance'].astype(str))
+    var_frame["observation_id"] = var_frame["observation_id"] + "-" + \
+                                  var_frame['observed_variable'].astype(str) + "-" + \
+                                  var_frame['value_significance'].astype(str)
 
+    return var_frame
+
+
+def construct_qc_df(var_frame):
+    """
+    Construct data frame for CDM-lite QC table
+
+    var_frame : `dataframe`
+        Dataframe for variable
+    """
+
+    # Set up QC table
+    qc_frame = var_frame[["primary_station_id",
+                          "report_id",
+                          "record_number",
+                          "qc_method",
+                          "quality_flag",
+                          "observed_variable",
+                          "value_significance",
+                      ]]
+
+    # QC observation_id not the same as for var_frame
+    qc_frame["observation_id"] = qc_frame["primary_station_id"] + "-" + \
+                                 qc_frame["record_number"] + "-" + \
+                                 qc_frame["report_id"] + "-" + \
+                                 qc_frame['observed_variable'].astype(str) + "-" + \
+                                 qc_frame['value_significance'].astype(str)
+
+    # create report_id
+    qc_frame["report_id"] = qc_frame["primary_station_id"] + "-" + \
+                            qc_frame["report_id"]
+    qc_frame['report_id'] = qc_frame['report_id'].str[:-6]
+
+    # restrict to required columns
+    qc_frame = qc_frame[["report_id","observation_id","qc_method","quality_flag"]]
+    
+    # final changes
+    qc_frame["quality_flag"] = pd.to_numeric(qc_frame["quality_flag"], errors='coerce')
+    qc_frame = qc_frame.fillna("Null")
+    qc_frame = qc_frame[qc_frame['quality_flag'] != 0]
+
+    return qc_frame
+
+def fix_decimal_places(var_frame, do_obs_value=True):
+    """
+    Make sure no decimal places remain 
+      or round value to required number of decimal places
+
+    var_frame : `dataframe`
+        Dataframe for variable
+    """
+
+    # remove the decimal places by editing string
+    var_frame['source_id'] = var_frame['source_id'].astype(str).apply(lambda x: x.replace('.0', ''))
+    var_frame["source_id"] = pd.to_numeric(var_frame["source_id"], errors='coerce')
+
+    # remove decimal places by editing string
+    var_frame['data_policy_licence'] = var_frame['data_policy_licence'].astype(str).apply(lambda x: x.replace('.0', ''))
+
+    if do_obs_value:
+        # Convert to float to allow rounding
+        var_frame["observation_value"] = pd.to_numeric(var_frame["observation_value"], errors='coerce')
+        var_frame["observation_value"] = var_frame["observation_value"].round(2)
+    
     return var_frame
 
 
@@ -372,16 +438,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         dft = construct_obs_id(dft)
 
         # Set up QC table
-        qct= dft[["primary_station_id","report_id","record_number","qc_method","quality_flag","observed_variable","value_significance"]]
-
-        # Concatentate more columns together
-        qct["observation_id"] = qct["primary_station_id"]+"-"+ qct["record_number"] +"-"+ qct["report_id"]+'-'+qct['observed_variable'].astype(str)+'-'+qct['value_significance'].astype(str)
-        qct["report_id"] = qct["primary_station_id"]+"-"+ qct["report_id"] 
-        qct['report_id'] = qct['report_id'].str[:-6]
-        qct= qct[["report_id","observation_id","qc_method","quality_flag"]]
-        qct["quality_flag"] = pd.to_numeric(qct["quality_flag"],errors='coerce')
-        qct = qct.fillna("Null")
-        qct= qct[qct['quality_flag'] != 0]
+        qct = construct_qc_df(dft)
 
         # Restrict to required columns
         dft = dft[["observation_id","report_type","date_time","date_time_meaning",
@@ -391,12 +448,8 @@ def main(station="", subset="", run_all=False, clobber=False):
                   "station_type","primary_station_id","station_name","quality_flag"
                   ,"data_policy_licence","source_id",]]
 
-        # Make sure no decimal places and round value to required number of decimal places
-        dft['source_id'] = dft['source_id'].astype(str).apply(lambda x: x.replace('.0',''))
-        dft['data_policy_licence'] = dft['data_policy_licence'].astype(str).apply(lambda x: x.replace('.0',''))
-        dft["source_id"] = pd.to_numeric(dft["source_id"],errors='coerce')
-        dft["observation_value"] = pd.to_numeric(dft["observation_value"],errors='coerce')
-        dft["observation_value"]= dft["observation_value"].round(2)
+        # Ensure correct number of decimal places
+        dft = fix_decimal_places(dft)
 
 
         # =================================================================================
@@ -446,14 +499,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         dfdpt = construct_obs_id(dfdpt)
 
         # Set up QC table
-        qcdpt=dfdpt[["primary_station_id","report_id","record_number","qc_method","quality_flag","observed_variable","value_significance"]]
-        qcdpt["observation_id"] = qcdpt["primary_station_id"]+"-"+ qcdpt["record_number"] +"-"+ qcdpt["report_id"]+'-'+qcdpt['observed_variable'].astype(str)+'-'+qcdpt['value_significance'].astype(str)
-        qcdpt["report_id"] = qcdpt["primary_station_id"]+"-"+ qcdpt["report_id"] 
-        qcdpt['report_id'] = qcdpt['report_id'].str[:-6]
-        qcdpt= qcdpt[["report_id","observation_id","qc_method","quality_flag"]]
-        qcdpt["quality_flag"] = pd.to_numeric(qcdpt["quality_flag"],errors='coerce')
-        qcdpt = qcdpt.fillna("Null")
-        qcdpt= qcdpt[qcdpt['quality_flag'] != 0]
+        qcdpt = construct_qc_df(dfdpt)
 
         # Restrict to required columns
         dfdpt = dfdpt[["observation_id","report_type","date_time","date_time_meaning",
@@ -464,11 +510,8 @@ def main(station="", subset="", run_all=False, clobber=False):
                   ,"data_policy_licence","source_id"]]
 
 
-        dfdpt['source_id'] = dfdpt['source_id'].astype(str).apply(lambda x: x.replace('.0',''))
-        dfdpt['data_policy_licence'] = dfdpt['data_policy_licence'].astype(str).apply(lambda x: x.replace('.0',''))
-        dfdpt["source_id"] = pd.to_numeric(dfdpt["source_id"],errors='coerce')
-        dfdpt["observation_value"] = pd.to_numeric(dfdpt["observation_value"],errors='coerce')
-        dfdpt["observation_value"]= dfdpt["observation_value"].round(2)
+        # Ensure correct number of decimal places
+        dfdpt = fix_decimal_places(dfdpt)
 
         #====================================================================================
         # Convert station level pressure  to cdmlite
@@ -517,16 +560,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         dfslp = construct_obs_id(dfslp)
 
         # Set up QC table
-        qcslp=dfslp[["primary_station_id","report_id","record_number","qc_method","quality_flag","observed_variable","value_significance"]]
-
-        # Concatenate more columns together
-        qcslp["observation_id"] = qcslp["primary_station_id"]+"-"+ qcslp["record_number"] +"-"+ qcslp["report_id"]+'-'+qcslp['observed_variable'].astype(str)+'-'+qcslp['value_significance'].astype(str)
-        qcslp["report_id"] = qcslp["primary_station_id"]+"-"+ qcslp["report_id"] 
-        qcslp['report_id'] = qcslp['report_id'].str[:-6]
-        qcslp= qcslp[["report_id","observation_id","qc_method","quality_flag"]]
-        qcslp["quality_flag"] = pd.to_numeric(qcslp["quality_flag"],errors='coerce')
-        qcslp = qcslp.fillna("Null")
-        qcslp= qcslp[qcslp['quality_flag'] != 0]
+        qcslp = construct_qc_df(dfslp)
 
         # Restrict to required columns
         dfslp = dfslp[["observation_id","report_type","date_time","date_time_meaning",
@@ -541,10 +575,8 @@ def main(station="", subset="", run_all=False, clobber=False):
         dfslp['observation_value'] = dfslp['observation_value'].map(float)
         dfslp['observation_value'] = (dfslp['observation_value']*100)
         dfslp['observation_value'] = dfslp['observation_value'].map(int)
-        dfslp['source_id'] = dfslp['source_id'].astype(str).apply(lambda x: x.replace('.0',''))
-        dfslp['data_policy_licence'] = dfslp['data_policy_licence'].astype(str).apply(lambda x: x.replace('.0',''))
-        dfslp["source_id"] = pd.to_numeric(dfslp["source_id"],errors='coerce')
-        dfslp['observation_value'] = dfslp['observation_value'].astype(str).apply(lambda x: x.replace('.0',''))
+
+        dfslp = fix_decimal_places(dfslp, do_obs_value=False)
 
         #===========================================================================================
         # Convert sea level pressure to CDM lite
@@ -593,16 +625,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         dfmslp = construct_obs_id(dfmslp)
 
         # Set up QC table
-        qcmslp=dfmslp[["primary_station_id","report_id","record_number","qc_method","quality_flag","observed_variable","value_significance"]]
-
-        # Concatenate more columns together
-        qcmslp["observation_id"] = qcmslp["primary_station_id"]+"-"+ qcmslp["record_number"] +"-"+ qcmslp["report_id"]+'-'+qcmslp['observed_variable'].astype(str)+'-'+qcmslp['value_significance'].astype(str)
-        qcmslp["report_id"] = qcmslp["primary_station_id"]+"-"+ qcmslp["report_id"] 
-        qcmslp['report_id'] = qcmslp['report_id'].str[:-6]
-        qcmslp= qcmslp[["report_id","observation_id","qc_method","quality_flag"]]
-        qcmslp["quality_flag"] = pd.to_numeric(qcmslp["quality_flag"],errors='coerce')
-        qcmslp = qcmslp.fillna("Null")
-        qcmslp= qcmslp[qcmslp['quality_flag'] != 0]
+        qcmslp = construct_qc_df(dfmslp)
 
         # Restrict to required columns
         dfmslp = dfmslp[["observation_id","report_type","date_time","date_time_meaning",
@@ -618,10 +641,8 @@ def main(station="", subset="", run_all=False, clobber=False):
         dfmslp['observation_value'] = dfmslp['observation_value'].map(float)
         dfmslp['observation_value'] = (dfmslp['observation_value']*100)
         dfmslp['observation_value'] = dfmslp['observation_value'].map(int)
-        dfmslp['source_id'] = dfmslp['source_id'].astype(str).apply(lambda x: x.replace('.0',''))
-        dfmslp['data_policy_licence'] = dfmslp['data_policy_licence'].astype(str).apply(lambda x: x.replace('.0',''))
-        dfmslp["source_id"] = pd.to_numeric(dfmslp["source_id"],errors='coerce')
-        dfmslp['observation_value'] = dfmslp['observation_value'].astype(str).apply(lambda x: x.replace('.0',''))
+
+        dfmslp = fix_decimal_places(dfmslp, do_obs_value=False)
 
         #===================================================================================
         # Convert wind direction to CDM lite
@@ -670,14 +691,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         dfwd = construct_obs_id(dfwd)
 
         # Set up QC table
-        qcwd=dfwd[["primary_station_id","report_id","record_number","qc_method","quality_flag","observed_variable","value_significance"]]
-        qcwd["observation_id"] = qcwd["primary_station_id"]+"-"+ qcwd["record_number"] +"-"+ qcwd["report_id"]+'-'+qcwd['observed_variable'].astype(str)+'-'+qcwd['value_significance'].astype(str)
-        qcwd["report_id"] = qcwd["primary_station_id"]+"-"+ qcwd["report_id"] 
-        qcwd['report_id'] = qcwd['report_id'].str[:-6]
-        qcwd= qcwd[["report_id","observation_id","qc_method","quality_flag"]]
-        qcwd["quality_flag"] = pd.to_numeric(qcwd["quality_flag"],errors='coerce')
-        qcwd = qcwd.fillna("Null")
-        qcwd= qcwd[qcwd['quality_flag'] != 0]
+        qcwd = construct_qc_df(dfwd)
 
         # Restrict to required columns
         dfwd = dfwd[["observation_id","report_type","date_time","date_time_meaning",
@@ -688,10 +702,9 @@ def main(station="", subset="", run_all=False, clobber=False):
                   ,"data_policy_licence","source_id"]]
 
         # Make sure no decimal places and round value to reuquired number of decimal places
-        dfwd['observation_value'] = dfwd['observation_value'].astype(str).apply(lambda x: x.replace('.0',''))
-        dfwd['source_id'] = dfwd['source_id'].astype(str).apply(lambda x: x.replace('.0',''))
-        dfwd['data_policy_licence'] = dfwd['data_policy_licence'].astype(str).apply(lambda x: x.replace('.0',''))
-        dfwd["source_id"] = pd.to_numeric(dfwd["source_id"],errors='coerce')
+        dfwd['observation_value'] = dfwd['observation_value'].astype(str).apply(lambda x: x.replace('.0', ''))
+        dfwd = fix_decimal_places(dfwd, do_obs_value=False)
+        
 
         #===========================================================================
         # Convert wind speed to CDM lite
@@ -741,16 +754,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         dfws = construct_obs_id(dfws)
 
         # QC flag tables
-        qcws=dfws[["primary_station_id","report_id","record_number","qc_method","quality_flag","observed_variable","value_significance"]]
-
-        # Concatenate more columns together
-        qcws["observation_id"] = qcws["primary_station_id"]+"-"+ qcws["record_number"] +"-"+ qcws["report_id"]+'-'+qcws['observed_variable'].astype(str)+'-'+qcws['value_significance'].astype(str)
-        qcws["report_id"] = qcws["primary_station_id"]+"-"+ qcws["report_id"] 
-        qcws['report_id'] = qcws['report_id'].str[:-6]
-        qcws= qcws[["report_id","observation_id","qc_method","quality_flag"]]
-        qcws["quality_flag"] = pd.to_numeric(qcws["quality_flag"],errors='coerce')
-        qcws = qcws.fillna("Null")
-        qcws= qcws[qcws['quality_flag'] != 0]
+        qcws = construct_qc_df(dfws)
 
         #station_id=dfws.iloc[1]["primary_station_id"]
 
@@ -762,12 +766,8 @@ def main(station="", subset="", run_all=False, clobber=False):
                   "station_type","primary_station_id","station_name","quality_flag"
                   ,"data_policy_licence","source_id"]]
 
-        # Make sure no decimal places and round value to required number of decimal places
-        dfws['source_id'] = dfws['source_id'].astype(str).apply(lambda x: x.replace('.0',''))
-        dfws['data_policy_licence'] = dfws['data_policy_licence'].astype(str).apply(lambda x: x.replace('.0',''))
-        dfws["source_id"] = pd.to_numeric(dfws["source_id"],errors='coerce')
-        dfws["observation_value"] = pd.to_numeric(dfws["observation_value"],errors='coerce')
-        dfws["observation_value"]= dfws["observation_value"].round(2)
+        # Ensure correct number of decimal places
+        dfws = fix_decimal_places(dfws)
 
 
         # =================================================================================

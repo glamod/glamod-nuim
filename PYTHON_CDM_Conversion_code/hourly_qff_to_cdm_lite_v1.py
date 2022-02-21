@@ -62,6 +62,27 @@ MISSING_DATA = {
     "wind_speed" : -999,
 }
 
+INITIAL_COLUMNS = ["observation_id","report_type","date_time","date_time_meaning",
+                   "latitude","longitude","observation_height_above_station_surface",
+                   "observed_variable","units","observation_value",
+                   "value_significance","observation_duration","platform_type",
+                   "station_type","primary_station_id","station_name","quality_flag",
+                   "data_policy_licence","source_id","secondary_id",]
+
+INTERMED_COLUMNS = ["observation_id","record_number","report_type","date_time","date_time_meaning",
+                    "latitude","longitude","observation_height_above_station_surface",
+                    "observed_variable","units","observation_value",
+                    "value_significance","observation_duration","platform_type",
+                    "station_type","primary_station_id","station_name","quality_flag",
+                    "data_policy_licence","source_id","report_id","qc_method",]
+
+FINAL_COLUMNS = ["observation_id","report_type","date_time","date_time_meaning",
+                 "latitude","longitude","observation_height_above_station_surface",
+                 "observed_variable","units","observation_value",
+                 "value_significance","observation_duration","platform_type",
+                 "station_type","primary_station_id","station_name","quality_flag",
+                 "data_policy_licence","source_id",]
+
 
 def construct_report_type(var_frame, all_frame, id_field):
     """
@@ -245,6 +266,7 @@ def construct_qc_df(var_frame):
 
     return qc_frame
 
+
 def fix_decimal_places(var_frame, do_obs_value=True):
     """
     Make sure no decimal places remain 
@@ -266,6 +288,27 @@ def fix_decimal_places(var_frame, do_obs_value=True):
         var_frame["observation_value"] = pd.to_numeric(var_frame["observation_value"], errors='coerce')
         var_frame["observation_value"] = var_frame["observation_value"].round(2)
     
+    return var_frame
+
+
+def construct_extra_ids(var_frame, all_frame, var_name):
+    """
+    Construct source_id and secondary_id fields
+
+    var_frame : `dataframe`
+        Dataframe for variable
+
+    all_frame : `dataframe`
+        Dataframe for station
+
+    var_name : `str`
+        Name of variable to use to extract QC information
+    """
+    
+    var_frame["source_id"] = all_frame[f"{var_name}_Source_Code"]
+    var_frame["secondary_id"] = all_frame[f"{var_name}_Source_Station_ID"].astype('str')
+    var_frame['secondary_id'] = var_frame['secondary_id'].astype(str).apply(lambda x: x.replace('.0', ''))
+
     return var_frame
 
 
@@ -398,21 +441,14 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         # =========================================================================================
         # Convert temperature [fields used change for each variable]
-        dft = df[["observation_id","report_type","date_time","date_time_meaning",
-                  "latitude","longitude","observation_height_above_station_surface",
-                  "observed_variable","units","observation_value",
-                  "value_significance","observation_duration","platform_type",
-                  "station_type","primary_station_id","station_name","quality_flag",
-                  "data_policy_licence","source_id","secondary_id"]]
+        dft = df[INITIAL_COLUMNS]
 
         # set report type to 4 for ICAO or 0 for all other hourly stations
         dft = construct_report_type(dft, df, "temperature_Source_Station_ID")
 
         # Change for each variable to convert to CDM compliant values
         dft["observation_value"] = df["temperature"] + 273.15
-        dft["source_id"] = df["temperature_Source_Code"]
-        dft["secondary_id"] = df["temperature_Source_Station_ID"].astype('str')
-        dft['secondary_id'] = dft['secondary_id'].astype(str).apply(lambda x: x.replace('.0', ''))
+        dft = construct_extra_ids(dft, df, "temperature")
 
         # Extract QC information for QC tables
         dft = extract_qc_info(dft, df, "temperature")
@@ -433,12 +469,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         dft = add_data_policy(dft, data_policy_df)
 
         # Restrict to required columns
-        dft = dft[["observation_id","record_number","report_type","date_time","date_time_meaning",
-                  "latitude","longitude","observation_height_above_station_surface",
-                  "observed_variable","units","observation_value",
-                  "value_significance","observation_duration","platform_type",
-                  "station_type","primary_station_id","station_name","quality_flag",
-                  "data_policy_licence","source_id","report_id","qc_method"]]
+        dft = dft[INTERMED_COLUMNS]
 
         # Create observation_id field
         dft = construct_obs_id(dft)
@@ -447,12 +478,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         qct = construct_qc_df(dft)
 
         # Restrict to required columns
-        dft = dft[["observation_id","report_type","date_time","date_time_meaning",
-                  "latitude","longitude","observation_height_above_station_surface",
-                  "observed_variable","units","observation_value",
-                  "value_significance","observation_duration","platform_type",
-                  "station_type","primary_station_id","station_name","quality_flag",
-                  "data_policy_licence","source_id",]]
+        dft = dft[FINAL_COLUMNS]
 
         # Ensure correct number of decimal places
         dft = fix_decimal_places(dft)
@@ -460,21 +486,14 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         # =================================================================================
         # Convert dew point temperature
-        dfdpt = df[["observation_id","report_type","date_time","date_time_meaning",
-                  "latitude","longitude","observation_height_above_station_surface",
-                  "observed_variable","units","observation_value",
-                  "value_significance","observation_duration","platform_type",
-                  "station_type","primary_station_id","station_name","quality_flag",
-                  "data_policy_licence","source_id","secondary_id"]]
+        dfdpt = df[INITIAL_COLUMNS]
 
         # set report type to 4 for ICAO or 0 for all other hourly stations
         dfdpt = construct_report_type(dfdpt, df, "dew_point_temperature_Source_Station_ID")
 
         # Change for each variable to convert to CDM compliant values
         dfdpt["observation_value"] = df["dew_point_temperature"] + 273.15
-        dfdpt["source_id"] = df["dew_point_temperature_Source_Code"]
-        dfdpt["secondary_id"] = df["dew_point_temperature_Source_Station_ID"].astype(str)
-        dfdpt['secondary_id'] = dfdpt['secondary_id'].astype(str).apply(lambda x: x.replace('.0', ''))
+        dfdpt = construct_extra_ids(dfdpt, df, "dew_point_temperature")
 
         # Extract QC information for QC tables
         dfdpt = extract_qc_info(dfdpt, df, "dew_point_temperature")
@@ -495,12 +514,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         dfdpt = add_data_policy(dfdpt, data_policy_df)
 
         # Restrict to required columns
-        dfdpt = dfdpt[["observation_id","record_number","report_type","date_time","date_time_meaning",
-                  "latitude","longitude","observation_height_above_station_surface"
-                  ,"observed_variable","units","observation_value",
-                  "value_significance","observation_duration","platform_type",
-                  "station_type","primary_station_id","station_name","quality_flag"
-                  ,"data_policy_licence","source_id","report_id","qc_method"]]
+        dfdpt = dfdpt[INTERMED_COLUMNS]
 
         # Create observation_id field
         dfdpt = construct_obs_id(dfdpt)
@@ -509,34 +523,21 @@ def main(station="", subset="", run_all=False, clobber=False):
         qcdpt = construct_qc_df(dfdpt)
 
         # Restrict to required columns
-        dfdpt = dfdpt[["observation_id","report_type","date_time","date_time_meaning",
-                  "latitude","longitude","observation_height_above_station_surface",
-                  "observed_variable","units","observation_value",
-                  "value_significance","observation_duration","platform_type",
-                  "station_type","primary_station_id","station_name","quality_flag",
-                  "data_policy_licence","source_id"]]
-
+        dfdpt = dfdpt[FINAL_COLUMNS]
 
         # Ensure correct number of decimal places
         dfdpt = fix_decimal_places(dfdpt)
 
         #====================================================================================
         # Convert station level pressure  to cdmlite
-        dfslp = df[["observation_id","report_type","date_time","date_time_meaning",
-                  "latitude","longitude","observation_height_above_station_surface",
-                  "observed_variable","units","observation_value",
-                  "value_significance","observation_duration","platform_type",
-                  "station_type","primary_station_id","station_name","quality_flag",
-                  "data_policy_licence","source_id","secondary_id"]]
+        dfslp = df[INITIAL_COLUMNS]
 
         # set report type to 4 for ICAO or 0 for all other hourly stations
         dfslp = construct_report_type(dfslp, df, "station_level_pressure_Source_Station_ID")
 
         # Change for each variable to convert to CDM compliant values
         dfslp["observation_value"] = df["station_level_pressure"]
-        dfslp["source_id"] = df["station_level_pressure_Source_Code"]
-        dfslp["secondary_id"] = df["station_level_pressure_Source_Station_ID"].astype(str)
-        dfslp['secondary_id'] = dfslp['secondary_id'].astype(str).apply(lambda x: x.replace('.0', ''))
+        dfslp = construct_extra_ids(dfslp, df, "station_level_pressure")
  
         # Extract QC information for QC tables
         dfslp = extract_qc_info(dfslp, df, "station_level_pressure")
@@ -556,12 +557,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         dfslp = add_data_policy(dfslp, data_policy_df)
 
         # Restrict to required columns
-        dfslp = dfslp[["observation_id","record_number","report_type","date_time","date_time_meaning",
-                  "latitude","longitude","observation_height_above_station_surface",
-                  "observed_variable","units","observation_value",
-                  "value_significance","observation_duration","platform_type",
-                  "station_type","primary_station_id","station_name","quality_flag",
-                  "data_policy_licence","source_id","report_id","qc_method"]]
+        dfslp = dfslp[INTERMED_COLUMNS]
 
         # Create observation_id field
         dfslp = construct_obs_id(dfslp)
@@ -570,12 +566,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         qcslp = construct_qc_df(dfslp)
 
         # Restrict to required columns
-        dfslp = dfslp[["observation_id","report_type","date_time","date_time_meaning",
-                  "latitude","longitude","observation_height_above_station_surface",
-                  "observed_variable","units","observation_value",
-                  "value_significance","observation_duration","platform_type",
-                  "station_type","primary_station_id","station_name","quality_flag",
-                  "data_policy_licence","source_id"]]
+        dfslp = dfslp[FINAL_COLUMNS]
         dfslp = dfslp[dfslp.observation_value != "Null"]
 
         # Make sure no decimal places and round value to required number of decimal places
@@ -587,21 +578,14 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         #===========================================================================================
         # Convert sea level pressure to CDM lite
-        dfmslp = df[["observation_id","report_type","date_time","date_time_meaning",
-                  "latitude","longitude","observation_height_above_station_surface",
-                  "observed_variable","units","observation_value",
-                  "value_significance","observation_duration","platform_type",
-                  "station_type","primary_station_id","station_name","quality_flag",
-                  "data_policy_licence","source_id","secondary_id"]]
+        dfmslp = df[INITIAL_COLUMNS]
 
         # set report type to 4 for ICAO or 0 for all other hourly stations
         dfmslp = construct_report_type(dfmslp, df, "sea_level_pressure_Source_Station_ID")
 
         # Change for each variable to convert to CDM compliant values
         dfmslp["observation_value"] = df["sea_level_pressure"]
-        dfmslp["source_id"] = df["sea_level_pressure_Source_Code"]
-        dfmslp["secondary_id"] = df["sea_level_pressure_Source_Station_ID"].astype(str)
-        dfmslp['secondary_id'] = dfmslp['secondary_id'].astype(str).apply(lambda x: x.replace('.0', ''))
+        dfmslp = construct_extra_ids(dfmslp, df, "sea_level_pressure")
 
         # Extract QC information for QC tables
         dfmslp = extract_qc_info(dfmslp, df, "sea_level_pressure")
@@ -621,12 +605,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         dfmslp = add_data_policy(dfmslp, data_policy_df)
 
         # Restrict to required columns
-        dfmslp = dfmslp[["observation_id","record_number","report_type","date_time","date_time_meaning",
-                  "latitude","longitude","observation_height_above_station_surface",
-                  "observed_variable","units","observation_value",
-                  "value_significance","observation_duration","platform_type",
-                  "station_type","primary_station_id","station_name","quality_flag",
-                  "data_policy_licence","source_id","report_id","qc_method"]]
+        dfmslp = dfmslp[INTERMED_COLUMNS]
 
         # Create observation_id field
         dfmslp = construct_obs_id(dfmslp)
@@ -635,13 +614,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         qcmslp = construct_qc_df(dfmslp)
 
         # Restrict to required columns
-        dfmslp = dfmslp[["observation_id","report_type","date_time","date_time_meaning",
-                  "latitude","longitude","observation_height_above_station_surface",
-                  "observed_variable","units","observation_value",
-                  "value_significance","observation_duration","platform_type",
-                  "station_type","primary_station_id","station_name","quality_flag",
-                  "data_policy_licence","source_id"]]
-
+        dfmslp = dfmslp[FINAL_COLUMNS]
         dfmslp = dfmslp[dfmslp.observation_value != "Null"]
 
         # Make sure no decimal places and round value to required number of decimal places
@@ -653,21 +626,14 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         #===================================================================================
         # Convert wind direction to CDM lite
-        dfwd = df[["observation_id","report_type","date_time","date_time_meaning",
-                  "latitude","longitude","observation_height_above_station_surface",
-                  "observed_variable","units","observation_value",
-                  "value_significance","observation_duration","platform_type",
-                  "station_type","primary_station_id","station_name","quality_flag",
-                  "data_policy_licence","source_id","secondary_id"]]
+        dfwd = df[INITIAL_COLUMNS]
 
         # set report type to 4 for ICAO or 0 for all other hourly stations
         dfwd = construct_report_type(dfwd, df, "wind_direction_Source_Station_ID")
 
         # Change for each variable to convert to CDM compliant values
         dfwd["observation_value"] = df["wind_direction"]
-        dfwd["source_id"] = df["wind_direction_Source_Code"]
-        dfwd["secondary_id"] = df["wind_direction_Source_Station_ID"].astype(str)
-        dfwd['secondary_id'] = dfwd['secondary_id'].astype(str).apply(lambda x: x.replace('.0', ''))
+        dfwd = construct_extra_ids(dfwd, df, "wind_direction")
 
         # Extract QC information for QC tables
         dfwd = extract_qc_info(dfwd, df, "wind_direction")
@@ -687,12 +653,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         dfwd = add_data_policy(dfwd, data_policy_df)
 
         # Restrict to required columns
-        dfwd = dfwd[["observation_id","record_number","report_type","date_time","date_time_meaning",
-                  "latitude","longitude","observation_height_above_station_surface",
-                  "observed_variable","units","observation_value",
-                  "value_significance","observation_duration","platform_type",
-                  "station_type","primary_station_id","station_name","quality_flag",
-                  "data_policy_licence","source_id","report_id","qc_method"]]
+        dfwd = dfwd[INTERMED_COLUMNS]
 
         # Create observation_id field
         dfwd = construct_obs_id(dfwd)
@@ -701,12 +662,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         qcwd = construct_qc_df(dfwd)
 
         # Restrict to required columns
-        dfwd = dfwd[["observation_id","report_type","date_time","date_time_meaning",
-                  "latitude","longitude","observation_height_above_station_surface",
-                  "observed_variable","units","observation_value",
-                  "value_significance","observation_duration","platform_type",
-                  "station_type","primary_station_id","station_name","quality_flag",
-                  "data_policy_licence","source_id"]]
+        dfwd = dfwd[FINAL_COLUMNS]
 
         # Make sure no decimal places and round value to reuquired number of decimal places
         dfwd['observation_value'] = dfwd['observation_value'].astype(str).apply(lambda x: x.replace('.0', ''))
@@ -715,21 +671,14 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         #===========================================================================
         # Convert wind speed to CDM lite
-        dfws = df[["observation_id","report_type","date_time","date_time_meaning",
-                  "latitude","longitude","observation_height_above_station_surface",
-                  "observed_variable","units","observation_value",
-                  "value_significance","observation_duration","platform_type",
-                  "station_type","primary_station_id","station_name","quality_flag",
-                  "data_policy_licence","source_id","secondary_id"]]
+        dfws = df[INITIAL_COLUMNS]
 
         # set report type to 4 for ICAO or 0 for all other hourly stations
         dfws = construct_report_type(dfws, df, "wind_speed_Source_Station_ID")
 
         # Change for each variable to convert to CDM compliant values
         dfws["observation_value"] = df["wind_speed"]
-        dfws["source_id"] = df["wind_speed_Source_Code"]
-        dfws["secondary_id"] = df["wind_speed_Source_Station_ID"].astype(str)
-        dfws['secondary_id'] = dfws['secondary_id'].astype(str).apply(lambda x: x.replace('.0', ''))
+        dfws = construct_extra_ids(dfws, df, "wind_speed")
 
         # Extract QC information for QC tables
         dfws = extract_qc_info(dfws, df, "wind_speed")
@@ -751,12 +700,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         dfws = add_data_policy(dfws, data_policy_df)
 
         # Restrict to required columns
-        dfws = dfws[["observation_id","record_number","report_type","date_time","date_time_meaning",
-                  "latitude","longitude","observation_height_above_station_surface",
-                  "observed_variable","units","observation_value",
-                  "value_significance","observation_duration","platform_type",
-                  "station_type","primary_station_id","station_name","quality_flag",
-                  "data_policy_licence","source_id","report_id","qc_method"]]
+        dfws = dfws[INTERMED_COLUMNS]
 
         # Create observation_id field
         dfws = construct_obs_id(dfws)
@@ -767,12 +711,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         #station_id=dfws.iloc[1]["primary_station_id"]
 
         # Restrict to required columns
-        dfws = dfws[["observation_id","report_type","date_time","date_time_meaning",
-                  "latitude","longitude","observation_height_above_station_surface",
-                  "observed_variable","units","observation_value",
-                  "value_significance","observation_duration","platform_type",
-                  "station_type","primary_station_id","station_name","quality_flag",
-                  "data_policy_licence","source_id"]]
+        dfws = dfws[FINAL_COLUMNS]
 
         # Ensure correct number of decimal places
         dfws = fix_decimal_places(dfws)

@@ -84,6 +84,27 @@ FINAL_COLUMNS = ["observation_id","report_type","date_time","date_time_meaning",
                  "data_policy_licence","source_id",]
 
 
+SUB_DAILY_QC_FLAGS = {
+    "L" : "0,",  # Logical
+    "o" : "1,",  # outlier
+    "F" : "2,",  # Frequent
+    "U" : "3,",  # diUrnal
+    "D" : "4,",  # Distribution 1
+    "d" : "5,",  # distribution 2
+    "W" : "6,",  # World Records
+    "K" : "7,",  # Streak
+    "C" : "8,",  # Climatological
+    "T" : "9,",  # Timestamp
+    "S" : "10,",  # Spike
+    "h" : "11,",  # humidity
+    "V" : "12,",  # Variance
+    "w" : "13,",  # winds
+    "N" : "14,",  # Neighbour
+    "E" : "15,",  # clEan up
+    "p" : "16,",  # pressure
+    "H" : "17,",  # High flag rate
+}
+
 def construct_report_type(var_frame, all_frame, id_field):
     """
     Construct the `report_type` field from station name information
@@ -740,24 +761,10 @@ def main(station="", subset="", run_all=False, clobber=False):
             # Save QC table to directory
             qc_merged_df=pd.concat([qcdpt,qct,qcslp,qcmslp,qcwd,qcws], axis=0)
             qc_merged_df.astype(str)
-            qc_merged_df['qc_method'] = qc_merged_df['qc_method'].str.replace("L","0,")
-            qc_merged_df['qc_method'] = qc_merged_df['qc_method'].str.replace("o","1,")
-            qc_merged_df['qc_method'] = qc_merged_df['qc_method'].str.replace("F","2,")
-            qc_merged_df['qc_method'] = qc_merged_df['qc_method'].str.replace("U","3,")
-            qc_merged_df['qc_method'] = qc_merged_df['qc_method'].str.replace("D","4,")
-            qc_merged_df['qc_method'] = qc_merged_df['qc_method'].str.replace("d","5,")
-            qc_merged_df['qc_method'] = qc_merged_df['qc_method'].str.replace("W","6,")
-            qc_merged_df['qc_method'] = qc_merged_df['qc_method'].str.replace("K","7,")
-            qc_merged_df['qc_method'] = qc_merged_df['qc_method'].str.replace("C","8,")
-            qc_merged_df['qc_method'] = qc_merged_df['qc_method'].str.replace("T","9,")
-            qc_merged_df['qc_method'] = qc_merged_df['qc_method'].str.replace("S","10,")
-            qc_merged_df['qc_method'] = qc_merged_df['qc_method'].str.replace("h","11,")
-            qc_merged_df['qc_method'] = qc_merged_df['qc_method'].str.replace("V","12,")
-            qc_merged_df['qc_method'] = qc_merged_df['qc_method'].str.replace("w","13,")
-            qc_merged_df['qc_method'] = qc_merged_df['qc_method'].str.replace("N","14,")
-            qc_merged_df['qc_method'] = qc_merged_df['qc_method'].str.replace("E","15,")
-            qc_merged_df['qc_method'] = qc_merged_df['qc_method'].str.replace("p","16,")
-            qc_merged_df['qc_method'] = qc_merged_df['qc_method'].str.replace("H","17,")
+
+            # Replace flag characters with numbers for CDM lite
+            for qc_flag, qc_value in SUB_DAILY_QC_FLAGS.items():
+                qc_merged_df['qc_method'] = qc_merged_df['qc_method'].str.replace(qc_flag, qc_value)
 
             # Remove unwanted "," from column
             qc_merged_df['qc_method'] = qc_merged_df['qc_method'].str[:-1]

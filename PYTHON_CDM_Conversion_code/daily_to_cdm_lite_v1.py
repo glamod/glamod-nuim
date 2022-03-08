@@ -100,7 +100,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         # Set up the output filenames, and check if they exist
         station_id=df.iloc[1]["Station_ID"] # NOTE: this is renamed below to "primary_station_id"
 
-        outroot_cdmlite = os.path.join(utils.DAILY_CDMLITE_OUT_DIR, utils.DAILY_CDMLITE_FILE_ROOT)
+        outroot_cdmlite = os.path.join(utils.DAILY_CDM_LITE_OUT_DIR, utils.DAILY_CDM_LITE_FILE_ROOT)
         cdmlite_outfile = f"{outroot_cdmlite}{station_id}.psv"
 
         outroot_qc= os.path.join(utils.DAILY_QC_OUT_DIR, utils.DAILY_QC_FILE_ROOT)
@@ -267,7 +267,7 @@ def main(station="", subset="", run_all=False, clobber=False):
     df['primary_station_id_2']=df['primary_station_id'].astype(str)+'-'+df['source_id'].astype(str)
     
     # add in location infromatin for cdm lite station 
-    df2 = pd.read_csv(utils.STATION_RECORD_ENTRIES_DAILY_OBS_LITE, encoding='latin-1')
+    df2 = pd.read_csv(utils.DAILY_STATION_RECORD_ENTRIES_OBS_LITE, encoding='latin-1')
     df['primary_station_id_2'] = df['primary_station_id_2'].astype(str)
     df2 = df2.astype(str)
     df= df2.merge(df, on=['primary_station_id_2'])

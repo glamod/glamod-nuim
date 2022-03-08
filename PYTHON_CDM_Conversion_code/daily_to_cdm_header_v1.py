@@ -62,9 +62,9 @@ def main(station="", subset="", run_all=False, clobber=False):
         all_filenames = [os.path.join(utils.DAILY_HEAD_IN_DIR, f"{station}.{EXTENSION}")]
     elif subset != "":
         print(f"Subset of stations run defined in: {subset}")
-        # Read filenames form a list of 5000 to parallel
+        # Allows parallelistaion
         try:
-            # e.g. "/work/scratch-pw/snoone/qff_cdm_test_2021/station_list/ls1.txt"
+            
             with open(subset, "r") as f:
                 filenames = f.read().splitlines()
 
@@ -85,27 +85,24 @@ def main(station="", subset="", run_all=False, clobber=False):
         all_filenames = [i for i in glob.glob(os.path.join(utils.DAILY_HEAD_IN_DIR, f'*.{EXTENSION}'))]    
         print(f"   N = {len(all_filenames)}")
               
-    # To start at next file after last processes 
-    #for filename in all_filenames[all_filenames.index('FRI0000LFBF.qff'):] :
-
     # To start at begining of files
     for filename in all_filenames:
         print(f"Processing {filename}") 
         
         col_list = ["observation_id", "report_id", "latitude","longitude","source_id","date_time"] 
-        merged_df=pd.read_csv(filename, sep="|", usecols=col_list)
-        ##extract Station_ID from report_ID in obs table
+        merged_df = pd.read_csv(filename, sep="|", usecols = col_list)
+        # extract Station_ID from report_ID in obs table
         merged_df['Station_ID'] = merged_df['report_id'].str[:11]
-        station_id=merged_df.iloc[1]["Station_ID"] # NOTE: this is renamed below to "primary_station_id" 
-        outroot_cdmhead = os.path.join(utils.DAILY_CDMHEAD_OUT_DIR, utils.DAILY_CDMHEAD_FILE_ROOT) 
+        station_id = merged_df.iloc[1]["Station_ID"] # NOTE: this is renamed below to "primary_station_id" 
+        outroot_cdmhead = os.path.join(utils.DAILY_CDM_HEAD_OUT_DIR, utils.DAILY_CDM_HEAD_FILE_ROOT) 
         cdmhead_outfile = f"{outroot_cdmhead}{station_id}.psv"
         if not clobber:
-            # and both output files exist
+        # and both output files exist
             if os.path.exists(cdmhead_outfile):
                 print(f"   Output files for {filename} already exist:")
-               print(f"     {cdmhead_outfile}")
+                print(f"     {cdmhead_outfile}")
                 print("   Skipping to next station")  
-                continue#  to next file in the loop
+                continue  #  to next file in the loop
                 
             hdf = pd.DataFrame()
             hdf['extract_record'] = merged_df['report_id'].str[:-11]
@@ -113,45 +110,45 @@ def main(station="", subset="", run_all=False, clobber=False):
             hdf['primary_station_id'] = hdf['extract_record'].str[:11] 
   
                                                 
-    hdf["report_id"]=merged_df["report_id"]
-    hdf["application_area"]=""
-    hdf["observing_programme"]=""
-    hdf["report_type"]="3"
-    hdf["station_type"]="1"
-    hdf["platform_type"]=""
-    hdf["primary_station_id_scheme"]="13"
-    hdf["location_accuracy"]="0.1"
-    hdf["location_method"]=""
-    hdf["location_quality"]="3"
-    hdf["crs"]="0"
-    hdf["station_speed"]=""  
-    hdf["station_course"]=""
-    hdf["station_heading"]=""
-    hdf["height_of_station_above_local_ground"]=""
-    hdf["height_of_station_above_sea_level_accuracy"]=""
-    hdf["sea_level_datum"]=""
-    hdf["report_meaning_of_timestamp"]="1"
-    hdf["report_timestamp"]=""
-    hdf["report_duration"]="13"
-    hdf["report_time_accuracy"]=""
-    hdf["report_time_quality"]=""
-    hdf["report_time_reference"]="0"
-    hdf["platform_subtype"]=""
-    hdf["profile_id"]=""
-    hdf["events_at_station"]=""
-    hdf["report_quality"]=""
-    hdf["duplicate_status"]="4"
-    hdf["duplicates"]=""
-    hdf["source_record_id"]=""
-    hdf ["processing_codes"]=""
-    hdf["source_id"]=merged_df["source_id"]
+    hdf["report_id"] = merged_df["report_id"]
+    hdf["application_area"] = ""
+    hdf["observing_programme"] = ""
+    hdf["report_type"] = "3"
+    hdf["station_type"] = "1"
+    hdf["platform_type"] = ""
+    hdf["primary_station_id_scheme"] = "13"
+    hdf["location_accuracy"] = "0.1"
+    hdf["location_method"] = ""
+    hdf["location_quality"] = "3"
+    hdf["crs"] = "0"
+    hdf["station_speed"] = ""  
+    hdf["station_course"] = ""
+    hdf["station_heading"] = ""
+    hdf["height_of_station_above_local_ground"] = ""
+    hdf["height_of_station_above_sea_level_accuracy"] = ""
+    hdf["sea_level_datum"] = ""
+    hdf["report_meaning_of_timestamp"] = "1"
+    hdf["report_timestamp"] = ""
+    hdf["report_duration"] = "13"
+    hdf["report_time_accuracy"] = ""
+    hdf["report_time_quality"] = ""
+    hdf["report_time_reference"] = "0"
+    hdf["platform_subtype"] = ""
+    hdf["profile_id"] = ""
+    hdf["events_at_station"] = ""
+    hdf["report_quality"] = ""
+    hdf["duplicate_status"] = "4"
+    hdf["duplicates"] = ""
+    hdf["source_record_id"] = ""
+    hdf ["processing_codes"] = ""
+    hdf["source_id"] = merged_df["source_id"]
     hdf['record_timestamp'] = pd.to_datetime('now').strftime("%Y-%m-%d %H:%M:%S")
     hdf.record_timestamp = hdf.record_timestamp + '+00'
     hdf["history"]=""
-    hdf["processing_level"]="0"
-    hdf["report_timestamp"]=merged_df["date_time"]
-    hdf['primary_station_id_2']=hdf['primary_station_id'].astype(str)+'-'+hdf['source_id'].astype(str)
-    hdf["duplicates_report"]=hdf["report_id"]+'-'+hdf["station_record_number"].astype(str)
+    hdf["processing_level"] = "0"
+    hdf["report_timestamp"] = merged_df["date_time"]
+    hdf['primary_station_id_2'] = hdf['primary_station_id'].astype(str)+'-'+hdf['source_id'].astype(str)
+    hdf["duplicates_report"] = hdf["report_id"]+'-'+hdf["station_record_number"].astype(str)
   
     try:
      station_id=hdf.iloc[1]["primary_station_id"]
@@ -161,14 +158,14 @@ def main(station="", subset="", run_all=False, clobber=False):
     df2 = pd.read_csv(utils.DAILY_STATION_RECORD_ENTRIES_HEADER , encoding='latin-1')
     hdf = hdf.astype(str)
     df2 = df2.astype(str)
-    hdf= df2.merge(hdf, on=['primary_station_id_2'])
-    hdf["station_name"]=hdf["station_name"]
-    hdf["station_record_number"]=hdf["record_number"]
+    hdf = df2.merge(hdf, on = ['primary_station_id_2'])
+    hdf["station_name"] = hdf["station_name"]
+    hdf["station_record_number"] = hdf["record_number"]
     hdf['height_of_station_above_sea_level'] = hdf['height_of_station_above_sea_level'].astype(str).apply(lambda x: x.replace('.0',''))
     hdf["latitude"] = pd.to_numeric(hdf["latitude"],errors='coerce')
     hdf["longitude"] = pd.to_numeric(hdf["longitude"],errors='coerce')
-    hdf["latitude"]= hdf["latitude"].round(3)
-    hdf["longitude"]= hdf["longitude"].round(3)
+    hdf["latitude"] = hdf["latitude"].round(3)
+    hdf["longitude"] = hdf["longitude"].round(3)
     
     
     hdf = hdf[["report_id","region","sub_region","application_area",
@@ -187,7 +184,7 @@ def main(station="", subset="", run_all=False, clobber=False):
               "primary_station_id_2", "duplicates_report"]]
     
     
-    hdf=hdf.drop_duplicates(subset=['duplicates_report'])
+    hdf = hdf.drop_duplicates(subset=['duplicates_report'])
 
 
     
@@ -209,7 +206,7 @@ def main(station="", subset="", run_all=False, clobber=False):
   
     hdf['region'] = hdf['region'].astype(str).apply(lambda x: x.replace('.0',''))
     hdf['sub_region'] = hdf['sub_region'].astype(str).apply(lambda x: x.replace('.0',''))
-              # Save CDM head table to directory
+    # Save CDM head table to directory
     try:
 
                        #with open(filename, "w") as outfile:

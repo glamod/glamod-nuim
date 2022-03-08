@@ -25,7 +25,6 @@ import pandas as pd
 pd.options.mode.chained_assignment = None  # default='warn'
 import utils
 import numpy as np
-print(dir(utils))
 
 # Set the file extension for the subdaily psv files
 EXTENSION = 'csv'
@@ -100,7 +99,7 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         # Set up the output filenames, and check if they exist
         station_id=df.iloc[1]["Station_ID"] # NOTE: this is renamed below to "primary_station_id"
-        outroot_cdmobs = os.path.join(utils.DAILY_OBS_OUT_DIR, utils.DAILY_OBS_FILE_ROOT)
+        outroot_cdmobs = os.path.join(utils.DAILY_CDM_OBS_OUT_DIR, utils.DAILY_CDM_OBS_FILE_ROOT)
         cdmobs_outfile = f"{outroot_cdmobs}{station_id}.psv"
 
         # if not overwriting

@@ -151,11 +151,10 @@ def main(station="", subset="", run_all=False, clobber=False):
     hdf["report_timestamp"] = merged_df["date_time"]
     hdf['primary_station_id_2'] = hdf['primary_station_id'].astype(str)+'-'+hdf['source_id'].astype(str)
     hdf["duplicates_report"] = hdf["report_id"]+'-'+hdf["station_record_number"].astype(str)
-
     try:
         station_id=hdf.iloc[1]["primary_station_id"]
     except:
-      pass
+        pass
      
     df2 = pd.read_csv(utils.DAILY_STATION_RECORD_ENTRIES_HEADER, encoding='latin-1')
     hdf = hdf.astype(str)

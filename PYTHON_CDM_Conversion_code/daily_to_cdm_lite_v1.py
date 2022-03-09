@@ -341,16 +341,15 @@ def main(station="", subset="", run_all=False, clobber=False):
               "station_type","primary_station_id","station_name","quality_flag"
               ,"data_policy_licence","source_id"]]
     unique_variables = df['observed_variable'].unique()
-        print(unique_variables)
-        df.to_csv(cdmlite_outfile, index=False, sep="|")
-        print(f"    {cdmlite_outfile}")
-
-        qct['qc_method'] = qct['qc_method'].str[:-1]
-        unique_qc_methods = qct['qc_method'].unique()
-        print(unique_qc_methods)
-        qct.to_csv(qc_outfile, index=False, sep="|")
-        print(f"   {qc_outfile}")
-        print("Done")
+    print(unique_variables)
+    df.to_csv(cdmlite_outfile, index=False, sep="|")
+    print(f"    {cdmlite_outfile}")
+    qct['qc_method'] = qct['qc_method'].str[:-1]
+    unique_qc_methods = qct['qc_method'].unique()
+    print(unique_qc_methods)
+    qct.to_csv(qc_outfile, index=False, sep="|")
+    print(f"   {qc_outfile}")
+    print("Done")
 
 #    return # main
 

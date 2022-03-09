@@ -18,7 +18,7 @@ config = configparser.ConfigParser()
 config.read(os.path.abspath(CONFIG_FILE))
 
 # -----------------
-# Subdaily/dail/monthly 
+# Subdaily/daily/monthly 
 # Paths
 SUBDAILY_QFF_IN_DIR = config.get("Paths", "subdaily_qff_indir")
 SUBDAILY_HEAD_IN_DIR = config.get("Paths", "subdaily_cdmhead_indir")
@@ -55,40 +55,4 @@ DAILY_STATION_RECORD_ENTRIES_OBS_LITE = config.get("Records", "daily_station_rec
 DAILY_STATION_RECORD_ENTRIES_HEADER = config.get("Records", "daily_station_records_header")
 MONTHLY_STATION_RECORD_ENTRIES_OBS_LITE = config.get("Records", "monthly_station_records_obs_lite")
 MONTHLY_STATION_RECORD_ENTRIES_HEADER = config.get("Records", "monthly_station_records_header"):wq
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

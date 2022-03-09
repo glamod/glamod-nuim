@@ -150,14 +150,15 @@ def main(station="", subset="", run_all=False, clobber=False):
                           "value_significance","observation_duration","platform_type",
                           "station_type","primary_station_id","station_name","quality_flag"
                           ,"data_policy_licence"]]
+
                 
-                # change for each variable to convertto cdm compliant values
+                # change for each variable to convert to cdm compliant values
                 dfprc["observation_value"] = df["PRCP"]
                 # change for each variable if required
                 dfprc["observation_height_above_station_surface"]="1"
                 dfprc["units"] = "710"
                 dfprc["observed_variable"] = "44"
-                # set up matching values for merging with record_id_month to add information source_id for first configuration only due yto lack of information
+                # set up matching values for merging with record_id_month to add information source_id for first configuration only due to lakc of information
                 dfprc["record_number"] = "1"   
                 dfprc['primary_station_id_2'] = dfprc['primary_station_id'].astype(str)+'-'+dfprc['record_number'].astype(str)
                 dfprc["report_id"] = dfprc["date_time"]
@@ -169,7 +170,7 @@ def main(station="", subset="", run_all=False, clobber=False):
                 dfprc = df2.merge(dfprc, on = ['primary_station_id_2'])
                 dfprc['observation_id'] = dfprc['primary_station_id'].astype(str)+'-'+dfprc['record_number'].astype(str)+'-'+dfprc['date_time'].astype(str)
                 dfprc['observation_id'] = dfprc['observation_id'].str.replace(r' ', '-')
-                # remove unwanted last twpo characters
+                # remove unwanted last two characters
                 dfprc['observation_id'] = dfprc['observation_id'].str[:-12]
                 dfprc["observation_id"] = dfprc["observation_id"]+'-'+dfprc['observed_variable'].astype(str)+'-'+dfprc['value_significance'].astype(str)
                 
@@ -203,7 +204,7 @@ def main(station="", subset="", run_all=False, clobber=False):
                 dfsnow["observation_height_above_station_surface"] = "0"
                 dfsnow["units"] = "710"
                 dfsnow["observed_variable"]="45"
-                #set up matching values for merging with record_id_month to add information source_id for first configuration only due yto lack of information
+                #set up matching values for merging with record_id_month to add information source_id for first configuration only due to lack of information
                 dfsnow["record_number"] = "1"   
                 dfsnow['primary_station_id_2'] = dfsnow['primary_station_id'].astype(str)+'-'+dfsnow['record_number'].astype(str)
                 dfsnow["report_id"] = dfsnow["date_time"]
@@ -424,6 +425,8 @@ def main(station="", subset="", run_all=False, clobber=False):
                           "value_significance","observation_duration","platform_type",
                           "station_type","primary_station_id","station_name","quality_flag"
                           ,"data_policy_licence","source_id","primary_station_id_2"]]
+            
+            # merge all the sperate variable df togther into one df    
             except:
                 pass 
                        

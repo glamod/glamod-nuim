@@ -1,40 +1,118 @@
 # -*- coding: utf-8 -*-
 """
+Convert daily csv files to CDM obs .psv files (one per station).
+
+CDM Lite files have all variables, one after another.
+
+Call in one of three ways using:
+
+>python daily_to_obs_table_v1.py --station STATIONID
+>python daily_to_obs_table_v1.py --subset FILENAME
+>python daily_to_obs_table_v1.py --run_all
+>python daily_to_obs_table_v1.py --help
+
 Created on Thu Nov 11 16:31:58 2021
 
 @author: snoone
+
+Edited: rjhd2, February 2022
+Edited snoone February 2022
+Edited snoone 09/03/2022
 """
 
 import os
 import glob
 import pandas as pd
-import numpy as np
 pd.options.mode.chained_assignment = None  # default='warn'
+import utils
+import numpy as np
 
+# Set the file extension for the subdaily psv files
+EXTENSION = 'csv'
 
+def main(station="", subset="", run_all=False, clobber=False):
+    """
+    Run processing of daily csv to CDM Observations tables
 
-OUTDIR = "/work/scratch-pw/snoone/csv_cdm_test_2021/cdmobs_out_dy_202111"
-os.chdir("/gws/nopw/j04/c3s311a_lot2/data/incoming/GHCND_r30062021/ghcnd_stations")
-#extension = 'csv'
-#my_file = open("D:/Python_CDM_conversion/hourly/qff/ls_dy.txt", "r")
-#all_filenames = my_file.readlines()
-#print(all_filenames)
-##use  a list of file name sto run 5000 parallel
-with open("/work/scratch-pw/snoone/csv_cdm_test_2021/station_list/ls_dy.txt", "r") as f:
-    all_filenames = f.read().splitlines()
-#all_filenames = [i for i in glob.glob('*.{}'.format(extension))]
-##to start at begining of files
-for filename in all_filenames:
-##to start at next file after last processe 
-#for filename in all_filenames[all_filenames.index('SWM00002338.qff'):] :
-    df=pd.read_csv(filename, sep=",")
-    ##add column headers
-    df.columns=["Station_ID", "Date", "observed_variable", "observation_value","quality_flag","Measurement_flag","Source_flag","hour"]
-    df = df.astype(str)
-    
-   # importing pandas as pd
- 
-# filtering the rows where Credit-Rating is Fair
+    Parameters
+    ----------
+
+    station : `str` 
+        Single station ID to process
+
+    subset : `str`
+        Path to file containing subset of IDs to process
+
+    run_all : `bool`
+        Run all files in the directory defined in the config file
+
+    clobber : `bool`
+        Overwrite existing files if they exist.  If False, will skip existing ones
+    """
+    # Read in either single file, list of files or run all
+    print(station)
+    # Check for sensible inputs
+    if station != "" and subset != "" and all:
+        print("Please select either single station, list of stations run or to run all")
+        return
+    elif station == "" and subset == "" and not all:
+        print("Please select either single station, list of stations run or to run all")
+        return
+
+    # Obtain list of station(s) to process (single/subset/all)
+    if station != "":
+        print(f"Single station run: {station}")
+        all_filenames = [os.path.join(utils.DAILY_CSV_IN_DIR, f"{station}.{EXTENSION}")]
+    elif subset != "":
+        print(f"Subset of stations run defined in: {subset}")
+        # allows parrallelisation
+        try:
+            
+            with open(subset, "r") as f:
+                filenames = f.read().splitlines()
+
+                # now add the path to the front
+                all_filenames = []
+                for infile in filenames:
+                    all_filenames += [os.path.join(utils.DAILY_CSV_IN_DIR, f"{infile}")]
+
+            print(f"   N = {len(all_filenames)}")
+        except IOError:
+            print(f"Subset file {subset} cannot be found")
+            return
+        except OSError:
+            print(f"Subset file {subset} cannot be found")
+            return
+    elif all:
+        print(f"All stations run in {utils.DAILY_CSV_IN_DIR}")
+        all_filenames = [i for i in glob.glob(os.path.join(utils.DAILY_CSV_IN_DIR, f'*.{EXTENSION}'))]    
+        print(f"   N = {len(all_filenames)}")
+              
+    # To start at begining of files
+    for filename in all_filenames:
+        print(f"Processing {filename}")
+
+        # Read in the dataframe
+        df=pd.read_csv(os.path.join(utils.DAILY_CSV_IN_DIR, filename), sep=",",low_memory=False)
+        ##add column headers to df
+        df.columns=["Station_ID", "Date", "observed_variable", "observation_value","quality_flag","Measurement_flag","Source_flag","hour"]
+        df = df.astype(str)
+
+        # Set up the output filenames, and check if they exist
+        station_id=df.iloc[1]["Station_ID"] # NOTE: this is renamed below to "primary_station_id"
+        outroot_cdmobs = os.path.join(utils.DAILY_CDM_OBS_OUT_DIR, utils.DAILY_CDM_OBS_FILE_ROOT)
+        cdmobs_outfile = f"{outroot_cdmobs}{station_id}.psv"
+
+        # if not overwriting
+        if not clobber:
+            # and both output files exist
+            if os.path.exists(cdmobs_outfile):
+                print(f"   Output files for {filename} already exist:")
+                print(f"     {cdmobs_outfile}")
+                print("   Skipping to next station")
+                
+                continue #  to next file in the loop
+
     df = df[df["observed_variable"].isin(["SNWD", "PRCP", "TMIN", "TMAX", "TAVG", "SNOW", "AWND", "AWDR", "WESD"])]
     df["Source_flag"]=df["Source_flag"]. astype(str) 
     df['Source_flag'] = df['Source_flag'].str.replace("0","c")
@@ -75,9 +153,8 @@ for filename in all_filenames:
     
     station_id=df.iloc[1]["Station_ID"]
     
-    ##set the value significnace for each variable
+    # set the value significnace for each variable
     df["value_significance"]="" 
-    
     df['observed_variable'] = df['observed_variable'].str.replace("SNWD","53")
     df.loc[df['observed_variable'] == "53", 'value_significance'] = '13'
     df['observed_variable'] = df['observed_variable'].str.replace("PRCP","44")
@@ -116,10 +193,8 @@ for filename in all_filenames:
                                            df['original_value'] / 10,
                                            df['original_value']).round(2)
     
-    ##SET OBSERVED VALUES TO CDM COMPLIANT values
+    # set the observation values to cdm compliant values
     df["observation_value"] = pd.to_numeric(df["observation_value"],errors='coerce')
-    #df["observed_variable"] = pd.to_numeric(df["observed_variable"],errors='coerce')
-    #df['observation_value'] = df['observation_value'].astype(int).round(2)
     df['observation_value'] = np.where(df['observed_variable'] == "44",
                                            df['observation_value'] / 10,
                                            df['observation_value']).round(2)
@@ -141,7 +216,7 @@ for filename in all_filenames:
   
     
     
-    ##set the units for each variable
+    # set the units for each variable
     df["original_units"]=""
     df.loc[df['observed_variable'] == "85", 'original_units'] = '350' 
     df.loc[df['observed_variable'] == "44", 'original_units'] = '710'
@@ -151,7 +226,7 @@ for filename in all_filenames:
     df.loc[df['observed_variable'] == "107", 'original_units'] = "320"
     df.loc[df['observed_variable'] == "53", 'original_units'] = '715'
         
-    ##set the original units for each variable
+    # set the original units for each variable
     df["units"]=""
     df.loc[df['observed_variable'] == "85", 'units'] = '5' 
     df.loc[df['observed_variable'] == "44", 'units'] = '710'
@@ -162,7 +237,7 @@ for filename in all_filenames:
     df.loc[df['observed_variable'] == "53", 'units'] = '715'
 
              
-    ##set each height above station surface for each variable
+    # set each height above station surface for each variable
     df["observation_height_above_station_surface"]=""
     df.loc[df['observed_variable'] == "85", 'observation_height_above_station_surface'] = '2' 
     df.loc[df['observed_variable'] == "44", 'observation_height_above_station_surface'] = '1'
@@ -172,7 +247,7 @@ for filename in all_filenames:
     df.loc[df['observed_variable'] == "107", 'observation_height_above_station_surface'] = "10"
     df.loc[df['observed_variable'] == "53", 'observation_height_above_station_surface'] = "1"
     
-    ##set conversion flags for variables
+    # set conversion flags for variables
     df["conversion_flag"]=""
     df.loc[df['observed_variable'] == "85", 'conversion_flag'] = '0' 
     df.loc[df['observed_variable'] == "44", 'conversion_flag'] = '2'
@@ -182,13 +257,12 @@ for filename in all_filenames:
     df.loc[df['observed_variable'] == "107", 'conversion_flag'] = "2"
     df.loc[df['observed_variable'] == "53", 'conversion_flag'] = "2"
     
-    ##set conversion method for variables
+    # set conversion method for variables
     df["conversion_method"]=""
     df.loc[df['observed_variable'] == "85", 'conversion_method'] = '1' 
     
     
-    ##set numerical precision for variables
-    
+    # set numerical precision for variables
     df["numerical_precision"]=""
     df.loc[df['observed_variable'] == "85", 'numerical_precision'] = '0.01' 
     df.loc[df['observed_variable'] == "44", 'numerical_precision'] = '0.1'
@@ -197,7 +271,6 @@ for filename in all_filenames:
     df.loc[df['observed_variable'] == "106", 'numerical_precision'] = '0.1' 
     df.loc[df['observed_variable'] == "107", 'numerical_precision'] = "0.1"
     df.loc[df['observed_variable'] == "53", 'numerical_precision'] = "1"
-    
     df["original_precision"]=""
     df.loc[df['observed_variable'] == "85", 'original_precision'] = '0.1' 
     df.loc[df['observed_variable'] == "44", 'original_precision'] = '0.1'
@@ -207,8 +280,7 @@ for filename in all_filenames:
     df.loc[df['observed_variable'] == "107", 'original_precision'] = "0.1"
     df.loc[df['observed_variable'] == "53", 'original_precision'] = "1"
     
-    
-    #add all columns for cdmlite
+    # add all columns for cdmlite
     df['year'] = df['Date'].str[:4]
     df['month'] = df['Date'].map(lambda x: x[4:6])
     df['day'] = df['Date'].map(lambda x: x[6:8])
@@ -256,9 +328,7 @@ for filename in all_filenames:
 
     
     
-    ###set quality flag to pass 0 or fail 1
-    #df.loc[df['quality_flag'].notnull(), "quality_flag"] = "1"
-    #df = df.fillna("Null")
+    # set quality flag to pass 0 or fail 1
     df.quality_flag[df.quality_flag == "nan"] = "0"
     df.quality_flag = df.quality_flag.str.replace('D', '1') \
     .str.replace('G', '1') \
@@ -276,14 +346,12 @@ for filename in all_filenames:
                                                     .str.replace('Z', '1')\
                                                       .str.replace('H', '1')\
                                                           .str.replace('P', '1')
-    #print (df.dtypes)                       
-    ##add timestamp to df and cerate report id
+                           
+    # add timestamp to df and create report id
     df["Timestamp2"] = df["year"].map(str) + "-" + df["month"].map(str)+ "-" + df["day"].map(str)  
     df["Seconds"]="00"
     df["offset"]="+00"
     df["date_time"] = df["Timestamp2"].map(str)+ " " + df["hour"].map(str)+":"+df["Minute"].map(str)+":"+df["Seconds"].map(str) 
-    #df['date_time'] =  pd.to_datetime(df['date_time'], format='%Y/%m/%d' " ""%H:%M")
-    #df['date_time'] = df['date_time'].astype('str')
     df.date_time = df.date_time + '+00'
     df["dates"]=df["date_time"].str[:-11]
     df['primary_station_id_2']=df['primary_station_id'].astype(str)+'-'+df['source_id'].astype(str)
@@ -292,8 +360,8 @@ for filename in all_filenames:
     df['source_id'] = df['source_id'].astype(str).apply(lambda x: x.replace('.0',''))
     df['primary_station_id_2']=df['primary_station_id'].astype(str)+'-'+df['source_id'].astype(str)
     
-   ##'add in location infromatin ro cdm lite station 
-    df2=pd.read_csv("/work/scratch-pw/snoone/csv_cdm_test_2021/station_list/record_id_dy.csv")
+    # add in location information for cdm lite station 
+    df2 = pd.read_csv(utils.DAILY_STATION_RECORD_ENTRIES_OBS_LITE, encoding='latin-1')
     df['primary_station_id_2'] = df['primary_station_id_2'].astype(str)
     df2 = df2.astype(str)
     df= df2.merge(df, on=['primary_station_id_2'])
@@ -304,24 +372,21 @@ for filename in all_filenames:
     df = df.replace({"null":""})
     
                                    
-    ##set up master df to extrcat each variable
+    # set up master df to extract each variable
        
     df["latitude"] = pd.to_numeric(df["latitude"],errors='coerce')
     df["longitude"] = pd.to_numeric(df["longitude"],errors='coerce')
     df["latitude"]= df["latitude"].round(3)
     df["longitude"]= df["longitude"].round(3)
-    ##add observation id to datafrme
+    
+    # add observation id to datafrme
     df['observation_id']=df['primary_station_id'].astype(str)+'-'+df['record_number'].astype(str)+'-'+df['dates'].astype(str)
     df['observation_id'] = df['observation_id'].str.replace(r' ', '-')
     df["observation_id"]=df["observation_id"]+df['observed_variable']+'-'+df['value_significance']
     df['report_id']=df['primary_station_id'].astype(str)+'-'+df['record_number'].astype(str)+'-'+df['dates'].astype(str)
     
-
-    
-    
-    
       
-    ##reorder df columns
+    # reorder df columns
     df = df[["observation_id","report_id","data_policy_licence","date_time",
                "date_time_meaning","observation_duration","longitude","latitude",
                "crs","z_coordinate","z_coordinate_type","observation_height_above_station_surface",
@@ -336,33 +401,38 @@ for filename in all_filenames:
                "processing_code","processing_level","adjustment_id","traceability",
                "advanced_qc","advanced_uncertainty","advanced_homogenisation",
                "advanced_assimilation_feedback","source_id"]]
- 
-    try:
 
-        cdm_type=("cdm_obs_202111_test_")
-        print(station_id+"_obs")
-        a = df['observed_variable'].unique()
-        print (a)
-        outname = os.path.join(OUTDIR,cdm_type)
-        df.to_csv(outname+ station_id+ ".psv", index=False, sep="|")
+    unique_variables = df['observed_variable'].unique()
+        print(unique_variables)
+        df.to_csv(cdmobs_outfile, index=False, sep="|")
+        print(f"    {cdmobs_outfile}")
+
+
+
+#    return # main
+
+#****************************************
+if __name__ == "__main__":
+
+    import argparse
+
+    # set up keyword arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--station', dest='station', action='store', default="",
+                        help='Root of station ID to run')
+    parser.add_argument('--subset', dest='subset', action='store', default="",
+                        help='File containing subsets of stations to run (full path only)')
+    parser.add_argument('--run_all', dest='run_all', action='store_true', default=False,
+                        help='Run all stations in QFF directory')
+    parser.add_argument('--clobber', dest='clobber', action='store_true', default=False,
+                        help='Overwrite existing files')
+
+    args = parser.parse_args()
+
+    main(station=args.station, subset=args.subset, run_all=args.run_all, clobber=args.clobber)
+
+
+
      
-    except:
-        # Continue to next iteration.
-        continue           
-      
-        
-                 
-    
-
-  
-          
-     #  df.to_csv("D:/Python_CDM_conversion/daily/.csv/dfdy.csv", index=False, sep=",")
-     #  qct.to_csv("D:/Python_CDM_conversion/daily/.csv/qcdy.csv", index=False, sep=",")
-       
-       
-       
-       
-    
-    
    
 

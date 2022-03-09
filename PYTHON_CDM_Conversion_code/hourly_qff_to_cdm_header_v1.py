@@ -156,7 +156,7 @@ def main(station="", subset="", run_all=False, clobber=False):
     hdf["duplicates_report"]=hdf["report_id"]
               
     # add in required information from external .csv file specific for header tables       
-    df2 = pd.read_csv(utils.STATION_RECORD_ENTRIES_H, encoding='latin-1')
+    df2 = pd.read_csv(utils.SUBDAILY_STATION_RECORD_ENTRIES_HEADER, encoding='latin-1')
     hdf = hdf.astype(str)
     df2 = df2.astype(str)
     hdf= df2.merge(hdf, on=['primary_station_id_3'])      

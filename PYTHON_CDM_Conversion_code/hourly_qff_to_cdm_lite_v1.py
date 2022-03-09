@@ -392,7 +392,7 @@ def main(station="", subset="", run_all=False, clobber=False):
 
 
     # Read in the data policy dataframe (only read in if needed)
-    data_policy_df = pd.read_csv(utils.STATION_RECORD_ENTRIES_OBS_LITE, encoding='latin-1')
+    data_policy_df = pd.read_csv(utils.SUBDAILY_STATION_RECORD_ENTRIES_OBS_LITE, encoding='latin-1')
     data_policy_df = data_policy_df.astype(str)
               
     # To start at begining of files

@@ -220,7 +220,7 @@ def main(station="", subset="", run_all=False, clobber=False):
     dft["observation_value"] = pd.to_numeric(dft["observation_value"],errors='coerce')
         
     # add data policy and record number to df
-    df2 = pd.read_csv(utils.STATION_RECORD_ENTRIES_OBS_LITE, encoding='latin-1')
+    df2 = pd.read_csv(utils.SUBDAILY_STATION_RECORD_ENTRIES_OBS_LITE, encoding='latin-1')
     dft = dft.astype(str)
     df2 = df2.astype(str)
     dft= df2.merge(dft, on=['primary_station_id_2'])
@@ -228,7 +228,7 @@ def main(station="", subset="", run_all=False, clobber=False):
     dft['data_policy_licence'] = dft['data_policy_licence'].astype(str).apply(lambda x: x.replace('.0',''))
     dft['observation_id']=dft['primary_station_id'].astype(str)+'-'+dft['record_number'].astype(str)+'-'+dft['date_time'].astype(str)
     dft['observation_id'] = dft['observation_id'].str.replace(r' ', '-')
-    ##remove unwanted last twpo characters
+    ##remove unwanted last two characters
     dft['observation_id'] = dft['observation_id'].str[:-6]
     dft["observation_id"]=dft["observation_id"]+'-'+dft['observed_variable'].astype(str)+'-'+dft['value_significance'].astype(str)
     dft["report_id"]=dft["observation_id"].str[:-6]
@@ -311,7 +311,7 @@ def main(station="", subset="", run_all=False, clobber=False):
     dfdpt["observation_value"] = pd.to_numeric(dfdpt["observation_value"],errors='coerce')
        
     # add data policy and record number to df
-    df2 = pd.read_csv(utils.STATION_RECORD_ENTRIES_OBS_LITE, encoding='latin-1')
+    df2 = pd.read_csv(utils.SUBDAILY_STATION_RECORD_ENTRIES_OBS_LITE, encoding='latin-1')
     dfdpt= dfdpt.astype(str)
     df2 = df2.astype(str)
     dfdpt= df2.merge(dfdpt, on=['primary_station_id_2'])
@@ -404,7 +404,7 @@ def main(station="", subset="", run_all=False, clobber=False):
     dfslp['primary_station_id_2']=dfslp['secondary_id'].astype(str)+'-'+dfslp['source_id'].astype(str)
             
     # add data policy and record number to df
-    df2 = pd.read_csv(utils.STATION_RECORD_ENTRIES_OBS_LITE, encoding='latin-1')
+    df2 = pd.read_csv(utils.SUBDAILY_STATION_RECORD_ENTRIES_OBS_LITE, encoding='latin-1')
     dfslp = dfslp.astype(str)
     df2 = df2.astype(str)
     dfslp= df2.merge(dfslp, on=['primary_station_id_2'])
@@ -412,7 +412,7 @@ def main(station="", subset="", run_all=False, clobber=False):
     dfslp['data_policy_licence'] = dfslp['data_policy_licence'].astype(str).apply(lambda x: x.replace('.0',''))
     dfslp['observation_id']=dfslp['primary_station_id'].astype(str)+'-'+dfslp['record_number'].astype(str)+'-'+dfslp['date_time'].astype(str)
     dfslp['observation_id'] = dfslp['observation_id'].str.replace(r' ', '-')
-    # remove unwanted last twpo characters
+    # remove unwanted last two characters
     dfslp['observation_id'] = dfslp['observation_id'].str[:-6]
     dfslp["observation_id"]=dfslp["observation_id"]+'-'+dfslp['observed_variable'].astype(str)+'-'+dfslp['value_significance'].astype(str)
     dfslp["report_id"]=dfslp["observation_id"].str[:-6]
@@ -501,7 +501,7 @@ def main(station="", subset="", run_all=False, clobber=False):
     dfmslp['primary_station_id_2']=dfmslp['secondary_id'].astype(str)+'-'+dfmslp['source_id'].astype(str)
         
     # add data policy and record number to df
-    df2 = pd.read_csv(utils.STATION_RECORD_ENTRIES_OBS_LITE, encoding='latin-1')
+    df2 = pd.read_csv(utils.SUBDAILY_STATION_RECORD_ENTRIES_OBS_LITE, encoding='latin-1')
     dfmslp = dfmslp.astype(str)
     df2 = df2.astype(str)
     dfmslp= df2.merge(dfmslp, on=['primary_station_id_2'])
@@ -600,7 +600,7 @@ def main(station="", subset="", run_all=False, clobber=False):
     dfwd["observation_value"] = pd.to_numeric(dfwd["observation_value"],errors='coerce')
        
     # add data policy and record number to df
-    df2 = pd.read_csv(utils.STATION_RECORD_ENTRIES_OBS_LITE, encoding='latin-1')
+    df2 = pd.read_csv(utils.SUBDAILY_STATION_RECORD_ENTRIES_OBS_LITE, encoding='latin-1')
     dfwd = dfwd.astype(str)
     df2 = df2.astype(str)
     dfwd= df2.merge(dfwd, on=['primary_station_id_2'])
@@ -696,7 +696,7 @@ def main(station="", subset="", run_all=False, clobber=False):
     dfws["observation_value"] = pd.to_numeric(dfws["observation_value"],errors='coerce')
       
     # add data policy and record number to df
-    df2 = pd.read_csv(utils.STATION_RECORD_ENTRIES_OBS_LITE, encoding='latin-1')
+    df2 = pd.read_csv(utils.SUBDAILY_STATION_RECORD_ENTRIES_OBS_LITE, encoding='latin-1')
     dfws = dfws.astype(str)
     df2 = df2.astype(str)
     dfws= df2.merge(dfws, on=['primary_station_id_2'])

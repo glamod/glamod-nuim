@@ -11,7 +11,7 @@ Call in one of three ways using:
 >python daily_to_cdm_header_v1.py --run_all
 >python daily_to_cdm_header_v1.py --help
 
-#Created on Thu Nov 11 16:31:58 2021
+# Created on Thu Nov 11 16:31:58 2021
 
 @author: snoone
 
@@ -23,8 +23,9 @@ import glob
 import pandas as pd
 pd.options.mode.chained_assignment = None  # default='warn'
 import utils
-print(dir(utils))
+
 # Set the file extension for the subdaily obs psv files
+
 EXTENSION = 'psv'
 
 def main(station="", subset="", run_all=False, clobber=False):
@@ -92,6 +93,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         col_list = ["observation_id", "report_id", "latitude","longitude","source_id","date_time"] 
         merged_df = pd.read_csv(filename, sep="|", usecols = col_list)
         # extract Station_ID from report_ID in obs table
+        
         merged_df['Station_ID'] = merged_df['report_id'].str[:11]
         station_id = merged_df.iloc[1]["Station_ID"] # NOTE: this is renamed below to "primary_station_id" 
         outroot_cdmhead = os.path.join(utils.DAILY_CDM_HEAD_OUT_DIR, utils.DAILY_CDM_HEAD_FILE_ROOT) 
@@ -149,13 +151,13 @@ def main(station="", subset="", run_all=False, clobber=False):
     hdf["report_timestamp"] = merged_df["date_time"]
     hdf['primary_station_id_2'] = hdf['primary_station_id'].astype(str)+'-'+hdf['source_id'].astype(str)
     hdf["duplicates_report"] = hdf["report_id"]+'-'+hdf["station_record_number"].astype(str)
-  
+
     try:
-     station_id=hdf.iloc[1]["primary_station_id"]
+        station_id=hdf.iloc[1]["primary_station_id"]
     except:
       pass
      
-    df2 = pd.read_csv(utils.DAILY_STATION_RECORD_ENTRIES_HEADER , encoding='latin-1')
+    df2 = pd.read_csv(utils.DAILY_STATION_RECORD_ENTRIES_HEADER, encoding='latin-1')
     hdf = hdf.astype(str)
     df2 = df2.astype(str)
     hdf = df2.merge(hdf, on = ['primary_station_id_2'])
@@ -206,14 +208,13 @@ def main(station="", subset="", run_all=False, clobber=False):
   
     hdf['region'] = hdf['region'].astype(str).apply(lambda x: x.replace('.0',''))
     hdf['sub_region'] = hdf['sub_region'].astype(str).apply(lambda x: x.replace('.0',''))
-    # Save CDM head table to directory
-    try:
+    # Save CDM head table to directory 
 
-                       #with open(filename, "w") as outfile:
-                   hdf.to_csv(cdmhead_outfile, index=False, sep="|")
-                   print(f"    {cdmhead_outfile}") 
+    try:
+        hdf.to_csv(cdmhead_outfile, index=False, sep="|")
+                print(f"    {cdmhead_outfile}") 
     except:
-                     continue
+        continue
 
 
 # next file in the loop

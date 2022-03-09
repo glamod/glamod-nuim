@@ -17,6 +17,7 @@ Created on Thu Nov 11 16:31:58 2021
 
 Edited: rjhd2, February 2022
 Edited snoone February 2022
+Edited snoone 09/03/2022
 """
 
 import os
@@ -192,7 +193,7 @@ def main(station="", subset="", run_all=False, clobber=False):
                                            df['original_value'] / 10,
                                            df['original_value']).round(2)
     
-    # SET OBSERVED VALUES TO CDM COMPLIANT values
+    # set the observation values to cdm compliant values
     df["observation_value"] = pd.to_numeric(df["observation_value"],errors='coerce')
     df['observation_value'] = np.where(df['observed_variable'] == "44",
                                            df['observation_value'] / 10,
@@ -346,7 +347,7 @@ def main(station="", subset="", run_all=False, clobber=False):
                                                       .str.replace('H', '1')\
                                                           .str.replace('P', '1')
                            
-    # add timestamp to df and cerate report id
+    # add timestamp to df and create report id
     df["Timestamp2"] = df["year"].map(str) + "-" + df["month"].map(str)+ "-" + df["day"].map(str)  
     df["Seconds"]="00"
     df["offset"]="+00"
@@ -359,7 +360,7 @@ def main(station="", subset="", run_all=False, clobber=False):
     df['source_id'] = df['source_id'].astype(str).apply(lambda x: x.replace('.0',''))
     df['primary_station_id_2']=df['primary_station_id'].astype(str)+'-'+df['source_id'].astype(str)
     
-    # add in location infromatin ro cdm lite station 
+    # add in location information for cdm lite station 
     df2 = pd.read_csv(utils.DAILY_STATION_RECORD_ENTRIES_OBS_LITE, encoding='latin-1')
     df['primary_station_id_2'] = df['primary_station_id_2'].astype(str)
     df2 = df2.astype(str)
@@ -371,7 +372,7 @@ def main(station="", subset="", run_all=False, clobber=False):
     df = df.replace({"null":""})
     
                                    
-    # set up master df to extrcat each variable
+    # set up master df to extract each variable
        
     df["latitude"] = pd.to_numeric(df["latitude"],errors='coerce')
     df["longitude"] = pd.to_numeric(df["longitude"],errors='coerce')

@@ -168,6 +168,8 @@ def main(station="", subset="", run_all=False, clobber=False):
                 dfprc = dfprc.astype(str)
                 df2 = df2.astype(str)
                 dfprc = df2.merge(dfprc, on = ['primary_station_id_2'])
+                dfprc = dfprc.rename(columns={"station_name_x":"station_name",})
+                dfprc = dfprc.rename(columns={"source_id_x":"source_id",})
                 dfprc['observation_id'] = dfprc['primary_station_id'].astype(str)+'-'+dfprc['record_number'].astype(str)+'-'+dfprc['date_time'].astype(str)
                 dfprc['observation_id'] = dfprc['observation_id'].str.replace(r' ', '-')
                 # remove unwanted last two characters
@@ -214,6 +216,8 @@ def main(station="", subset="", run_all=False, clobber=False):
                 dfsnow = dfsnow.astype(str)
                 df2 = df2.astype(str)
                 dfsnow= df2.merge(dfsnow, on = ['primary_station_id_2'])
+                dfsnow = dfsnow.rename(columns={"source_id_x":"source_id",})
+                dfsnow = dfsnow.rename(columns={"station_name_x":"station_name",})
                 dfsnow['observation_id'] = dfsnow['primary_station_id'].astype(str)+'-'+dfsnow['record_number'].astype(str)+'-'+dfsnow['date_time'].astype(str)
                 dfsnow['observation_id'] = dfsnow['observation_id'].str.replace(r' ', '-')
                 # remove unwanted last twpo characters
@@ -264,6 +268,8 @@ def main(station="", subset="", run_all=False, clobber=False):
                 dftmax = dftmax.astype(str)
                 df2 = df2.astype(str)
                 dftmax= df2.merge(dftmax, on = ['primary_station_id_2'])
+                dftmax = dftmax.rename(columns={"station_name_x":"station_name",})
+                dftmax = dftmax.rename(columns={"source_id_x":"source_id",})
                 dftmax['observation_id'] = dftmax['primary_station_id'].astype(str)+'-'+dftmax['record_number'].astype(str)+'-'+dftmax['date_time'].astype(str)
                 dftmax['observation_id'] = dftmax['observation_id'].str.replace(r' ', '-')
                 # remove unwanted last twpo characters
@@ -314,6 +320,8 @@ def main(station="", subset="", run_all=False, clobber=False):
                  dftmin = dftmin.astype(str)
                  df2 = df2.astype(str)
                  dftmin= df2.merge(dftmin, on = ['primary_station_id_2'])
+                 dftmin = dftmin.rename(columns={"station_name_x":"station_name",})
+                 dftmin = dftmin.rename(columns={"source_id_x":"source_id",})
                  dftmin['observation_id'] = dftmin['primary_station_id'].astype(str)+'-'+dftmin['record_number'].astype(str)+'-'+dftmin['date_time'].astype(str)
                  dftmin['observation_id'] = dftmin['observation_id'].str.replace(r' ', '-')
                  # remove unwanted last twpo characters
@@ -364,6 +372,8 @@ def main(station="", subset="", run_all=False, clobber=False):
                 dftavg = dftavg.astype(str)
                 df2 = df2.astype(str)
                 dftavg= df2.merge(dftavg, on = ['primary_station_id_2'])
+                dftavg = dftavg.rename(columns={"station_name_x":"station_name",})
+                dftavg = dftavg.rename(columns={"source_id_x":"source_id",})
                 dftavg['observation_id'] = dftavg['primary_station_id'].astype(str)+'-'+dftavg['record_number'].astype(str)+'-'+dftavg['date_time'].astype(str)
                 dftavg['observation_id'] = dftavg['observation_id'].str.replace(r' ', '-')
                 dftavg["observation_id"] = dftavg["observation_id"]+'-'+dftavg['observed_variable'].astype(str)+'-'+dftavg['value_significance'].astype(str)
@@ -412,6 +422,8 @@ def main(station="", subset="", run_all=False, clobber=False):
                 dftws = dftws.astype(str)
                 df2 = df2.astype(str)
                 dftws= df2.merge(dftws, on = ['primary_station_id_2'])
+                dftws = dftws.rename(columns={"station_name_x":"station_name",})
+                dftws = dftws.rename(columns={"source_id_x":"source_id",})
                 dftws['observation_id'] = dftws['primary_station_id'].astype(str)+'-'+dftws['record_number'].astype(str)+'-'+dftws['date_time'].astype(str)
                 dftws['observation_id'] = dftws['observation_id'].str.replace(r' ', '-')
                 # remove unwanted last twpo characters
@@ -607,6 +619,8 @@ def main(station="", subset="", run_all=False, clobber=False):
                 hdf = hdf.astype(str)
                 df2 = df2.astype(str)
                 hdf = df2.merge(hdf, on=['primary_station_id_2'])
+                hdf = hdf.rename(columns={"latitude_x":"latitude",})
+                hdf = hdf.rename(columns={"longitude_x":"longitude",})
                 hdf['height_of_station_above_sea_level'] = hdf['height_of_station_above_sea_level'].astype(str).apply(lambda x: x.replace('.0',''))
                 hdf["source_id"] = hdf["source_id_x"]
                 hdf["latitude"] = pd.to_numeric(hdf["latitude"],errors='coerce')

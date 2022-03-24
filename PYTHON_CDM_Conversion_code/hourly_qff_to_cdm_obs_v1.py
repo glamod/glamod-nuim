@@ -29,6 +29,36 @@ import hourly_qff_to_cdm_utils as h_utils
 EXTENSION = 'qff'
 
 
+INITIAL_COLUMNS = ["observation_id","report_id","data_policy_licence","date_time",
+                   "date_time_meaning","observation_duration","longitude","latitude",
+                   "crs","z_coordinate","z_coordinate_type","observation_height_above_station_surface",
+                   "observed_variable","secondary_variable","observation_value",
+                   "value_significance","secondary_value","units","code_table",
+                   "conversion_flag","location_method","location_precision",
+                   "z_coordinate_method","bbox_min_longitude","bbox_max_longitude",
+                   "bbox_min_latitude","bbox_max_latitude","spatial_representativeness",
+                   "quality_flag","numerical_precision","sensor_id","sensor_automation_status",
+                   "exposure_of_sensor","original_precision","original_units",
+                   "original_code_table","original_value","conversion_method",
+                   "processing_code","processing_level","adjustment_id","traceability",
+                   "advanced_qc","advanced_uncertainty","advanced_homogenisation",
+                   "advanced_assimilation_feedback","source_id","primary_station_id","secondary_id"]
+
+FINAL_COLUMNS = ["observation_id","report_id","data_policy_licence","date_time",
+                   "date_time_meaning","observation_duration","longitude","latitude",
+                   "crs","z_coordinate","z_coordinate_type","observation_height_above_station_surface",
+                   "observed_variable","secondary_variable","observation_value",
+                   "value_significance","secondary_value","units","code_table",
+                   "conversion_flag","location_method","location_precision",
+                   "z_coordinate_method","bbox_min_longitude","bbox_max_longitude",
+                   "bbox_min_latitude","bbox_max_latitude","spatial_representativeness",
+                   "quality_flag","numerical_precision","sensor_id","sensor_automation_status",
+                   "exposure_of_sensor","original_precision","original_units",
+                   "original_code_table","original_value","conversion_method",
+                   "processing_code","processing_level","adjustment_id","traceability",
+                   "advanced_qc","advanced_uncertainty","advanced_homogenisation",
+                   "advanced_assimilation_feedback","source_id"]
+
 CONVERSION_FLAGS = {
     "temperature" : "0",
     "dew_point_temperature" : "0",
@@ -164,10 +194,10 @@ def main(station="", subset="", run_all=False, clobber=False):
             print("Processing {}".format(os.path.join(utils.SUBDAILY_QFF_IN_DIR, filename)))
 
         # Read in the dataframe
-        df=pd.read_csv(os.path.join(utils.SUBDAILY_QFF_IN_DIR, filename), sep="|",low_memory=False)
+        df = pd.read_csv(os.path.join(utils.SUBDAILY_QFF_IN_DIR, filename), sep="|", low_memory=False)
         
         # Set up the output filenames, and check if they exist
-        station_id=df.iloc[1]["Station_ID"] # NOTE: this is renamed below to "primary_station_id"
+        station_id = df.iloc[1]["Station_ID"] # NOTE: this is renamed below to "primary_station_id"
         outroot_cdmobs = os.path.join(utils.SUBDAILY_CDM_OBS_OUT_DIR, utils.SUBDAILY_CDM_OBS_FILE_ROOT)
         cdmobs_outfile = f"{outroot_cdmobs}{station_id}.psv"
 
@@ -243,27 +273,14 @@ def main(station="", subset="", run_all=False, clobber=False):
             df["Hour"].map(str) + ":" + \
             df["Minute"].map(str) + ":" + \
             df["Seconds"].map(str) 
-        df['date_time'] =  pd.to_datetime(df['date_time'], format='%Y/%m/%d' " ""%H:%M")
+        df['date_time'] = pd.to_datetime(df['date_time'], format='%Y/%m/%d' " ""%H:%M")
         df['date_time'] = df['date_time'].astype('str')
         df.date_time = df.date_time + '+00'
 
 
         # =========================================================================================
-        #convert temperature changes for each variable    
-        dft = df[["observation_id","report_id","data_policy_licence","date_time",
-                   "date_time_meaning","observation_duration","longitude","latitude",
-                   "crs","z_coordinate","z_coordinate_type","observation_height_above_station_surface",
-                   "observed_variable","secondary_variable","observation_value",
-                   "value_significance","secondary_value","units","code_table",
-                   "conversion_flag","location_method","location_precision",
-                   "z_coordinate_method","bbox_min_longitude","bbox_max_longitude",
-                   "bbox_min_latitude","bbox_max_latitude","spatial_representativeness",
-                   "quality_flag","numerical_precision","sensor_id","sensor_automation_status",
-                   "exposure_of_sensor","original_precision","original_units",
-                   "original_code_table","original_value","conversion_method",
-                   "processing_code","processing_level","adjustment_id","traceability",
-                   "advanced_qc","advanced_uncertainty","advanced_homogenisation",
-                   "advanced_assimilation_feedback","source_id","primary_station_id","secondary_id"]]
+        # convert temperature changes for each variable    
+        dft = df[INITIAL_COLUMNS]
 
         # change for each variable to convert to cdm compliant values
         dft["observation_value"] = df["temperature"] + 273.15
@@ -295,20 +312,8 @@ def main(station="", subset="", run_all=False, clobber=False):
         
         dft["report_id"] = dft["observation_id"].str[:-6]
 
-        dft = dft[["observation_id","report_id","data_policy_licence","date_time",
-                   "date_time_meaning","observation_duration","longitude","latitude",
-                   "crs","z_coordinate","z_coordinate_type","observation_height_above_station_surface",
-                   "observed_variable","secondary_variable","observation_value",
-                   "value_significance","secondary_value","units","code_table",
-                   "conversion_flag","location_method","location_precision",
-                   "z_coordinate_method","bbox_min_longitude","bbox_max_longitude",
-                   "bbox_min_latitude","bbox_max_latitude","spatial_representativeness",
-                   "quality_flag","numerical_precision","sensor_id","sensor_automation_status",
-                   "exposure_of_sensor","original_precision","original_units",
-                   "original_code_table","original_value","conversion_method",
-                   "processing_code","processing_level","adjustment_id","traceability",
-                   "advanced_qc","advanced_uncertainty","advanced_homogenisation",
-                   "advanced_assimilation_feedback","source_id"]]
+        dft = dft[FINAL_COLUMNS]
+        
         df.dropna(subset = ["observation_value"], inplace=True)
 
         # Ensure correct number of decimal places
@@ -317,24 +322,11 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         # =================================================================================
         # convert dew point temperature changes for each variable    
-        dfdpt= df[["observation_id","report_id","data_policy_licence","date_time",
-                   "date_time_meaning","observation_duration","longitude","latitude",
-                   "crs","z_coordinate","z_coordinate_type","observation_height_above_station_surface",
-                   "observed_variable","secondary_variable","observation_value",
-                   "value_significance","secondary_value","units","code_table",
-                   "conversion_flag","location_method","location_precision",
-                   "z_coordinate_method","bbox_min_longitude","bbox_max_longitude",
-                   "bbox_min_latitude","bbox_max_latitude","spatial_representativeness",
-                   "quality_flag","numerical_precision","sensor_id","sensor_automation_status",
-                   "exposure_of_sensor","original_precision","original_units",
-                   "original_code_table","original_value","conversion_method",
-                   "processing_code","processing_level","adjustment_id","traceability",
-                   "advanced_qc","advanced_uncertainty","advanced_homogenisation",
-                   "advanced_assimilation_feedback","source_id","primary_station_id","secondary_id"]]
+        dfdpt = df[INITIAL_COLUMNS]
 
         # change for each variable to convert to cdm compliant values
-        dfdpt["observation_value"]=df["dew_point_temperature"]+273.15
-        dfdpt["original_value"]=df["dew_point_temperature"]
+        dfdpt["observation_value"] = df["dew_point_temperature"] + 273.15
+        dfdpt["original_value"] = df["dew_point_temperature"]
 
         dfdpt = h_utils.construct_extra_ids(dfdpt, df, "dew_point_temperature")
 
@@ -350,9 +342,9 @@ def main(station="", subset="", run_all=False, clobber=False):
         dfdpt = h_utils.remove_missing_data_rows(dfdpt, "dew_point_temperature")
 
         # concatenate columns for joining df for next step
-        dfdpt['source_id'] = dfdpt['source_id'].astype(str).apply(lambda x: x.replace('.0',''))
-        dfdpt['primary_station_id_2']=dfdpt['secondary_id'].astype(str)+'-'+dfdpt['source_id'].astype(str)
-        dfdpt["observation_value"] = pd.to_numeric(dfdpt["observation_value"],errors='coerce')
+        dfdpt['source_id'] = dfdpt['source_id'].astype(str).apply(lambda x: x.replace('.0', ''))
+        dfdpt['primary_station_id_2'] = dfdpt['secondary_id'].astype(str) + '-' + dfdpt['source_id'].astype(str)
+        dfdpt["observation_value"] = pd.to_numeric(dfdpt["observation_value"], errors='coerce')
 
         # add data policy and record number to df
         dfdpt = h_utils.add_data_policy(dfdpt, data_policy_df)
@@ -360,45 +352,20 @@ def main(station="", subset="", run_all=False, clobber=False):
         # Create observation_id field
         dfdpt = h_utils.construct_obs_id(dfdpt)
 
-        dfdpt["report_id"]=dfdpt["observation_id"].str[:-6]
+        dfdpt["report_id"] = dfdpt["observation_id"].str[:-6]
 
-        dfdpt= dfdpt[["observation_id","report_id","data_policy_licence","date_time",
-                   "date_time_meaning","observation_duration","longitude","latitude",
-                   "crs","z_coordinate","z_coordinate_type","observation_height_above_station_surface",
-                   "observed_variable","secondary_variable","observation_value",
-                   "value_significance","secondary_value","units","code_table",
-                   "conversion_flag","location_method","location_precision",
-                   "z_coordinate_method","bbox_min_longitude","bbox_max_longitude",
-                   "bbox_min_latitude","bbox_max_latitude","spatial_representativeness",
-                   "quality_flag","numerical_precision","sensor_id","sensor_automation_status",
-                   "exposure_of_sensor","original_precision","original_units",
-                   "original_code_table","original_value","conversion_method",
-                   "processing_code","processing_level","adjustment_id","traceability",
-                   "advanced_qc","advanced_uncertainty","advanced_homogenisation",
-                   "advanced_assimilation_feedback","source_id"]]
+        dfdpt= dfdpt[FINAL_COLUMNS]
+        
         dfdpt.dropna(subset = ["observation_value"], inplace=True)
  
         # Ensure correct number of decimal places
         dfdpt = h_utils.fix_decimal_places(dfdpt, do_obs_value=True)
 
 
-        #====================================================================================
+        # ====================================================================================
         # convert station level pressure
 
-        dfslp = df[["observation_id","report_id","data_policy_licence","date_time",
-                   "date_time_meaning","observation_duration","longitude","latitude",
-                   "crs","z_coordinate","z_coordinate_type","observation_height_above_station_surface",
-                   "observed_variable","secondary_variable","observation_value",
-                   "value_significance","secondary_value","units","code_table",
-                   "conversion_flag","location_method","location_precision",
-                   "z_coordinate_method","bbox_min_longitude","bbox_max_longitude",
-                   "bbox_min_latitude","bbox_max_latitude","spatial_representativeness",
-                   "quality_flag","numerical_precision","sensor_id","sensor_automation_status",
-                   "exposure_of_sensor","original_precision","original_units",
-                   "original_code_table","original_value","conversion_method",
-                   "processing_code","processing_level","adjustment_id","traceability",
-                   "advanced_qc","advanced_uncertainty","advanced_homogenisation",
-                   "advanced_assimilation_feedback","source_id","primary_station_id","secondary_id"]]
+        dfslp = df[INITIAL_COLUMNS]
 
         # change for each variable to convert to cdm compliant values
         dfslp["observation_value"] = df["station_level_pressure"].map(float)
@@ -427,22 +394,9 @@ def main(station="", subset="", run_all=False, clobber=False):
         # Create observation_id field
         dfslp = h_utils.construct_obs_id(dfslp)
         
-        dfslp["report_id"]=dfslp["observation_id"].str[:-6]
+        dfslp["report_id"] = dfslp["observation_id"].str[:-6]
 
-        dfslp = dfslp[["observation_id","report_id","data_policy_licence","date_time",
-                   "date_time_meaning","observation_duration","longitude","latitude",
-                   "crs","z_coordinate","z_coordinate_type","observation_height_above_station_surface",
-                   "observed_variable","secondary_variable","observation_value",
-                   "value_significance","secondary_value","units","code_table",
-                   "conversion_flag","location_method","location_precision",
-                   "z_coordinate_method","bbox_min_longitude","bbox_max_longitude",
-                   "bbox_min_latitude","bbox_max_latitude","spatial_representativeness",
-                   "quality_flag","numerical_precision","sensor_id","sensor_automation_status",
-                   "exposure_of_sensor","original_precision","original_units",
-                   "original_code_table","original_value","conversion_method",
-                   "processing_code","processing_level","adjustment_id","traceability",
-                   "advanced_qc","advanced_uncertainty","advanced_homogenisation",
-                   "advanced_assimilation_feedback","source_id"]]
+        dfslp = dfslp[FINAL_COLUMNS]
 
         dfslp['observation_value'] = dfslp['observation_value'].map(float)
         dfslp['observation_value'] = (dfslp['observation_value']*100)
@@ -452,27 +406,14 @@ def main(station="", subset="", run_all=False, clobber=False):
         dft = h_utils.fix_decimal_places(dft, do_obs_value=True)
 
 
-        #===========================================================================================
+        # ===========================================================================================
         # convert sea level presure 
 
-        dfmslp = df[["observation_id","report_id","data_policy_licence","date_time",
-                   "date_time_meaning","observation_duration","longitude","latitude",
-                   "crs","z_coordinate","z_coordinate_type","observation_height_above_station_surface",
-                   "observed_variable","secondary_variable","observation_value",
-                   "value_significance","secondary_value","units","code_table",
-                   "conversion_flag","location_method","location_precision",
-                   "z_coordinate_method","bbox_min_longitude","bbox_max_longitude",
-                   "bbox_min_latitude","bbox_max_latitude","spatial_representativeness",
-                   "quality_flag","numerical_precision","sensor_id","sensor_automation_status",
-                   "exposure_of_sensor","original_precision","original_units",
-                   "original_code_table","original_value","conversion_method",
-                   "processing_code","processing_level","adjustment_id","traceability",
-                   "advanced_qc","advanced_uncertainty","advanced_homogenisation",
-                   "advanced_assimilation_feedback","source_id","primary_station_id","secondary_id"]]
+        dfmslp = df[INITIAL_COLUMNS]
 
         # change for each variable to convert to cdm compliant values
-        dfmslp["observation_value"]=df["sea_level_pressure"].map(float)
-        dfmslp["original_value"]=df["sea_level_pressure"]
+        dfmslp["observation_value"] = df["sea_level_pressure"].map(float)
+        dfmslp["original_value"] = df["sea_level_pressure"]
         
         dfmslp = h_utils.construct_extra_ids(dfmslp, df, "sea_level_pressure")
 
@@ -488,8 +429,8 @@ def main(station="", subset="", run_all=False, clobber=False):
         dfmslp = h_utils.remove_missing_data_rows(dfmslp, "sea_level_pressure")
 
         # concatenate columns for joining df for next step
-        dfmslp['source_id'] = dfmslp['source_id'].astype(str).apply(lambda x: x.replace('.0',''))
-        dfmslp['primary_station_id_2']=dfmslp['secondary_id'].astype(str)+'-'+dfmslp['source_id'].astype(str)
+        dfmslp['source_id'] = dfmslp['source_id'].astype(str).apply(lambda x: x.replace('.0', ''))
+        dfmslp['primary_station_id_2'] = dfmslp['secondary_id'].astype(str) + '-' + dfmslp['source_id'].astype(str)
 
         # add data policy and record number to df
         dfmslp = h_utils.add_data_policy(dfmslp, data_policy_df)
@@ -497,22 +438,9 @@ def main(station="", subset="", run_all=False, clobber=False):
         # Create observation_id field
         dfmslp = h_utils.construct_obs_id(dfmslp)
         
-        dfmslp["report_id"]=dfmslp["observation_id"].str[:-6]
+        dfmslp["report_id"] = dfmslp["observation_id"].str[:-6]
 
-        dfmslp = dfmslp[["observation_id","report_id","data_policy_licence","date_time",
-                   "date_time_meaning","observation_duration","longitude","latitude",
-                   "crs","z_coordinate","z_coordinate_type","observation_height_above_station_surface",
-                   "observed_variable","secondary_variable","observation_value",
-                   "value_significance","secondary_value","units","code_table",
-                   "conversion_flag","location_method","location_precision",
-                   "z_coordinate_method","bbox_min_longitude","bbox_max_longitude",
-                   "bbox_min_latitude","bbox_max_latitude","spatial_representativeness",
-                   "quality_flag","numerical_precision","sensor_id","sensor_automation_status",
-                   "exposure_of_sensor","original_precision","original_units",
-                   "original_code_table","original_value","conversion_method",
-                   "processing_code","processing_level","adjustment_id","traceability",
-                   "advanced_qc","advanced_uncertainty","advanced_homogenisation",
-                   "advanced_assimilation_feedback","source_id"]]
+        dfmslp = dfmslp[FINAL_COLUMNS]
 
         dfmslp['observation_value'] = dfmslp['observation_value'].map(float)
         dfmslp['observation_value'] = (dfmslp['observation_value']*100)
@@ -522,28 +450,14 @@ def main(station="", subset="", run_all=False, clobber=False):
         dfmslp = h_utils.fix_decimal_places(dfmslp, do_obs_value=True)
         
 
-        #========================================================================================================
+        # ===========================================================================
         # convert wind direction
 
-        dfwd = df[["observation_id","report_id","data_policy_licence","date_time",
-                   "date_time_meaning","observation_duration","longitude","latitude",
-                   "crs","z_coordinate","z_coordinate_type","observation_height_above_station_surface",
-                   "observed_variable","secondary_variable","observation_value",
-                   "value_significance","secondary_value","units","code_table",
-                   "conversion_flag","location_method","location_precision",
-                   "z_coordinate_method","bbox_min_longitude","bbox_max_longitude",
-                   "bbox_min_latitude","bbox_max_latitude","spatial_representativeness",
-                   "quality_flag","numerical_precision","sensor_id","sensor_automation_status",
-                   "exposure_of_sensor","original_precision","original_units",
-                   "original_code_table","original_value","conversion_method",
-                   "processing_code","processing_level","adjustment_id","traceability",
-                   "advanced_qc","advanced_uncertainty","advanced_homogenisation",
-                   "advanced_assimilation_feedback","source_id","primary_station_id","secondary_id"]]
+        dfwd = df[INITIAL_COLUMNS]
 
         # change for each variable to convert to cdm compliant values
-        dfwd["observation_value"]=df["wind_direction"]
-        dfwd["original_value"]=df["wind_direction"]
-        
+        dfwd["observation_value"] = df["wind_direction"]
+        dfwd["original_value"] = df["wind_direction"]
 
         dfwd = h_utils.construct_extra_ids(dfwd, df, "wind_direction")
 
@@ -559,8 +473,8 @@ def main(station="", subset="", run_all=False, clobber=False):
         dfwd = h_utils.remove_missing_data_rows(dfwd, "wind_direction")
 
         # concatenate columns for joining df for next step
-        dfwd['source_id'] = dfwd['source_id'].astype(str).apply(lambda x: x.replace('.0',''))
-        dfwd['primary_station_id_2']=dfwd['secondary_id'].astype(str)+'-'+dfwd['source_id'].astype(str)
+        dfwd['source_id'] = dfwd['source_id'].astype(str).apply(lambda x: x.replace('.0', ''))
+        dfwd['primary_station_id_2'] = dfwd['secondary_id'].astype(str) + '-' + dfwd['source_id'].astype(str)
         dfwd["observation_value"] = pd.to_numeric(dfwd["observation_value"], errors='coerce')
 
         # add data policy and record number to df
@@ -569,58 +483,26 @@ def main(station="", subset="", run_all=False, clobber=False):
         # Create observation_id field
         dfwd = h_utils.construct_obs_id(dfwd)
 
-        dfwd["report_id"]=dfwd["observation_id"].str[:-7] # WD is 3 digits
+        dfwd["report_id"] = dfwd["observation_id"].str[:-7] # WD is 3 digits
 
-        dfwd = dfwd[["observation_id","report_id","data_policy_licence","date_time",
-                   "date_time_meaning","observation_duration","longitude","latitude",
-                   "crs","z_coordinate","z_coordinate_type","observation_height_above_station_surface",
-                   "observed_variable","secondary_variable","observation_value",
-                   "value_significance","secondary_value","units","code_table",
-                   "conversion_flag","location_method","location_precision",
-                   "z_coordinate_method","bbox_min_longitude","bbox_max_longitude",
-                   "bbox_min_latitude","bbox_max_latitude","spatial_representativeness",
-                   "quality_flag","numerical_precision","sensor_id","sensor_automation_status",
-                   "exposure_of_sensor","original_precision","original_units",
-                   "original_code_table","original_value","conversion_method",
-                   "processing_code","processing_level","adjustment_id","traceability",
-                   "advanced_qc","advanced_uncertainty","advanced_homogenisation",
-                   "advanced_assimilation_feedback","source_id"]]
-
-
+        dfwd = dfwd[FINAL_COLUMNS]
 
         # make sure no decimal places an dround value to reuqred decimal places
         dfwd.dropna(subset = ["observation_value"], inplace=True)
  
         # Ensure correct number of decimal places
+        dfwd['observation_value'] = dfwd['observation_value'].astype(str).apply(lambda x: x.replace('.0', ''))
         dfwd = h_utils.fix_decimal_places(dfwd, do_obs_value=False)
-        
-        #dfwd['observation_value'] = dfwd['observation_value'].astype(str).apply(lambda x: x.replace('.0',''))
-        #dfwd['source_id'] = dfwd['source_id'].astype(str).apply(lambda x: x.replace('.0',''))
-        #dfwd['data_policy_licence'] = dfwd['data_policy_licence'].astype(str).apply(lambda x: x.replace('.0',''))
-        #dfwd["source_id"] = pd.to_numeric(dfwd["source_id"],errors='coerce')
-        # missing Obs_value
 
-        #===========================================================================
+        
+        # ===========================================================================
         # convert wind speed
 
-        dfws = df[["observation_id","report_id","data_policy_licence","date_time",
-                   "date_time_meaning","observation_duration","longitude","latitude",
-                   "crs","z_coordinate","z_coordinate_type","observation_height_above_station_surface",
-                   "observed_variable","secondary_variable","observation_value",
-                   "value_significance","secondary_value","units","code_table",
-                   "conversion_flag","location_method","location_precision",
-                   "z_coordinate_method","bbox_min_longitude","bbox_max_longitude",
-                   "bbox_min_latitude","bbox_max_latitude","spatial_representativeness",
-                   "quality_flag","numerical_precision","sensor_id","sensor_automation_status",
-                   "exposure_of_sensor","original_precision","original_units",
-                   "original_code_table","original_value","conversion_method",
-                   "processing_code","processing_level","adjustment_id","traceability",
-                   "advanced_qc","advanced_uncertainty","advanced_homogenisation",
-                   "advanced_assimilation_feedback","source_id","primary_station_id","secondary_id"]]
+        dfws = df[INITIAL_COLUMNS]
 
         # change for each variable to convert to cdm compliant values
         dfws["secondary_id"]=df["wind_speed_Source_Station_ID"].astype(str)
-        dfws['secondary_id'] = dfws['secondary_id'].astype(str).apply(lambda x: x.replace('.0',''))
+        dfws['secondary_id'] = dfws['secondary_id'].astype(str).apply(lambda x: x.replace('.0', ''))
 
         dfws = h_utils.construct_extra_ids(dfws, df, "wind_speed")
 
@@ -636,9 +518,9 @@ def main(station="", subset="", run_all=False, clobber=False):
         dfws = h_utils.remove_missing_data_rows(dfws, "wind_speed")
 
         # concatenate columns for joining df for next step
-        dfws['source_id'] = dfws['source_id'].astype(str).apply(lambda x: x.replace('.0',''))
-        dfws['primary_station_id_2']=dfws['secondary_id'].astype(str)+'-'+dfws['source_id'].astype(str)
-        dfws["observation_value"] = pd.to_numeric(dfws["observation_value"],errors='coerce')
+        dfws['source_id'] = dfws['source_id'].astype(str).apply(lambda x: x.replace('.0', ''))
+        dfws['primary_station_id_2']=dfws['secondary_id'].astype(str) + '-' + dfws['source_id'].astype(str)
+        dfws["observation_value"] = pd.to_numeric(dfws["observation_value"], errors='coerce')
 
         # add data policy and record number to df
         dfws = h_utils.add_data_policy(dfws, data_policy_df)
@@ -648,21 +530,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         
         dfws["report_id"] = dfws["observation_id"].str[:-7] # WS is 3 digits
 
-
-        dfws = dfws[["observation_id","report_id","data_policy_licence","date_time",
-                   "date_time_meaning","observation_duration","longitude","latitude",
-                   "crs","z_coordinate","z_coordinate_type","observation_height_above_station_surface",
-                   "observed_variable","secondary_variable","observation_value",
-                   "value_significance","secondary_value","units","code_table",
-                   "conversion_flag","location_method","location_precision",
-                   "z_coordinate_method","bbox_min_longitude","bbox_max_longitude",
-                   "bbox_min_latitude","bbox_max_latitude","spatial_representativeness",
-                   "quality_flag","numerical_precision","sensor_id","sensor_automation_status",
-                   "exposure_of_sensor","original_precision","original_units",
-                   "original_code_table","original_value","conversion_method",
-                   "processing_code","processing_level","adjustment_id","traceability",
-                   "advanced_qc","advanced_uncertainty","advanced_homogenisation",
-                   "advanced_assimilation_feedback","source_id"]]
+        dfws = dfws[FINAL_COLUMNS]
 
         dfws.dropna(subset = ["observation_value"], inplace=True)
 

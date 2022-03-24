@@ -24,44 +24,12 @@ import pandas as pd
 import numpy as np
 pd.options.mode.chained_assignment = None  # default='warn'
 import utils
+import hourly_qff_to_cdm_utils as h_utils
 
 # Set the file extension for the subdaily psv files
 EXTENSION = 'qff'
 
 # Dictionaries to hold CDM codes.  In due course, read directly from those docs
-HEIGHTS = {
-    "temperature" : "2",
-    "dew_point_temperature" : "2",
-    "station_level_pressure" : "2",
-    "sea_level_pressure" : "2",
-    "wind_direction" : "10",
-    "wind_speed" : "10",
-}
-UNITS = {
-    "temperature" : "5",
-    "dew_point_temperature" : "5",
-    "station_level_pressure" : "32",
-    "sea_level_pressure" : "32",
-    "wind_direction" : "320",
-    "wind_speed" : "731",
-}
-VARIABLE_ID = {
-    "temperature" : "85",
-    "dew_point_temperature" : "36",
-    "station_level_pressure" : "57",
-    "sea_level_pressure" : "58",
-    "wind_direction" : "106",
-    "wind_speed" : "107",
-}
-MISSING_DATA = {
-    "temperature" : -99999,
-    "dew_point_temperature" : -99999,
-    "station_level_pressure" : -99999,
-    "sea_level_pressure" : -99999,
-    "wind_direction" : -999,
-    "wind_speed" : -999,
-}
-
 INITIAL_COLUMNS = ["observation_id","report_type","date_time","date_time_meaning",
                    "latitude","longitude","observation_height_above_station_surface",
                    "observed_variable","units","observation_value",
@@ -133,119 +101,6 @@ def construct_report_type(var_frame, all_frame, id_field):
     return var_frame
 
 
-def extract_qc_info(var_frame, all_frame, var_name):
-    """
-    Extract QC information for the QC tables
-
-    var_frame : `dataframe`
-        Dataframe for variable
-
-    all_frame : `dataframe`
-        Dataframe for station
-
-    var_name : `str`
-        Name of variable to use to extract QC information
-    """
-
-    var_frame["quality_flag"] = all_frame[f"{var_name}_QC_flag"]
-    var_frame["qc_method"] = var_frame["quality_flag"]
-    var_frame["report_id"] = var_frame["date_time"]
-
-    # Set quality flag from master dataframe for variable
-    #    and fill all nan with Null then change all nonnan to 1
-    var_frame.loc[var_frame['quality_flag'].notnull(), "quality_flag"] = 1
-    var_frame = var_frame.fillna("Null")
-    var_frame.quality_flag[var_frame.quality_flag == "Null"] = 0
-
-    return var_frame
-
-
-def overwrite_variable_info(var_frame, var_name):
-    """
-    Replace information for variable with CDM codes
-
-    var_frame : `dataframe`
-        Dataframe for variable
-
-    var_name : `str`
-        Name of variable
-    """
-
-    var_frame["observation_height_above_station_surface"] = HEIGHTS[var_name]
-    var_frame["units"] = UNITS[var_name]
-    var_frame["observed_variable"] = VARIABLE_ID[var_name]
-   
-    return var_frame
-
-
-def remove_missing_data_rows(var_frame, var_name):
-    """
-    Remove rows with no data
-
-    var_frame : `dataframe`
-        Dataframe for variable
-
-    var_name : `str`
-        Name of variable
-    """
-
-    var_frame = var_frame.fillna("null")
-    var_frame = var_frame.replace({"null" : f"{MISSING_DATA[var_name]}"})
-    var_frame = var_frame[var_frame.observation_value != MISSING_DATA[var_name]]
-    var_frame = var_frame.dropna(subset=['secondary_id'])
-    var_frame = var_frame.dropna(subset=['observation_value'])
-    var_frame["source_id"] = pd.to_numeric(var_frame["source_id"], errors='coerce')
-
-    return var_frame
-
-
-def add_data_policy(var_frame, policy_frame):
-    """
-    Merge in data policy information from another dataframe
-
-    var_frame : `dataframe`
-        Dataframe for variable
-
-    policy_frame : `dataframe`
-        Dataframe for the data policy
-    """
-
-    var_frame = var_frame.astype(str)
-
-    # merge policy frame into var_frame
-    var_frame = policy_frame.merge(var_frame, on=['primary_station_id_2'])
-
-    # rename column and remove ".0"
-    var_frame['data_policy_licence'] = var_frame['data_policy_licence_x']
-
-    var_frame['data_policy_licence'] = var_frame['data_policy_licence'].astype(str).apply(lambda x: x.replace('.0',''))
-
-    return var_frame
-
-
-def construct_obs_id(var_frame):
-    """
-    construct `observation_id` field
-
-    var_frame : `dataframe`
-        Dataframe for variable
-    """
-
-    # concatenate columns
-    var_frame['observation_id'] = var_frame['primary_station_id'].astype(str) + "-" + \
-                                  var_frame['record_number'].astype(str) + "-" + \
-                                  var_frame['date_time'].astype(str)
-
-    var_frame['observation_id'] = var_frame['observation_id'].str.replace(r' ', '-')
-    
-    # Remove unwanted last two characters
-    var_frame['observation_id'] = var_frame['observation_id'].str[:-6]
-    var_frame["observation_id"] = var_frame["observation_id"] + "-" + \
-                                  var_frame['observed_variable'].astype(str) + "-" + \
-                                  var_frame['value_significance'].astype(str)
-
-    return var_frame
-
 
 def construct_qc_df(var_frame):
     """
@@ -286,51 +141,6 @@ def construct_qc_df(var_frame):
     qc_frame = qc_frame[qc_frame['quality_flag'] != 0]
 
     return qc_frame
-
-
-def fix_decimal_places(var_frame, do_obs_value=True):
-    """
-    Make sure no decimal places remain 
-      or round value to required number of decimal places
-
-    var_frame : `dataframe`
-        Dataframe for variable
-    """
-
-    # remove the decimal places by editing string
-    var_frame['source_id'] = var_frame['source_id'].astype(str).apply(lambda x: x.replace('.0', ''))
-    var_frame["source_id"] = pd.to_numeric(var_frame["source_id"], errors='coerce')
-
-    # remove decimal places by editing string
-    var_frame['data_policy_licence'] = var_frame['data_policy_licence'].astype(str).apply(lambda x: x.replace('.0', ''))
-
-    if do_obs_value:
-        # Convert to float to allow rounding
-        var_frame["observation_value"] = pd.to_numeric(var_frame["observation_value"], errors='coerce')
-        var_frame["observation_value"] = var_frame["observation_value"].round(2)
-    
-    return var_frame
-
-
-def construct_extra_ids(var_frame, all_frame, var_name):
-    """
-    Construct source_id and secondary_id fields
-
-    var_frame : `dataframe`
-        Dataframe for variable
-
-    all_frame : `dataframe`
-        Dataframe for station
-
-    var_name : `str`
-        Name of variable to use to extract QC information
-    """
-    
-    var_frame["source_id"] = all_frame[f"{var_name}_Source_Code"]
-    var_frame["secondary_id"] = all_frame[f"{var_name}_Source_Station_ID"].astype('str')
-    var_frame['secondary_id'] = var_frame['secondary_id'].astype(str).apply(lambda x: x.replace('.0', ''))
-
-    return var_frame
 
 
 def main(station="", subset="", run_all=False, clobber=False):
@@ -474,16 +284,16 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         # Change for each variable to convert to CDM compliant values
         dft["observation_value"] = df["temperature"] + 273.15
-        dft = construct_extra_ids(dft, df, "temperature")
+        dft = h_utils.construct_extra_ids(dft, df, "temperature")
 
         # Extract QC information for QC tables
-        dft = extract_qc_info(dft, df, "temperature")
+        dft = h_utils.extract_qc_info(dft, df, "temperature", do_report_id=True)
 
         # Change for each variable if required
-        dft = overwrite_variable_info(dft, "temperature")
+        dft = h_utils.overwrite_variable_info(dft, "temperature")
 
         # Remove unwanted missing data rows
-        dft = remove_missing_data_rows(dft, "temperature")
+        dft = h_utils.remove_missing_data_rows(dft, "temperature")
         
         # Concatenate columns for joining dataframe in next step
         dft['source_id'] = dft['source_id'].astype(str).apply(lambda x: x.replace('.0', ''))
@@ -492,13 +302,13 @@ def main(station="", subset="", run_all=False, clobber=False):
         dft["observation_value"] = pd.to_numeric(dft["observation_value"], errors='coerce')
         
         # Add data policy and record number to dataframe
-        dft = add_data_policy(dft, data_policy_df)
+        dft = h_utils.add_data_policy(dft, data_policy_df)
 
         # Restrict to required columns
         dft = dft[INTERMED_COLUMNS]
 
         # Create observation_id field
-        dft = construct_obs_id(dft)
+        dft = h_utils.construct_obs_id(dft)
 
         # Set up QC table
         qct = construct_qc_df(dft)
@@ -507,7 +317,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         dft = dft[FINAL_COLUMNS]
 
         # Ensure correct number of decimal places
-        dft = fix_decimal_places(dft)
+        dft = h_utils.fix_decimal_places(dft)
 
 
         # =================================================================================
@@ -519,16 +329,16 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         # Change for each variable to convert to CDM compliant values
         dfdpt["observation_value"] = df["dew_point_temperature"] + 273.15
-        dfdpt = construct_extra_ids(dfdpt, df, "dew_point_temperature")
+        dfdpt = h_utils.construct_extra_ids(dfdpt, df, "dew_point_temperature")
 
         # Extract QC information for QC tables
-        dfdpt = extract_qc_info(dfdpt, df, "dew_point_temperature")
+        dfdpt = h_utils.extract_qc_info(dfdpt, df, "dew_point_temperature", do_report_id=True)
 
         # Change for each variable if required
-        dfdpt = overwrite_variable_info(dfdpt, "dew_point_temperature")
+        dfdpt = h_utils.overwrite_variable_info(dfdpt, "dew_point_temperature")
 
         # Remove unwanted mising data rows
-        dfdpt = remove_missing_data_rows(dfdpt, "dew_point_temperature")
+        dfdpt = h_utils.remove_missing_data_rows(dfdpt, "dew_point_temperature")
         
         # Concatenate columns for joining dataframe for next step
         dfdpt['source_id'] = dfdpt['source_id'].astype(str).apply(lambda x: x.replace('.0', ''))
@@ -537,13 +347,13 @@ def main(station="", subset="", run_all=False, clobber=False):
         dfdpt["observation_value"] = pd.to_numeric(dfdpt["observation_value"],errors='coerce')
         
         # Add data policy and record numbers to dataframe
-        dfdpt = add_data_policy(dfdpt, data_policy_df)
+        dfdpt = h_utils.add_data_policy(dfdpt, data_policy_df)
 
         # Restrict to required columns
         dfdpt = dfdpt[INTERMED_COLUMNS]
 
         # Create observation_id field
-        dfdpt = construct_obs_id(dfdpt)
+        dfdpt = h_utils.construct_obs_id(dfdpt)
 
         # Set up QC table
         qcdpt = construct_qc_df(dfdpt)
@@ -552,7 +362,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         dfdpt = dfdpt[FINAL_COLUMNS]
 
         # Ensure correct number of decimal places
-        dfdpt = fix_decimal_places(dfdpt)
+        dfdpt = h_utils.fix_decimal_places(dfdpt)
 
         #====================================================================================
         # Convert station level pressure  to cdmlite
@@ -563,16 +373,16 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         # Change for each variable to convert to CDM compliant values
         dfslp["observation_value"] = df["station_level_pressure"]
-        dfslp = construct_extra_ids(dfslp, df, "station_level_pressure")
+        dfslp = h_utils.construct_extra_ids(dfslp, df, "station_level_pressure")
  
         # Extract QC information for QC tables
-        dfslp = extract_qc_info(dfslp, df, "station_level_pressure")
+        dfslp = h_utils.extract_qc_info(dfslp, df, "station_level_pressure", do_report_id=True)
 
         # Change for each variable if required
-        dfslp = overwrite_variable_info(dfslp, "station_level_pressure")
+        dfslp = h_utils.overwrite_variable_info(dfslp, "station_level_pressure")
 
         # Remove unwanted missing data rows
-        dfslp = remove_missing_data_rows(dfslp, "station_level_pressure")
+        dfslp = h_utils.remove_missing_data_rows(dfslp, "station_level_pressure")
         
         # Concatenate columns for joining dataframe for next step
         dfslp['source_id'] = dfslp['source_id'].astype(str).apply(lambda x: x.replace('.0', ''))
@@ -580,13 +390,13 @@ def main(station="", subset="", run_all=False, clobber=False):
                                         dfslp['source_id'].astype(str)
         
         # Add data policy and record numbers to dataframe
-        dfslp = add_data_policy(dfslp, data_policy_df)
+        dfslp = h_utils.add_data_policy(dfslp, data_policy_df)
 
         # Restrict to required columns
         dfslp = dfslp[INTERMED_COLUMNS]
 
         # Create observation_id field
-        dfslp = construct_obs_id(dfslp)
+        dfslp = h_utils.construct_obs_id(dfslp)
 
         # Set up QC table
         qcslp = construct_qc_df(dfslp)
@@ -600,7 +410,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         dfslp['observation_value'] = (dfslp['observation_value']*100)
         dfslp['observation_value'] = dfslp['observation_value'].map(int)
 
-        dfslp = fix_decimal_places(dfslp, do_obs_value=False)
+        dfslp = h_utils.fix_decimal_places(dfslp, do_obs_value=False)
 
         #===========================================================================================
         # Convert sea level pressure to CDM lite
@@ -611,16 +421,16 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         # Change for each variable to convert to CDM compliant values
         dfmslp["observation_value"] = df["sea_level_pressure"]
-        dfmslp = construct_extra_ids(dfmslp, df, "sea_level_pressure")
+        dfmslp = h_utils.construct_extra_ids(dfmslp, df, "sea_level_pressure")
 
         # Extract QC information for QC tables
-        dfmslp = extract_qc_info(dfmslp, df, "sea_level_pressure")
+        dfmslp = h_utils.extract_qc_info(dfmslp, df, "sea_level_pressure", do_report_id=True)
 
         # Change for each variable if required
-        dfmslp = overwrite_variable_info(dfmslp, "sea_level_pressure")
+        dfmslp = h_utils.overwrite_variable_info(dfmslp, "sea_level_pressure")
 
         # Remove unwanted missing data rows
-        dfmslp = remove_missing_data_rows(dfmslp, "sea_level_pressure")
+        dfmslp = h_utils.remove_missing_data_rows(dfmslp, "sea_level_pressure")
         
         # Concatenate columns for joining dataframe for next step
         dfmslp['source_id'] = dfmslp['source_id'].astype(str).apply(lambda x: x.replace('.0', ''))
@@ -628,13 +438,13 @@ def main(station="", subset="", run_all=False, clobber=False):
                                          dfmslp['source_id'].astype(str)
         
         # Add data policy and record numbers to dataframe
-        dfmslp = add_data_policy(dfmslp, data_policy_df)
+        dfmslp = h_utils.add_data_policy(dfmslp, data_policy_df)
 
         # Restrict to required columns
         dfmslp = dfmslp[INTERMED_COLUMNS]
 
         # Create observation_id field
-        dfmslp = construct_obs_id(dfmslp)
+        dfmslp = h_utils.construct_obs_id(dfmslp)
 
         # Set up QC table
         qcmslp = construct_qc_df(dfmslp)
@@ -648,7 +458,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         dfmslp['observation_value'] = (dfmslp['observation_value']*100)
         dfmslp['observation_value'] = dfmslp['observation_value'].map(int)
 
-        dfmslp = fix_decimal_places(dfmslp, do_obs_value=False)
+        dfmslp = h_utils.fix_decimal_places(dfmslp, do_obs_value=False)
 
         #===================================================================================
         # Convert wind direction to CDM lite
@@ -659,16 +469,16 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         # Change for each variable to convert to CDM compliant values
         dfwd["observation_value"] = df["wind_direction"]
-        dfwd = construct_extra_ids(dfwd, df, "wind_direction")
+        dfwd = h_utils.construct_extra_ids(dfwd, df, "wind_direction")
 
         # Extract QC information for QC tables
-        dfwd = extract_qc_info(dfwd, df, "wind_direction")
+        dfwd = h_utils.extract_qc_info(dfwd, df, "wind_direction", do_report_id=True)
 
         # Change for each variable if required
-        dfwd = overwrite_variable_info(dfwd, "wind_direction")
+        dfwd = h_utils.overwrite_variable_info(dfwd, "wind_direction")
 
         # Remove unwanted missing data rows
-        dfwd = remove_missing_data_rows(dfwd, "wind_direction")
+        dfwd = h_utils.remove_missing_data_rows(dfwd, "wind_direction")
         
         # Concatenate columns for joining dataframe for next step
         dfwd['source_id'] = dfwd['source_id'].astype(str).apply(lambda x: x.replace('.0', ''))
@@ -676,13 +486,13 @@ def main(station="", subset="", run_all=False, clobber=False):
                                        dfwd['source_id'].astype(str)
         
         # Add data policy and record numbers to datframe
-        dfwd = add_data_policy(dfwd, data_policy_df)
+        dfwd = h_utils.add_data_policy(dfwd, data_policy_df)
 
         # Restrict to required columns
         dfwd = dfwd[INTERMED_COLUMNS]
 
         # Create observation_id field
-        dfwd = construct_obs_id(dfwd)
+        dfwd = h_utils.construct_obs_id(dfwd)
 
         # Set up QC table
         qcwd = construct_qc_df(dfwd)
@@ -692,7 +502,7 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         # Make sure no decimal places and round value to reuquired number of decimal places
         dfwd['observation_value'] = dfwd['observation_value'].astype(str).apply(lambda x: x.replace('.0', ''))
-        dfwd = fix_decimal_places(dfwd, do_obs_value=False)
+        dfwd = h_utils.fix_decimal_places(dfwd, do_obs_value=False)
         
 
         #===========================================================================
@@ -704,16 +514,16 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         # Change for each variable to convert to CDM compliant values
         dfws["observation_value"] = df["wind_speed"]
-        dfws = construct_extra_ids(dfws, df, "wind_speed")
+        dfws = h_utils.construct_extra_ids(dfws, df, "wind_speed")
 
         # Extract QC information for QC tables
-        dfws = extract_qc_info(dfws, df, "wind_speed")
+        dfws = h_utils.extract_qc_info(dfws, df, "wind_speed", do_report_id=True)
 
         # Change for each variable if required
-        dfws = overwrite_variable_info(dfws, "wind_speed")
+        dfws = h_utils.overwrite_variable_info(dfws, "wind_speed")
 
         # Remove unwanted missing data rows
-        dfws = remove_missing_data_rows(dfws, "wind_speed")
+        dfws = h_utils.remove_missing_data_rows(dfws, "wind_speed")
 
         # Concatenate columns for joining dataframe for next step
         dfws['source_id'] = dfws['source_id'].astype(str).apply(lambda x: x.replace('.0', ''))
@@ -723,13 +533,13 @@ def main(station="", subset="", run_all=False, clobber=False):
         #dft.to_csv("ttest.csv", index=False, sep=",")
 
         # Add data policy and record numbers to datafram
-        dfws = add_data_policy(dfws, data_policy_df)
+        dfws = h_utils.add_data_policy(dfws, data_policy_df)
 
         # Restrict to required columns
         dfws = dfws[INTERMED_COLUMNS]
 
         # Create observation_id field
-        dfws = construct_obs_id(dfws)
+        dfws = h_utils.construct_obs_id(dfws)
 
         # QC flag tables
         qcws = construct_qc_df(dfws)
@@ -740,7 +550,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         dfws = dfws[FINAL_COLUMNS]
 
         # Ensure correct number of decimal places
-        dfws = fix_decimal_places(dfws)
+        dfws = h_utils.fix_decimal_places(dfws)
 
 
         # =================================================================================

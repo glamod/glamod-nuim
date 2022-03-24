@@ -397,7 +397,12 @@ def main(station="", subset="", run_all=False, clobber=False):
               
     # To start at begining of files
     for filename in all_filenames:
-        print(f"Processing {filename}")
+
+        if not os.path.exists(os.path.join(utils.SUBDAILY_QFF_IN_DIR, filename)):
+            print("Input QFF file missing: {}".format(os.path.join(utils.SUBDAILY_QFF_IN_DIR, filename)))
+            continue
+        else:
+            print("Processing {}".format(os.path.join(utils.SUBDAILY_QFF_IN_DIR, filename)))
 
         # Read in the dataframe
         df=pd.read_csv(os.path.join(utils.SUBDAILY_QFF_IN_DIR, filename), sep="|", low_memory=False)

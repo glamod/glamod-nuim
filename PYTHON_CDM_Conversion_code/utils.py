@@ -35,6 +35,22 @@ DAILY_CDM_OBS_OUT_DIR = config.get("Paths", "daily_cdmobs_outdir")
 MONTHLY_CDM_LITE_OUT_DIR = config.get("Paths", "monthly_cdmlite_outdir")
 MONTHLY_CDM_OBS_OUT_DIR = config.get("Paths", "monthly_cdmobs_outdir")
 MONTHLY_CDM_HEAD_OUT_DIR = config.get("Paths", "monthly_cdmhead_outdir")
+
+# make directories if they do not exist
+for path in (SUBDAILY_QC_OUT_DIR,
+             SUBDAILY_CDM_LITE_OUT_DIR,
+             SUBDAILY_CDM_OBS_OUT_DIR,
+             SUBDAILY_CDM_HEAD_OUT_DIR,
+             DAILY_CDM_LITE_OUT_DIR,
+             DAILY_QC_OUT_DIR,
+             DAILY_CDM_OBS_OUT_DIR,
+             MONTHLY_CDM_LITE_OUT_DIR,
+             MONTHLY_CDM_OBS_OUT_DIR,
+             MONTHLY_CDM_HEAD_OUT_DIR,
+             ):
+    os.makedirs(path, exist_ok=True)
+
+
 # Files
 SUBDAILY_CDM_LITE_FILE_ROOT = config.get("Filenames", "subdaily_cdmlite_file")
 SUBDAILY_QC_FILE_ROOT = config.get("Filenames", "subdaily_cdmqc_file")
@@ -54,5 +70,5 @@ SUBDAILY_STATION_RECORD_ENTRIES_HEADER = config.get("Records", "subdaily_station
 DAILY_STATION_RECORD_ENTRIES_OBS_LITE = config.get("Records", "daily_station_records_obs_lite")
 DAILY_STATION_RECORD_ENTRIES_HEADER = config.get("Records", "daily_station_records_header")
 MONTHLY_STATION_RECORD_ENTRIES_OBS_LITE = config.get("Records", "monthly_station_records_obs_lite")
-MONTHLY_STATION_RECORD_ENTRIES_HEADER = config.get("Records", "monthly_station_records_header"):wq
+MONTHLY_STATION_RECORD_ENTRIES_HEADER = config.get("Records", "monthly_station_records_header")
 

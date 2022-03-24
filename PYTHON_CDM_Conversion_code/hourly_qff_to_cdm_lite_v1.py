@@ -397,10 +397,15 @@ def main(station="", subset="", run_all=False, clobber=False):
               
     # To start at begining of files
     for filename in all_filenames:
-        print(f"Processing {filename}")
+
+        if not os.path.exists(os.path.join(utils.SUBDAILY_QFF_IN_DIR, filename)):
+            print("Input QFF file missing: {}".format(os.path.join(utils.SUBDAILY_QFF_IN_DIR, filename)))
+            continue
+        else:
+            print("Processing {}".format(os.path.join(utils.SUBDAILY_QFF_IN_DIR, filename)))
 
         # Read in the dataframe
-        df=pd.read_csv(os.path.join(utils.SUBDAILY_QFF_IN_DIR, filename), sep="|",low_memory=False)
+        df=pd.read_csv(os.path.join(utils.SUBDAILY_QFF_IN_DIR, filename), sep="|", low_memory=False)
 
         # Set up the output filenames, and check if they exist
         station_id=df.iloc[1]["Station_ID"] # NOTE: this is renamed below to "primary_station_id"
@@ -774,11 +779,14 @@ def main(station="", subset="", run_all=False, clobber=False):
             qc_merged_df.to_csv(qc_outfile, index=False, sep="|")
             print(f"   {qc_outfile}")
             print("    Done")
-        except:
-            # Continue to next iteration.
-            continue
+        except IOError:
+            # something wrong with file paths, despite checking
+            print(f"Cannot save datafile: {cdmlite_outfile}")
+        except RuntimeError:
+            print("Runtime error")
+        # TODO add logging for these errors
 
-#    return # main
+    return # main
 
 #****************************************
 if __name__ == "__main__":

@@ -151,34 +151,13 @@ def main(station="", subset="", run_all=False, clobber=False):
         return
 
     # Obtain list of station(s) to process (single/subset/all)
-    if station != "":
-        print(f"Single station run: {station}")
-        all_filenames = [os.path.join(utils.SUBDAILY_QFF_IN_DIR, f"{station}.{EXTENSION}")]
-    elif subset != "":
-        print(f"Subset of stations run defined in: {subset}")
-        # Allows for parallelisation
-        try:
-            with open(subset, "r") as f:
-                filenames = f.read().splitlines()
+    all_filenames = utils.get_station_list_to_process(utils.SUBDAILY_QFF_IN_DIR,
+                                                      EXTENSION,
+                                                      station=station,
+                                                      subset=subset,
+                                                      run_all=run_all,
+                                                      )
 
-                #now add the path to the front
-                all_filenames = []
-                for infile in filenames:
-                    all_filenames += [os.path.join(utils.SUBDAILY_QFF_IN_DIR, f"{infile}.{EXTENSION}")]
-
-            print(f"   N = {len(all_filenames)}")
-        except IOError:
-            print(f"Subset file {subset} cannot be found")
-            return
-        except OSError:
-            print(f"Subset file {subset} cannot be found")
-            return
-    elif run_all:
-        print(f"All stations run in {utils.SUBDAILY_QFF_IN_DIR}")
-        all_filenames = [i for i in glob.glob(os.path.join(utils.SUBDAILY_QFF_IN_DIR,
-                                                           f'*.{EXTENSION}'))]    
-        print(f"   N = {len(all_filenames)}")
-              
     # Read in the data policy dataframe (only read in if needed)
     data_policy_df = pd.read_csv(utils.SUBDAILY_STATION_RECORD_ENTRIES_OBS_LITE, encoding='latin-1')
     data_policy_df = data_policy_df.astype(str)

@@ -61,34 +61,15 @@ def main(station="", subset="", run_all=False, clobber=False):
         return
 
     # Obtain list of station(s) to process (single/subset/all)
-    if station != "":
-        print(f"Single station run: {station}")
-        all_filenames = [os.path.join(utils.SUBDAILY_HEAD_IN_DIR, f"{utils.SUBDAILY_CDM_OBS_FILE_ROOT}{station}.{EXTENSION}")]
-    elif subset != "":
-        print(f"Subset of stations run defined in: {subset}")
-        # Allows for parallelisation
-        try:
-            with open(subset, "r") as f:
-                filenames = f.read().splitlines()
+    all_filenames = utils.get_station_list_to_process(utils.SUBDAILY_HEAD_IN_DIR,
+                                                      EXTENSION,
+                                                      station=station,
+                                                      subset=subset,
+                                                      run_all=run_all,
+                                                      prepend=utils.SUBDAILY_CDM_OBS_FILE_ROOT
+                                                      )
+             
 
-                # now add the path to the front
-                all_filenames = []
-                for infile in filenames:
-                    all_filenames += [os.path.join(utils.SUBDAILY_HEAD_IN_DIR, f"{utils.SUBDAILY_CDM_OBS_FILE_ROOT}{infile}.{EXTENSION}")]
-
-            print(f"   N = {len(all_filenames)}")
-        except IOError:
-            print(f"Subset file {subset} cannot be found")
-            return
-        except OSError:
-            print(f"Subset file {subset} cannot be found")
-            return
-    elif run_all:
-        print(f"All stations run in {utils.SUBDAILY_HEAD_IN_DIR}")
-        all_filenames = [i for i in glob.glob(os.path.join(utils.SUBDAILY_HEAD_IN_DIR, f'*.{EXTENSION}'))]    
-        print(f"   N = {len(all_filenames)}")
-              
-    
     # To start at begining of files
     for filename in all_filenames:
 

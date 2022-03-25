@@ -105,13 +105,10 @@ def main(station="", subset="", run_all=False, clobber=False):
                 print(f"     {cdmhead_outfile}")
                 print("   Skipping to next station")  
                 continue  #  to next file in the loop
-                
-            hdf = pd.DataFrame()
-            hdf['extract_record'] = merged_df['report_id'].str[:-11]
-            hdf['station_record_number'] = hdf['extract_record'].str[12:]
-            hdf['primary_station_id'] = hdf['extract_record'].str[:11] 
-  
-                                                
+    hdf = pd.DataFrame()
+    hdf['extract_record'] = merged_df['report_id'].str[:-11]
+    hdf['station_record_number'] = hdf['extract_record'].str[12:]
+    hdf['primary_station_id'] = hdf['extract_record'].str[:11]                                              
     hdf["report_id"] = merged_df["report_id"]
     hdf["application_area"] = ""
     hdf["observing_programme"] = ""
@@ -143,13 +140,15 @@ def main(station="", subset="", run_all=False, clobber=False):
     hdf["duplicates"] = ""
     hdf["source_record_id"] = ""
     hdf ["processing_codes"] = ""
+    hdf["longitude"]=merged_df["longitude"]
+    hdf["latitude"]=merged_df["latitude"]
     hdf["source_id"] = merged_df["source_id"]
     hdf['record_timestamp'] = pd.to_datetime('now').strftime("%Y-%m-%d %H:%M:%S")
     hdf.record_timestamp = hdf.record_timestamp + '+00'
     hdf["history"]=""
     hdf["processing_level"] = "0"
     hdf["report_timestamp"] = merged_df["date_time"]
-    hdf['primary_station_id_2'] = hdf['primary_station_id'].astype(str)+'-'+hdf['source_id'].astype(str)
+    hdf['primary_station_id_3']=hdf['primary_station_id'].astype(str)+'-'+hdf['source_id'].astype(str)+'-'+hdf['station_record_number'].astype(str)
     hdf["duplicates_report"] = hdf["report_id"]+'-'+hdf["station_record_number"].astype(str)
     try:
         station_id=hdf.iloc[1]["primary_station_id"]
@@ -159,10 +158,12 @@ def main(station="", subset="", run_all=False, clobber=False):
     df2 = pd.read_csv(utils.DAILY_STATION_RECORD_ENTRIES_HEADER, encoding='latin-1')
     hdf = hdf.astype(str)
     df2 = df2.astype(str)
-    hdf = df2.merge(hdf, on = ['primary_station_id_2'])
+    hdf = df2.merge(hdf, on = ['primary_station_id_3'])
     hdf["station_name"] = hdf["station_name"]
     hdf["station_record_number"] = hdf["record_number"]
     hdf['height_of_station_above_sea_level'] = hdf['height_of_station_above_sea_level'].astype(str).apply(lambda x: x.replace('.0',''))
+    hdf = hdf.rename(columns={"latitude_x":"latitude",})
+    hdf = hdf.rename(columns={"longitude_x":"longitude",})
     hdf["latitude"] = pd.to_numeric(hdf["latitude"],errors='coerce')
     hdf["longitude"] = pd.to_numeric(hdf["longitude"],errors='coerce')
     hdf["latitude"] = hdf["latitude"].round(3)
@@ -182,7 +183,7 @@ def main(station="", subset="", run_all=False, clobber=False):
               "report_time_reference","profile_id","events_at_station","report_quality",
               "duplicate_status","duplicates","record_timestamp","history",
               "processing_level","processing_codes","source_id","source_record_id",
-              "primary_station_id_2", "duplicates_report"]]
+              "primary_station_id_3", "duplicates_report"]]
     
     
     hdf = hdf.drop_duplicates(subset=['duplicates_report'])

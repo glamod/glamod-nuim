@@ -164,7 +164,7 @@ def main(station="", subset="", run_all=False, clobber=False):
                 #now add the path to the front
                 all_filenames = []
                 for infile in filenames:
-                    all_filenames += [os.path.join(utils.SUBDAILY_QFF_IN_DIR, f"{infile}")]
+                    all_filenames += [os.path.join(utils.SUBDAILY_QFF_IN_DIR, f"{infile}.{EXTENSION}")]
 
             print(f"   N = {len(all_filenames)}")
         except IOError:
@@ -173,7 +173,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         except OSError:
             print(f"Subset file {subset} cannot be found")
             return
-    elif all:
+    elif run_all:
         print(f"All stations run in {utils.SUBDAILY_QFF_IN_DIR}")
         all_filenames = [i for i in glob.glob(os.path.join(utils.SUBDAILY_QFF_IN_DIR,
                                                            f'*.{EXTENSION}'))]    

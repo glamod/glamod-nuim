@@ -63,8 +63,9 @@ DAILY_CDM_HEAD_FILE_ROOT= config.get("Filenames", "daily_cdmhead_file")
 MONTHLY_CDM_LITE_FILE_ROOT = config.get("Filenames", "monthly_cdmlite_file")
 MONTHLY_CDM_OBS_FILE_ROOT = config.get("Filenames", "monthly_cdmobs_file")
 MONTHLY_CDM_HEAD_FILE_ROOT = config.get("Filenames", "monthly_cdmhead_file")
+
 # Station records (note there are two different record_id .csv files needed one for
-#observations tables and one for the header table
+#  observations tables and one for the header table
 SUBDAILY_STATION_RECORD_ENTRIES_OBS_LITE = config.get("Records", "subdaily_station_records_obs_lite")
 SUBDAILY_STATION_RECORD_ENTRIES_HEADER = config.get("Records", "subdaily_station_records_header")
 DAILY_STATION_RECORD_ENTRIES_OBS_LITE = config.get("Records", "daily_station_records_obs_lite")
@@ -72,3 +73,61 @@ DAILY_STATION_RECORD_ENTRIES_HEADER = config.get("Records", "daily_station_recor
 MONTHLY_STATION_RECORD_ENTRIES_OBS_LITE = config.get("Records", "monthly_station_records_obs_lite")
 MONTHLY_STATION_RECORD_ENTRIES_HEADER = config.get("Records", "monthly_station_records_header")
 
+
+def get_station_list_to_process(indir, extension, station="", subset="", run_all=False, prepend=""):
+    """
+    Parameters
+    ----------
+
+    indir :  `str`
+        Directory in which the input files are to be found
+
+    extension : `str`
+        Filename extension of the input files
+
+    station : `str` 
+        Single station ID to process
+
+    subset : `str`
+        Path to file containing subset of IDs to process
+
+    run_all : `bool`
+        Run all files in the directory defined in the config file
+
+    prepend : `str`
+        Text to insert before station ID for input filename
+    """
+    
+    # Obtain list of station(s) to process (single/subset/all)
+    if station != "":
+        print(f"Single station run: {station}")
+        all_filenames = [os.path.join(indir, f"{prepend}{station}.{extension}")]
+        
+    elif subset != "":
+        print(f"Subset of stations run defined in: {subset}")
+        # Allows for parallelisation
+        try:
+            with open(subset, "r") as f:
+                filenames = f.read().splitlines()
+                #now add the path to the front
+                all_filenames = []
+                for infile in filenames:
+                    all_filenames += [os.path.join(indir, f"{prepend}{infile}.{extension}")]
+
+            print(f"   N = {len(all_filenames)}")
+
+        except IOError:
+            print(f"Subset file {subset} cannot be found")
+            all_filenames = []
+        
+        except OSError:
+            print(f"Subset file {subset} cannot be found")
+            all_filenames = []
+        
+    elif run_all:
+        print(f"All stations run in {indir}")
+        # no prepend necessary as working from directory listing
+        all_filenames = [i for i in glob.glob(os.path.join(indir, f'*.{extension}'))]
+        print(f"   N = {len(all_filenames)}")
+
+    return all_filenames

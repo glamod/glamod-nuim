@@ -28,7 +28,56 @@ import utils
 import numpy as np
 
 # Set the file extension for the subdaily psv files
-EXTENSION = 'csv'
+EXTENSION = 'csv.gz'
+
+ORIGINAL_UNITS = {
+    "SNWD" : "715",
+    "PRCP" : "710",
+    "TMIN" : "350",
+    "TMAX" : "350",
+    "TAVG" : "350",
+    "SNOW" : "710",
+    "AWND" : "320",
+    "AWDR" : "731",
+    "WESD" : "710",
+}
+
+CONVERSION_FLAGS = {
+    "SNWD" : "2",
+    "PRCP" : "2",
+    "TMIN" : "0",
+    "TMAX" : "0",
+    "TAVG" : "0",
+    "SNOW" : "2",
+    "AWND" : "2",
+    "AWDR" : "2",
+    "WESD" : "2",
+}
+
+NUMERICAL_PRECISION = {
+    "SNWD" : "1",
+    "PRCP" : "0.1",
+    "TMIN" : "0.01",
+    "TMAX" : "0.01",
+    "TAVG" : "0.01",
+    "SNOW" : "0.1",
+    "AWND" : "0.1",
+    "AWDR" : "0.1",
+    "WESD" : "0.1",
+}
+
+ORIGINAL_PRECISION = {
+    "SNWD" : "1",
+    "PRCP" : "0.1",
+    "TMIN" : "0.1",
+    "TMAX" : "0.1",
+    "TAVG" : "0.1",
+    "SNOW" : "0.1",
+    "AWND" : "0.1",
+    "AWDR" : "1",
+    "WESD" : "0.1",
+}
+
 
 def main(station="", subset="", run_all=False, clobber=False):
     """
@@ -60,42 +109,27 @@ def main(station="", subset="", run_all=False, clobber=False):
         return
 
     # Obtain list of station(s) to process (single/subset/all)
-    if station != "":
-        print(f"Single station run: {station}")
-        all_filenames = [os.path.join(utils.DAILY_CSV_IN_DIR, f"{station}.{EXTENSION}")]
-    elif subset != "":
-        print(f"Subset of stations run defined in: {subset}")
-        # allows parrallelisation
-        try:
+    all_filenames = utils.get_station_list_to_process(utils.DAILY_CSV_IN_DIR,
+                                                      EXTENSION,
+                                                      station=station,
+                                                      subset=subset,
+                                                      run_all=run_all,
+                                                      )
+
             
-            with open(subset, "r") as f:
-                filenames = f.read().splitlines()
+    # Read in the data policy dataframe (only read in if needed)
+    data_policy_df = pd.read_csv(utils.DAILY_STATION_RECORD_ENTRIES_OBS_LITE, encoding='latin-1')
+    data_policy_df = data_policy_df.astype(str)
 
-                # now add the path to the front
-                all_filenames = []
-                for infile in filenames:
-                    all_filenames += [os.path.join(utils.DAILY_CSV_IN_DIR, f"{infile}")]
-
-            print(f"   N = {len(all_filenames)}")
-        except IOError:
-            print(f"Subset file {subset} cannot be found")
-            return
-        except OSError:
-            print(f"Subset file {subset} cannot be found")
-            return
-    elif all:
-        print(f"All stations run in {utils.DAILY_CSV_IN_DIR}")
-        all_filenames = [i for i in glob.glob(os.path.join(utils.DAILY_CSV_IN_DIR, f'*.{EXTENSION}'))]    
-        print(f"   N = {len(all_filenames)}")
-              
     # To start at begining of files
     for filename in all_filenames:
         print(f"Processing {filename}")
 
         # Read in the dataframe
-        df=pd.read_csv(os.path.join(utils.DAILY_CSV_IN_DIR, filename), sep=",",low_memory=False)
-        ##add column headers to df
-        df.columns=["Station_ID", "Date", "observed_variable", "observation_value","quality_flag","Measurement_flag","Source_flag","hour"]
+        df = pd.read_csv(os.path.join(utils.DAILY_CSV_IN_DIR, filename), sep=",", low_memory=False, compression='gzip')
+
+        # add column headers to df
+        df.columns = ["Station_ID", "Date", "observed_variable", "observation_value", "quality_flag", "Measurement_flag", "Source_flag", "hour"]
         df = df.astype(str)
 
         # Set up the output filenames, and check if they exist
@@ -113,299 +147,225 @@ def main(station="", subset="", run_all=False, clobber=False):
                 
                 continue #  to next file in the loop
 
-    df = df[df["observed_variable"].isin(["SNWD", "PRCP", "TMIN", "TMAX", "TAVG", "SNOW", "AWND", "AWDR", "WESD"])]
-    df["Source_flag"]=df["Source_flag"]. astype(str) 
-    df['Source_flag'] = df['Source_flag'].str.replace("0","c")
-    df['Source_flag'] = df['Source_flag'].str.replace("6","n")
-    df['Source_flag'] = df['Source_flag'].str.replace("7","t")
-    df['Source_flag'] = df['Source_flag'].str.replace("A","224")
-    df['Source_flag'] = df['Source_flag'].str.replace("c","161")
-    df['Source_flag'] = df['Source_flag'].str.replace("n","162")
-    df['Source_flag'] = df['Source_flag'].str.replace("t","120")
-    df['Source_flag'] = df['Source_flag'].str.replace("A","224")
-    df['Source_flag'] = df['Source_flag'].str.replace("a","225")
-    df['Source_flag'] = df['Source_flag'].str.replace("B","159")
-    df['Source_flag'] = df['Source_flag'].str.replace("b","226")
-    df['Source_flag'] = df['Source_flag'].str.replace("C","227")
-    df['Source_flag'] = df['Source_flag'].str.replace("D","228")
-    df['Source_flag'] = df['Source_flag'].str.replace("E","229")
-    df['Source_flag'] = df['Source_flag'].str.replace("F","230")
-    df['Source_flag'] = df['Source_flag'].str.replace("G","231")
-    df['Source_flag'] = df['Source_flag'].str.replace("H","160")
-    df['Source_flag'] = df['Source_flag'].str.replace("I","232")
-    df['Source_flag'] = df['Source_flag'].str.replace("K","233")
-    df['Source_flag'] = df['Source_flag'].str.replace("M","234")
-    df['Source_flag'] = df['Source_flag'].str.replace("N","235")
-    df['Source_flag'] = df['Source_flag'].str.replace("Q","236")
-    df['Source_flag'] = df['Source_flag'].str.replace("R","237")
-    df['Source_flag'] = df['Source_flag'].str.replace("r","238")
-    df['Source_flag'] = df['Source_flag'].str.replace("S","166")
-    df['Source_flag'] = df['Source_flag'].str.replace("s","239")
-    df['Source_flag'] = df['Source_flag'].str.replace("T","240")
-    df['Source_flag'] = df['Source_flag'].str.replace("U","241")
-    df['Source_flag'] = df['Source_flag'].str.replace("u","242")
-    df['Source_flag'] = df['Source_flag'].str.replace("W","163")
-    df['Source_flag'] = df['Source_flag'].str.replace("X","164")
-    df['Source_flag'] = df['Source_flag'].str.replace("Z","165")
-    df['Source_flag'] = df['Source_flag'].str.replace("z","243")
-    df['Source_flag'] = df['Source_flag'].str.replace("m","196")
-    
-    
-    station_id=df.iloc[1]["Station_ID"]
-    
-    # set the value significnace for each variable
-    df["value_significance"]="" 
-    df['observed_variable'] = df['observed_variable'].str.replace("SNWD","53")
-    df.loc[df['observed_variable'] == "53", 'value_significance'] = '13'
-    df['observed_variable'] = df['observed_variable'].str.replace("PRCP","44")
-    df.loc[df['observed_variable'] == "44", 'value_significance'] = "13" 
-    df.loc[df['observed_variable'] == "TMIN", 'value_significance'] = '1'
-    df['observed_variable'] = df['observed_variable'].str.replace("TMIN","85")
-    df.loc[df['observed_variable'] == "TMAX", 'value_significance'] = '0'
-    df['observed_variable'] = df['observed_variable'].str.replace("TMAX","85")
-    df.loc[df['observed_variable'] == "TAVG", 'value_significance'] = '2'
-    df['observed_variable'] = df['observed_variable'].str.replace("TAVG","85")
-    df['observed_variable'] = df['observed_variable'].str.replace("SNOW","45")
-    df.loc[df['observed_variable'] == "45", 'value_significance'] = '13'
-    df['observed_variable'] = df['observed_variable'].str.replace("AWND","107")
-    df.loc[df['observed_variable'] == "107", 'value_significance'] = '2'
-    df['observed_variable'] = df['observed_variable'].str.replace("AWDR","106")
-    df.loc[df['observed_variable'] == "106", 'value_significance'] = '2'
-    df['observed_variable'] = df['observed_variable'].str.replace("WESD","55")
-    df.loc[df['observed_variable'] == "55", 'value_significance'] = '13' 
-    
-    
-    df["observation_value"] = pd.to_numeric(df["observation_value"],errors='coerce')
-    df["original_value"]=df["observation_value"]
-    df['original_value'] = np.where(df['observed_variable'] == "44",
-                                           df['original_value'] / 10,
-                                           df['original_value']).round(2)
-    df['original_value'] = np.where(df['observed_variable'] == "53",
-                                           df['original_value'] / 10,
-                                           df['original_value']).round(2)
-    df['original_value'] = np.where(df['observed_variable'] == "85",
-                                           df['original_value'] / 10,
-                                           df['original_value']).round(2)
-    df["original_value"] = np.where(df['observed_variable'] == '45',
-                                           df['original_value'] / 10,
-                                           df['original_value']).round(2)
-    df['original_value'] = np.where(df['observed_variable'] == '55',
-                                           df['original_value'] / 10,
-                                           df['original_value']).round(2)
-    
-    # set the observation values to cdm compliant values
-    df["observation_value"] = pd.to_numeric(df["observation_value"],errors='coerce')
-    df['observation_value'] = np.where(df['observed_variable'] == "44",
-                                           df['observation_value'] / 10,
-                                           df['observation_value']).round(2)
-    df['observation_value'] = np.where(df['observed_variable'] == "53",
-                                           df['observation_value'] / 10,
-                                           df['observation_value']).round(2)
-    df['observation_value'] = np.where(df['observed_variable'] == "85",
-                                           df['observation_value'] / 10 + 273.15,
-                                           df['observation_value']).round(2)
-    df['observation_value'] = np.where(df['observed_variable'] == '45',
-                                           df['observation_value'] / 10,
-                                           df['observation_value']).round(2)
-    df['observation_value'] = np.where(df['observed_variable'] == '55',
-                                           df['observation_value'] / 10,
-                                           df['observation_value']).round(2)
-    df['observation_value'] = np.where(df['observed_variable'] == '107',
-                                           df['observation_value'] / 10,
-                                           df['observation_value']).round(2)
-  
-    
-    
-    # set the units for each variable
-    df["original_units"]=""
-    df.loc[df['observed_variable'] == "85", 'original_units'] = '350' 
-    df.loc[df['observed_variable'] == "44", 'original_units'] = '710'
-    df.loc[df['observed_variable'] == "45", 'original_units'] = '710'
-    df.loc[df['observed_variable'] == "55", 'original_units'] = '710' 
-    df.loc[df['observed_variable'] == "106", 'original_units'] = '731' 
-    df.loc[df['observed_variable'] == "107", 'original_units'] = "320"
-    df.loc[df['observed_variable'] == "53", 'original_units'] = '715'
+        # Just retain the variables required
+        df = df[df["observed_variable"].isin(["SNWD", "PRCP", "TMIN", "TMAX", "TAVG", "SNOW", "AWND", "AWDR", "WESD"])]
+
+
+        # set the source_flag
+        df["Source_flag"] = df["Source_flag"]. astype(str) 
+        for source_flag, source_value in d_utils.SOURCE_FLAGS.items():
+            df['Source_flag'] = df['Source_flag'].str.replace(source_flag, source_value)
+
+        station_id = df.iloc[1]["Station_ID"]
+
+        # set the value significance for each variable
+        df["value_significance"] = "" 
+        for obs_var, val_signif in d_utils.VALUE_SIGNIFICANCE.items():
+            df.loc[df['observed_variable'] == obs_var, 'value_significance'] = val_signif
+
+
+        df["observation_value"] = pd.to_numeric(df["observation_value"],errors='coerce')
+        df["original_value"]=df["observation_value"]
+        df['original_value'] = np.where(df['observed_variable'] == "44",
+                                               df['original_value'] / 10,
+                                               df['original_value']).round(2)
+        df['original_value'] = np.where(df['observed_variable'] == "53",
+                                               df['original_value'] / 10,
+                                               df['original_value']).round(2)
+        df['original_value'] = np.where(df['observed_variable'] == "85",
+                                               df['original_value'] / 10,
+                                               df['original_value']).round(2)
+        df["original_value"] = np.where(df['observed_variable'] == '45',
+                                               df['original_value'] / 10,
+                                               df['original_value']).round(2)
+        df['original_value'] = np.where(df['observed_variable'] == '55',
+                                               df['original_value'] / 10,
+                                               df['original_value']).round(2)
+
+        # set the observation values to cdm compliant values
+        df["observation_value"] = pd.to_numeric(df["observation_value"],errors='coerce')
+        df['observation_value'] = np.where(df['observed_variable'] == "44",
+                                               df['observation_value'] / 10,
+                                               df['observation_value']).round(2)
+        df['observation_value'] = np.where(df['observed_variable'] == "53",
+                                               df['observation_value'] / 10,
+                                               df['observation_value']).round(2)
+        df['observation_value'] = np.where(df['observed_variable'] == "85",
+                                               df['observation_value'] / 10 + 273.15,
+                                               df['observation_value']).round(2)
+        df['observation_value'] = np.where(df['observed_variable'] == '45',
+                                               df['observation_value'] / 10,
+                                               df['observation_value']).round(2)
+        df['observation_value'] = np.where(df['observed_variable'] == '55',
+                                               df['observation_value'] / 10,
+                                               df['observation_value']).round(2)
+        df['observation_value'] = np.where(df['observed_variable'] == '107',
+                                               df['observation_value'] / 10,
+                                               df['observation_value']).round(2)
+
+
+
+        # set the original units for each variable
+        df["original_units"]=""
+        for obs_var, unit in utils.ORIGINAL_UNITS.items():
+            df.loc[df['observed_variable'] == obs_var, 'original_units'] = unit
+
+        # set the units for each variable
+        df["units"] = ""
+        for obs_var, unit in d_utils.UNITS.items():
+            df.loc[df['observed_variable'] == obs_var, 'units'] = unit
+
+
+        # set each height above station surface for each variable
+        df["observation_height_above_station_surface"] = ""
+        for obs_var, height in d_utils.HEIGHTS.items():
+            df.loc[df['observed_variable'] == obs_var, 'observation_height_above_station_surface'] = height
+
+        # set conversion flags for variables
+        df["conversion_flag"] = ""
+        for obs_var, conv_flag in CONVERSION_FLAGS.items():
+            df.loc[df['observed_variable'] == obs_var, 'conversion_flag'] = conv_flag
+
+        # set conversion method for variables
+        df["conversion_method"] = ""
+        df.loc[df['observed_variable'] == "TMIN", 'conversion_method'] = '1' 
+        df.loc[df['observed_variable'] == "TMAX", 'conversion_method'] = '1' 
+        df.loc[df['observed_variable'] == "TAVG", 'conversion_method'] = '1' 
         
-    # set the original units for each variable
-    df["units"]=""
-    df.loc[df['observed_variable'] == "85", 'units'] = '5' 
-    df.loc[df['observed_variable'] == "44", 'units'] = '710'
-    df.loc[df['observed_variable'] == "45", 'units'] = '710'
-    df.loc[df['observed_variable'] == "55", 'units'] = '710' 
-    df.loc[df['observed_variable'] == "106", 'units'] = '731' 
-    df.loc[df['observed_variable'] == "107", 'units'] = "320"
-    df.loc[df['observed_variable'] == "53", 'units'] = '715'
+        # set numerical precision for variables
+        df["numerical_precision"]=""
+        for obs_var, num_prec in NUMERICAL_PRECISION.items():
+            df.loc[df['observed_variable'] == obs_var, 'numerical_precision'] = num_prec
 
-             
-    # set each height above station surface for each variable
-    df["observation_height_above_station_surface"]=""
-    df.loc[df['observed_variable'] == "85", 'observation_height_above_station_surface'] = '2' 
-    df.loc[df['observed_variable'] == "44", 'observation_height_above_station_surface'] = '1'
-    df.loc[df['observed_variable'] == "45", 'observation_height_above_station_surface'] = '1'
-    df.loc[df['observed_variable'] == "55", 'observation_height_above_station_surface'] = '1' 
-    df.loc[df['observed_variable'] == "106", 'observation_height_above_station_surface'] = '10' 
-    df.loc[df['observed_variable'] == "107", 'observation_height_above_station_surface'] = "10"
-    df.loc[df['observed_variable'] == "53", 'observation_height_above_station_surface'] = "1"
-    
-    # set conversion flags for variables
-    df["conversion_flag"]=""
-    df.loc[df['observed_variable'] == "85", 'conversion_flag'] = '0' 
-    df.loc[df['observed_variable'] == "44", 'conversion_flag'] = '2'
-    df.loc[df['observed_variable'] == "45", 'conversion_flag'] = '2'
-    df.loc[df['observed_variable'] == "55", 'conversion_flag'] = '2' 
-    df.loc[df['observed_variable'] == "106", 'conversion_flag'] = '2' 
-    df.loc[df['observed_variable'] == "107", 'conversion_flag'] = "2"
-    df.loc[df['observed_variable'] == "53", 'conversion_flag'] = "2"
-    
-    # set conversion method for variables
-    df["conversion_method"]=""
-    df.loc[df['observed_variable'] == "85", 'conversion_method'] = '1' 
-    
-    
-    # set numerical precision for variables
-    df["numerical_precision"]=""
-    df.loc[df['observed_variable'] == "85", 'numerical_precision'] = '0.01' 
-    df.loc[df['observed_variable'] == "44", 'numerical_precision'] = '0.1'
-    df.loc[df['observed_variable'] == "45", 'numerical_precision'] = '0.1'
-    df.loc[df['observed_variable'] == "55", 'numerical_precision'] = '0.1' 
-    df.loc[df['observed_variable'] == "106", 'numerical_precision'] = '0.1' 
-    df.loc[df['observed_variable'] == "107", 'numerical_precision'] = "0.1"
-    df.loc[df['observed_variable'] == "53", 'numerical_precision'] = "1"
-    df["original_precision"]=""
-    df.loc[df['observed_variable'] == "85", 'original_precision'] = '0.1' 
-    df.loc[df['observed_variable'] == "44", 'original_precision'] = '0.1'
-    df.loc[df['observed_variable'] == "45", 'original_precision'] = '0.1'
-    df.loc[df['observed_variable'] == "55", "original_precision"] = '0.1' 
-    df.loc[df['observed_variable'] == "106", 'original_precision'] = '1' 
-    df.loc[df['observed_variable'] == "107", 'original_precision'] = "0.1"
-    df.loc[df['observed_variable'] == "53", 'original_precision'] = "1"
-    
-    # add all columns for cdmlite
-    df['year'] = df['Date'].str[:4]
-    df['month'] = df['Date'].map(lambda x: x[4:6])
-    df['day'] = df['Date'].map(lambda x: x[6:8])
-    df["hour"] ="00"
-    df["Minute"]="00"
-    df["report_type"]="3"
-    df["source_id"]=df["Source_flag"]
-    df["date_time_meaning"]="1"
-    df["observation_duration"]="13"
-    df["platform_type"]=""
-    df["station_type"]="1"
-    df["observation_id"]=""
-    df["data_policy_licence"]=""
-    df["primary_station_id"]=df["Station_ID"]
-    df["qc_method"]=df["quality_flag"].astype(str)
-    df["quality_flag"]=df["quality_flag"].astype(str)
-    df["crs"]=""
-    df["z_coordinate"]=""
-    df["z_coordinate_type"]=""
-    df["secondary_variable"]=""
-    df["secondary_value"]=""
-    df["code_table"]=""
-    df["sensor_id"]=""
-    df["sensor_automation_status"]=""
-    df["exposure_of_sensor"]=""
-    df["processing_code"]=""
-    df["processing_level"]="0"
-    df["adjustment_id"]=""
-    df["traceability"]=""
-    df["advanced_qc"]=""
-    df["advanced_uncertainty"]=""
-    df["advanced_homogenisation"]=""
-    df["advanced_assimilation_feedback"]=""
-    df["source_record_id"]=""
-    df["location_method"]=""
-    df["location_precision"]=""
-    df["z_coordinate_method"]=""
-    df["bbox_min_longitude"]=""
-    df["bbox_max_longitude"]=""
-    df["bbox_min_latitude"]=""
-    df["bbox_max_latitude"]=""
-    df["spatial_representativeness"]=""
-    df["original_code_table"]=""
-    df["report_id"]=""
+        df["original_precision"]=""
+        for obs_var, orig_prec in ORIGINAL_PRECISION.items():
+            df.loc[df['observed_variable'] == obs_var, 'original_precision'] = orig_prec
 
-    
-    
-    # set quality flag to pass 0 or fail 1
-    df.quality_flag[df.quality_flag == "nan"] = "0"
-    df.quality_flag = df.quality_flag.str.replace('D', '1') \
-    .str.replace('G', '1') \
-        .str.replace('I', '1')\
-            .str.replace('K', '1')\
-                .str.replace('L', '1')\
-                    .str.replace('M', '1')\
-                        .str.replace('N', '1')\
-                            .str.replace('O', '1')\
-                                .str.replace('R', '1')\
-                                    .str.replace('S', '1')\
-                                        .str.replace('T', '1')\
-                                            .str.replace('W', '1')\
-                                                .str.replace('X', '1')\
-                                                    .str.replace('Z', '1')\
-                                                      .str.replace('H', '1')\
-                                                          .str.replace('P', '1')
-                           
-    # add timestamp to df and create report id
-    df["Timestamp2"] = df["year"].map(str) + "-" + df["month"].map(str)+ "-" + df["day"].map(str)  
-    df["Seconds"]="00"
-    df["offset"]="+00"
-    df["date_time"] = df["Timestamp2"].map(str)+ " " + df["hour"].map(str)+":"+df["Minute"].map(str)+":"+df["Seconds"].map(str) 
-    df.date_time = df.date_time + '+00'
-    df["dates"]=df["date_time"].str[:-11]
-    df['primary_station_id_2']=df['primary_station_id'].astype(str)+'-'+df['source_id'].astype(str)
-    df["observation_value"] = pd.to_numeric(df["observation_value"],errors='coerce')
-    df = df.astype(str)                                       
-    df['source_id'] = df['source_id'].astype(str).apply(lambda x: x.replace('.0',''))
-    df['primary_station_id_2']=df['primary_station_id'].astype(str)+'-'+df['source_id'].astype(str)
-    
-    # add in location information for cdm lite station 
-    df2 = pd.read_csv(utils.DAILY_STATION_RECORD_ENTRIES_OBS_LITE, encoding='latin-1')
-    df['primary_station_id_2'] = df['primary_station_id_2'].astype(str)
-    df2 = df2.astype(str)
-    df= df2.merge(df, on=['primary_station_id_2'])
-    df['data_policy_licence'] = df['data_policy_licence_x']
-    df['data_policy_licence'] = df['data_policy_licence'].astype(str).apply(lambda x: x.replace('.0',''))
-    df["observation_value"] = pd.to_numeric(df["observation_value"],errors='coerce')
-    df = df.fillna("null")
-    df = df.replace({"null":""})
-    
-                                   
-    # set up master df to extract each variable
-       
-    df["latitude"] = pd.to_numeric(df["latitude"],errors='coerce')
-    df["longitude"] = pd.to_numeric(df["longitude"],errors='coerce')
-    df["latitude"]= df["latitude"].round(3)
-    df["longitude"]= df["longitude"].round(3)
-    
-    # add observation id to datafrme
-    df['observation_id']=df['primary_station_id'].astype(str)+'-'+df['record_number'].astype(str)+'-'+df['dates'].astype(str)
-    df['observation_id'] = df['observation_id'].str.replace(r' ', '-')
-    df["observation_id"]=df["observation_id"]+df['observed_variable']+'-'+df['value_significance']
-    df['report_id']=df['primary_station_id'].astype(str)+'-'+df['record_number'].astype(str)+'-'+df['dates'].astype(str)
-    
-      
-    # reorder df columns
-    df = df[["observation_id","report_id","data_policy_licence","date_time",
-               "date_time_meaning","observation_duration","longitude","latitude",
-               "crs","z_coordinate","z_coordinate_type","observation_height_above_station_surface",
-               "observed_variable","secondary_variable","observation_value",
-               "value_significance","secondary_value","units","code_table",
-               "conversion_flag","location_method","location_precision",
-               "z_coordinate_method","bbox_min_longitude","bbox_max_longitude",
-               "bbox_min_latitude","bbox_max_latitude","spatial_representativeness",
-               "quality_flag","numerical_precision","sensor_id","sensor_automation_status",
-               "exposure_of_sensor","original_precision","original_units",
-               "original_code_table","original_value","conversion_method",
-               "processing_code","processing_level","adjustment_id","traceability",
-               "advanced_qc","advanced_uncertainty","advanced_homogenisation",
-               "advanced_assimilation_feedback","source_id"]]
+        # add all columns for cdmlite
+        df['year'] = df['Date'].str[:4]
+        df['month'] = df['Date'].map(lambda x: x[4:6])
+        df['day'] = df['Date'].map(lambda x: x[6:8])
+        df["hour"] = "00"
+        df["Minute"] = "00"
+        df["report_type"] = "3"
+        df["source_id"] = df["Source_flag"]
+        df["date_time_meaning"] = "1"
+        df["observation_duration"] = "13"
+        df["platform_type"] = ""
+        df["station_type"] = "1"
+        df["observation_id"] = ""
+        df["data_policy_licence"] = ""
+        df["primary_station_id"] = df["Station_ID"]
+        df["qc_method"] = df["quality_flag"].astype(str)
+        df["quality_flag"] = df["quality_flag"].astype(str)
+        df["crs"] = ""
+        df["z_coordinate"] = ""
+        df["z_coordinate_type"] = ""
+        df["secondary_variable"] = ""
+        df["secondary_value"] = ""
+        df["code_table"] = ""
+        df["sensor_id"] = ""
+        df["sensor_automation_status"] = ""
+        df["exposure_of_sensor"] = ""
+        df["processing_code"] = ""
+        df["processing_level"] = "0"
+        df["adjustment_id"] = ""
+        df["traceability"] = ""
+        df["advanced_qc"] = ""
+        df["advanced_uncertainty"] = ""
+        df["advanced_homogenisation"] = ""
+        df["advanced_assimilation_feedback"] = ""
+        df["source_record_id"] = ""
+        df["location_method"] = ""
+        df["location_precision"] = ""
+        df["z_coordinate_method"] = ""
+        df["bbox_min_longitude"] = ""
+        df["bbox_max_longitude"] = ""
+        df["bbox_min_latitude"] = ""
+        df["bbox_max_latitude"] = ""
+        df["spatial_representativeness"] = ""
+        df["original_code_table"] = ""
+        df["report_id"] = ""
 
-    unique_variables = df['observed_variable'].unique()
-        print(unique_variables)
-        df.to_csv(cdmobs_outfile, index=False, sep="|")
-        print(f"    {cdmobs_outfile}")
+
+
+        # set quality flag to pass 0 or fail 1
+        #    loop allows for option to include more information in future
+        df.quality_flag[df.quality_flag == "nan"] = "0"
+        for flag, new_flag in d_utils.QUALITY_FLAGS.items():
+            df.quality_flag = df.quality_flag.str.replace(flag, new_flag)
+        df.quality_flag[df.quality_flag == "nan"] = "0"
+    
+
+        # add timestamp to df and create report id
+        df["Timestamp2"] = df["year"].map(str) + "-" + df["month"].map(str) + "-" + df["day"].map(str)  
+        df["Seconds"] = "00"
+        df["offset"] = "+00"
+        df["date_time"] = df["Timestamp2"].map(str) + " " + df["hour"].map(str) + ":" +\
+                          df["Minute"].map(str) + ":" + df["Seconds"].map(str) 
+        df.date_time = df.date_time + '+00'
+        df["dates"] = df["date_time"].str[:-11]
+
+        df['primary_station_id_2'] = df['primary_station_id'].astype(str) + '-' + df['source_id'].astype(str)
+
+        df = df.astype(str)  
+                                     
+        # Concatenate columns for joining dataframe in next step
+        df['source_id'] = df['source_id'].astype(str).apply(lambda x: x.replace('.0',''))
+        df['primary_station_id_2']=df['primary_station_id'].astype(str)+'-'+df['source_id'].astype(str)
+        df['primary_station_id_2'] = df['primary_station_id_2'].astype(str)
+        df["observation_value"] = pd.to_numeric(df["observation_value"],errors='coerce')
+
+        # add data policy information
+        df = d_utils.add_data_policy(df, data_policy_df)
+        
+        # Remove NAs
+        df = df.fillna("null")
+        df = df.replace({"null":""})
+
+        # sort out the locational metadata
+        df["latitude"] = pd.to_numeric(df["latitude"],errors='coerce')
+        df["longitude"] = pd.to_numeric(df["longitude"],errors='coerce')
+        df["latitude"] = df["latitude"].round(3)
+        df["longitude"] = df["longitude"].round(3)
+
+        # add observation id to dataframe
+        df['observation_id'] = df['primary_station_id'].astype(str) + '-' + df['record_number'].astype(str) + '-' + df['dates'].astype(str)
+        df['observation_id'] = df['observation_id'].str.replace(r' ', '-')
+        df["observation_id"] = df["observation_id"] + df['observed_variable'] + '-' + df['value_significance']
+        df['report_id'] = df['primary_station_id'].astype(str) + '-' + df['record_number'].astype(str) + '-' + df['dates'].astype(str)
+
+
+        # reorder df columns
+        df = df[["observation_id","report_id","data_policy_licence","date_time",
+                   "date_time_meaning","observation_duration","longitude","latitude",
+                   "crs","z_coordinate","z_coordinate_type","observation_height_above_station_surface",
+                   "observed_variable","secondary_variable","observation_value",
+                   "value_significance","secondary_value","units","code_table",
+                   "conversion_flag","location_method","location_precision",
+                   "z_coordinate_method","bbox_min_longitude","bbox_max_longitude",
+                   "bbox_min_latitude","bbox_max_latitude","spatial_representativeness",
+                   "quality_flag","numerical_precision","sensor_id","sensor_automation_status",
+                   "exposure_of_sensor","original_precision","original_units",
+                   "original_code_table","original_value","conversion_method",
+                   "processing_code","processing_level","adjustment_id","traceability",
+                   "advanced_qc","advanced_uncertainty","advanced_homogenisation",
+                   "advanced_assimilation_feedback","source_id"]]
+
+        # Write the output files
+        try:
+            unique_variables = df['observed_variable'].unique()
+            print(unique_variables)
+
+            df.to_csv(cdmobs_outfile, index=False, sep="|")
+            print(f"    {cdmobs_outfile}")
+            print("Done")
+        except IOError:
+            # something wrong with file paths, despite checking
+            print(f"Cannot save datafile: {cdmlite_outfile}")
+        except RuntimeError:
+            print("Runtime error")
+        # TODO add logging for these errors
 
 
 

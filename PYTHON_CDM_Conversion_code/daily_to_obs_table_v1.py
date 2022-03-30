@@ -22,10 +22,11 @@ Edited snoone 09/03/2022
 
 import os
 import glob
+import numpy as np
 import pandas as pd
 pd.options.mode.chained_assignment = None  # default='warn'
 import utils
-import numpy as np
+import daily_csv_to_cdm_utils as d_utils
 
 # Set the file extension for the subdaily psv files
 EXTENSION = 'csv.gz'
@@ -207,7 +208,7 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         # set the original units for each variable
         df["original_units"]=""
-        for obs_var, unit in utils.ORIGINAL_UNITS.items():
+        for obs_var, unit in ORIGINAL_UNITS.items():
             df.loc[df['observed_variable'] == obs_var, 'original_units'] = unit
 
         # set the units for each variable
@@ -240,6 +241,11 @@ def main(station="", subset="", run_all=False, clobber=False):
         df["original_precision"]=""
         for obs_var, orig_prec in ORIGINAL_PRECISION.items():
             df.loc[df['observed_variable'] == obs_var, 'original_precision'] = orig_prec
+
+        # replace observed variable name by appropriate ID
+        for obs_var, var_id in d_utils.VARIABLE_ID.items():
+            df['observed_variable'] = df['observed_variable'].str.replace(obs_var, var_id)
+
 
         # add all columns for cdmlite
         df['year'] = df['Date'].str[:4]

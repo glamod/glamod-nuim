@@ -30,109 +30,7 @@ import daily_csv_to_cdm_utils as d_utils
 # Set the file extension for the subdaily psv files
 EXTENSION = 'csv.gz'
 
-SOURCE_FLAGS = {
-    "0" : "c",
-    "6" : "n",
-    "7" : "t",
-    "A" : "224",
-    "c" : "161",
-    "n" : "162",
-    "t" : "120",
-    "A" : "224",
-    "a" : "225",
-    "B" : "159",
-    "b" : "226",
-    "C" : "227",
-    "D" : "228",
-    "E" : "229",
-    "F" : "230",
-    "G" : "231",
-    "H" : "160",
-    "I" : "232",
-    "K" : "233",
-    "M" : "234",
-    "N" : "235",
-    "Q" : "236",
-    "R" : "237",
-    "r" : "238",
-    "S" : "166",
-    "s" : "239",
-    "T" : "240",
-    "U" : "241",
-    "u" : "242",
-    "W" : "163",
-    "X" : "164",
-    "Z" : "165",
-    "z" : "243",
-    "m" : "196",
-}
 
-VARIABLE_ID = {
-    "SNWD" : "53",
-    "PRCP" : "44",
-    "TMIN" : "85",
-    "TMAX" : "85",
-    "TAVG" : "85",
-    "SNOW" : "45",
-    "AWND" : "107",
-    "AWDR" : "106",
-    "WESD" : "55",
-}
-
-VALUE_SIGNIFICANCE = {
-    "SNWD" : "13",
-    "PRCP" : "13",
-    "TMIN" : "1",
-    "TMAX" : "0",
-    "TAVG" : "2",
-    "SNOW" : "13",
-    "AWND" : "2",
-    "AWDR" : "2",
-    "WESD" : "13",
-}
-
-UNITS = {
-    "SNWD" : "715",
-    "PRCP" : "710",
-    "TMIN" : "5",
-    "TMAX" : "5",
-    "TAVG" : "5",
-    "SNOW" : "710",
-    "AWND" : "320",
-    "AWDR" : "731",
-    "WESD" : "710",
-}
-
-HEIGHTS = {
-    "SNWD" : "1",
-    "PRCP" : "1",
-    "TMIN" : "2",
-    "TMAX" : "2",
-    "TAVG" : "2",
-    "SNOW" : "1",
-    "AWND" : "10",
-    "AWDR" : "10",
-    "WESD" : "1",
-}
-
-QUALITY_FLAGS = {
-    'D' : '1',
-    'G' : '1',
-    'I' : '1',
-    'K' : '1',
-    'L' : '1',
-    'M' : '1',
-    'N' : '1',
-    'O' : '1',
-    'R' : '1',
-    'S' : '1',
-    'T' : '1',
-    'W' : '1',
-    'X' : '1',
-    'Z' : '1',
-    'H' : '1',
-    'P' : '1',
-}
 
 QC_METHODS = {
         "D" : "16,",
@@ -225,18 +123,18 @@ def main(station="", subset="", run_all=False, clobber=False):
                 print("   Skipping to next station")
                 continue #  to next file in the loop
 
-        # Just retain the variables we want
+        # Just retain the variables required
         df = df[df["observed_variable"].isin(["SNWD", "PRCP", "TMIN", "TMAX", "TAVG", "SNOW", "AWND", "AWDR", "WESD"])]
         # TODO - add cross check to ensure that all are tested for in the various steps
 
         # set the source_flag
         df["Source_flag"] = df["Source_flag"]. astype(str) 
-        for source_flag, source_value in SOURCE_FLAGS.items():
+        for source_flag, source_value in d_utils.SOURCE_FLAGS.items():
             df['Source_flag'] = df['Source_flag'].str.replace(source_flag, source_value)
 
-        # set the variable ID and suitable value significnace for each variable
+        # set the value significance for each variable
         df["value_significance"] = "" 
-        for obs_var, val_signif in VALUE_SIGNIFICANCE.items():
+        for obs_var, val_signif in d_utils.VALUE_SIGNIFICANCE.items():
             df.loc[df['observed_variable'] == obs_var, 'value_significance'] = val_signif
 
 
@@ -267,16 +165,16 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         # set the units for each variable
         df["units"] = ""
-        for obs_var, unit in UNITS.items():
+        for obs_var, unit in d_utils.UNITS.items():
             df.loc[df['observed_variable'] == obs_var, 'units'] = unit
 
         # set each height above station surface for each variable
         df["observation_height_above_station_surface"] = ""
-        for obs_var, height in HEIGHTS.items():
+        for obs_var, height in d_utils.HEIGHTS.items():
             df.loc[df['observed_variable'] == obs_var, 'observation_height_above_station_surface'] = height
 
         # replace observed variable name by appropriate ID
-        for obs_var, var_id in VARIABLE_ID.items():
+        for obs_var, var_id in d_utils.VARIABLE_ID.items():
             df['observed_variable'] = df['observed_variable'].str.replace(obs_var, var_id)
 
 
@@ -301,7 +199,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         # set quality flag to pass 0 or fail 1
         #    loop allows for option to include more information in future
         df.quality_flag[df.quality_flag == "nan"] = "0"
-        for flag, new_flag in QUALITY_FLAGS.items():
+        for flag, new_flag in d_utils.QUALITY_FLAGS.items():
             df.quality_flag = df.quality_flag.str.replace(flag, new_flag)
 
         # add timestamp to df and create report id

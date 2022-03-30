@@ -69,15 +69,15 @@ def main(station="", subset="", run_all=False, clobber=False):
                                                       prepend=utils.SUBDAILY_CDM_OBS_FILE_ROOT
                                                       )
              
-
+    
     # To start at begining of files
     for filename in all_filenames:
 
-        if not os.path.exists(os.path.join(utils.SUBDAILY_HEAD_IN_DIR, filename)):
-            print("Input psv file missing: {}".format(os.path.join(utils.SUBDAILY_HEAD_IN_DIR, filename)))
+        if not os.path.exists(filename):
+            print("Input psv file missing: {}".format(filename))
             continue
         else:
-            print("Processing {}".format(os.path.join(utils.SUBDAILY_HEAD_IN_DIR, filename)))
+            print("Processing {}".format(filename))
         
         obs_table_df=pd.read_csv(filename, sep="|", usecols=OBS_TABLE_COLUMNS)
         
@@ -128,7 +128,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         hdf["duplicate_status"] = "4"
         hdf["duplicates"] = ""
         hdf["source_record_id"] = ""
-        hdf ["processing_codes"] = ""
+        hdf["processing_codes"] = ""
         hdf["longitude"] = obs_table_df["longitude"]
         hdf["latitude"] = obs_table_df["latitude"]
         hdf["source_id"] = obs_table_df["source_id"]
@@ -151,8 +151,8 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         # tidy up metadata
         hdf['height_of_station_above_sea_level'] = hdf['height_of_station_above_sea_level'].astype(str).apply(lambda x: x.replace('.0', ''))
-        hdf["latitude"] = pd.to_numeric(hdf["latitude"],errors='coerce')
-        hdf["longitude"] = pd.to_numeric(hdf["longitude"],errors='coerce')
+        hdf["latitude"] = pd.to_numeric(hdf["latitude"], errors='coerce')
+        hdf["longitude"] = pd.to_numeric(hdf["longitude"], errors='coerce')
         hdf["latitude"] = hdf["latitude"].round(3)
         hdf["longitude"] = hdf["longitude"].round(3)
 

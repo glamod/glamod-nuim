@@ -149,11 +149,12 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         del obs_table_df
 
+
         # add in required information from external .csv file specific for header tables       
         df2 = pd.read_csv(utils.DAILY_STATION_RECORD_ENTRIES_HEADER, encoding='latin-1')
         hdf = hdf.astype(str)
         df2 = df2.astype(str)
-        hdf = df2.merge(hdf, on = ['primary_station_id_3'])
+        hdf = df2.merge(hdf, on=['primary_station_id_3'])
         # hdf["station_name"] = hdf["station_name"]
         hdf["station_record_number"] = hdf["record_number"]
 

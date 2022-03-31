@@ -281,7 +281,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         df["date_time"] = df["Timestamp2"].map(str) + " " + df["hour"].map(str) + ":" +\
                           df["Minute"].map(str) + ":" + df["Seconds"].map(str) 
         df.date_time = df.date_time + '+00'
-        df["dates"] = df["date_time"].str[:-11]
+        df["dates"] = df["date_time"].str[:-12]
 
         df['primary_station_id_2'] = df['primary_station_id'].astype(str) + '-' + df['source_id'].astype(str)
 
@@ -311,7 +311,6 @@ def main(station="", subset="", run_all=False, clobber=False):
         df['observation_id'] = df['observation_id'].str.replace(r' ', '-')
         df["observation_id"] = df["observation_id"] + df['observed_variable'] + '-' + df['value_significance']
         df['report_id'] = df['primary_station_id'].astype(str) + '-' + df['record_number'].astype(str) + '-' + df['dates'].astype(str)
-
 
         # reorder df columns
         df = df[["observation_id","report_id","data_policy_licence","date_time",

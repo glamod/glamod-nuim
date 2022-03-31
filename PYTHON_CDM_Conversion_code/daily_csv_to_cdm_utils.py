@@ -5,8 +5,11 @@ Subroutines for sub-daily QFF to CDM conversion scripts
 
 @author: rjhd2
 """
-
+import numpy as np
 import pandas as pd
+
+VARIABLE_NAMES = ["SNWD", "PRCP", "TMIN", "TMAX", "TAVG", "SNOW", "AWND", "AWDR", "WESD"]
+
 
 SOURCE_FLAGS = {
     "0" : "c",
@@ -132,5 +135,80 @@ def add_data_policy(var_frame, policy_frame):
     var_frame['data_policy_licence'] = var_frame['data_policy_licence_x']
 
     var_frame['data_policy_licence'] = var_frame['data_policy_licence'].astype(str).apply(lambda x: x.replace('.0',''))
+
+    return var_frame
+
+
+def convert_values(var_frame, var_name, field_name, kelvin=False):
+    """
+    Convert values to CDM compliant form
+
+    var_frame : `dataframe`
+        Dataframe for variable
+
+    var_name : `str`
+        Name of variable
+
+    field_name : `str`
+        Name of dataframe field to work on
+
+    kelvin : `bool`
+        To convert temperatures to Kelvin or not
+    """
+
+    if var_name == "PRCP":
+        var_frame[field_name] = np.where(var_frame['observed_variable'] == "PRCP",
+                                         var_frame[field_name] / 10,
+                                         var_frame[field_name]).round(2)
+
+    elif var_name == "SNWD":
+        var_frame[field_name] = np.where(var_frame['observed_variable'] == "SNWD",
+                                         var_frame[field_name] / 10,
+                                         var_frame[field_name]).round(2)
+
+    elif var_name == "TMIN":
+        if kelvin:
+            var_frame[field_name] = np.where(var_frame['observed_variable'] == "TMIN",
+                                             var_frame[field_name] / 10 + 273.15,
+                                             var_frame[field_name]).round(2)
+        else:
+            var_frame[field_name] = np.where(var_frame['observed_variable'] == "TMIN",
+                                             var_frame[field_name] / 10,
+                                             var_frame[field_name]).round(2)
+
+    elif var_name == "TMAX":
+        if kelvin:
+            var_frame[field_name] = np.where(var_frame['observed_variable'] == "TMAX",
+                                             var_frame[field_name] / 10 + 273.15,
+                                             var_frame[field_name]).round(2)
+        else:
+            var_frame[field_name] = np.where(var_frame['observed_variable'] == "TMAX",
+                                             var_frame[field_name] / 10,
+                                             var_frame[field_name]).round(2)
+    elif var_name == "TAVG":
+        if kelvin:
+            var_frame[field_name] = np.where(var_frame['observed_variable'] == "TAVG",
+                                             var_frame[field_name] / 10 + 273.15,
+                                             var_frame[field_name]).round(2)
+        else:
+            var_frame[field_name] = np.where(var_frame['observed_variable'] == "TAVG",
+                                             var_frame[field_name] / 10,
+                                             var_frame[field_name]).round(2)
+    elif var_name == "SNOW":
+        var_frame[field_name] = np.where(var_frame['observed_variable'] == 'SNOW',
+                                         var_frame[field_name] / 10,
+                                         var_frame[field_name]).round(2)
+    elif var_name == "WESD":
+        var_frame[field_name] = np.where(var_frame['observed_variable'] == 'WESD',
+                                         var_frame[field_name] / 10,
+                                         var_frame[field_name]).round(2)  
+    elif var_name == "AWND":
+        pass
+
+    elif var_name == "AWDR":
+        pass
+    else:
+        print(f"Invalid variable name {var_name}")
+
 
     return var_frame

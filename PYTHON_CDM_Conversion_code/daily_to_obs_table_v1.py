@@ -149,7 +149,7 @@ def main(station="", subset="", run_all=False, clobber=False):
                 continue #  to next file in the loop
 
         # Just retain the variables required
-        df = df[df["observed_variable"].isin(["SNWD", "PRCP", "TMIN", "TMAX", "TAVG", "SNOW", "AWND", "AWDR", "WESD"])]
+        df = df[df["observed_variable"].isin(d_utils.VARIABLE_NAMES)]
 
 
         # set the source_flag
@@ -165,45 +165,16 @@ def main(station="", subset="", run_all=False, clobber=False):
             df.loc[df['observed_variable'] == obs_var, 'value_significance'] = val_signif
 
 
-        df["observation_value"] = pd.to_numeric(df["observation_value"],errors='coerce')
-        df["original_value"]=df["observation_value"]
-        df['original_value'] = np.where(df['observed_variable'] == "44",
-                                               df['original_value'] / 10,
-                                               df['original_value']).round(2)
-        df['original_value'] = np.where(df['observed_variable'] == "53",
-                                               df['original_value'] / 10,
-                                               df['original_value']).round(2)
-        df['original_value'] = np.where(df['observed_variable'] == "85",
-                                               df['original_value'] / 10,
-                                               df['original_value']).round(2)
-        df["original_value"] = np.where(df['observed_variable'] == '45',
-                                               df['original_value'] / 10,
-                                               df['original_value']).round(2)
-        df['original_value'] = np.where(df['observed_variable'] == '55',
-                                               df['original_value'] / 10,
-                                               df['original_value']).round(2)
+        # set the original values to cdm compliant values
+        df["original_value"] = df["observation_value"]
+        df["original_value"] = pd.to_numeric(df["original_value"], errors='coerce')
+        for var_name in d_utils.VARIABLE_NAMES:
+            df = d_utils.convert_values(df, var_name, "original_value", kelvin=False)
 
         # set the observation values to cdm compliant values
-        df["observation_value"] = pd.to_numeric(df["observation_value"],errors='coerce')
-        df['observation_value'] = np.where(df['observed_variable'] == "44",
-                                               df['observation_value'] / 10,
-                                               df['observation_value']).round(2)
-        df['observation_value'] = np.where(df['observed_variable'] == "53",
-                                               df['observation_value'] / 10,
-                                               df['observation_value']).round(2)
-        df['observation_value'] = np.where(df['observed_variable'] == "85",
-                                               df['observation_value'] / 10 + 273.15,
-                                               df['observation_value']).round(2)
-        df['observation_value'] = np.where(df['observed_variable'] == '45',
-                                               df['observation_value'] / 10,
-                                               df['observation_value']).round(2)
-        df['observation_value'] = np.where(df['observed_variable'] == '55',
-                                               df['observation_value'] / 10,
-                                               df['observation_value']).round(2)
-        df['observation_value'] = np.where(df['observed_variable'] == '107',
-                                               df['observation_value'] / 10,
-                                               df['observation_value']).round(2)
-
+        df["observation_value"] = pd.to_numeric(df["observation_value"], errors='coerce')
+        for var_name in d_utils.VARIABLE_NAMES:
+            df = d_utils.convert_values(df, var_name, "observation_value", kelvin=True)
 
 
         # set the original units for each variable

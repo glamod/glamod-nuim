@@ -31,7 +31,6 @@ import daily_csv_to_cdm_utils as d_utils
 EXTENSION = 'csv.gz'
 
 
-
 QC_METHODS = {
         "D" : "16,",
         "H" : "30,",
@@ -124,7 +123,7 @@ def main(station="", subset="", run_all=False, clobber=False):
                 continue #  to next file in the loop
 
         # Just retain the variables required
-        df = df[df["observed_variable"].isin(["SNWD", "PRCP", "TMIN", "TMAX", "TAVG", "SNOW", "AWND", "AWDR", "WESD"])]
+        df = df[df["observed_variable"].isin(d_utils.VARIABLE_NAMES)]
         # TODO - add cross check to ensure that all are tested for in the various steps
 
         # set the source_flag
@@ -139,29 +138,9 @@ def main(station="", subset="", run_all=False, clobber=False):
 
 
         # SET OBSERVED VALUES TO CDM COMPLIANT values
-        #     not required for Winds (AWND, AWDR)
         df["observation_value"] = pd.to_numeric(df["observation_value"], errors='coerce')
-        df['observation_value'] = np.where(df['observed_variable'] == "PRCP",
-                                               df['observation_value'] / 10,
-                                               df['observation_value']).round(2)
-        df['observation_value'] = np.where(df['observed_variable'] == "SNWD",
-                                               df['observation_value'] / 10,
-                                               df['observation_value']).round(2)
-        df['observation_value'] = np.where(df['observed_variable'] == "TMIN",
-                                               df['observation_value'] / 10 + 273.15,
-                                               df['observation_value']).round(2)
-        df['observation_value'] = np.where(df['observed_variable'] == "TMAX",
-                                               df['observation_value'] / 10 + 273.15,
-                                               df['observation_value']).round(2)
-        df['observation_value'] = np.where(df['observed_variable'] == "TAVG",
-                                               df['observation_value'] / 10 + 273.15,
-                                               df['observation_value']).round(2)
-        df['observation_value'] = np.where(df['observed_variable'] == 'SNOW',
-                                               df['observation_value'] / 10,
-                                               df['observation_value']).round(2)
-        df['observation_value'] = np.where(df['observed_variable'] == 'WESD',
-                                               df['observation_value'] / 10,
-                                               df['observation_value']).round(2)
+        for var_name in d_utils.VARIABLE_NAMES:
+            df = d_utils.convert_values(df, var_name, "observation_value", kelvin=True)
 
         # set the units for each variable
         df["units"] = ""

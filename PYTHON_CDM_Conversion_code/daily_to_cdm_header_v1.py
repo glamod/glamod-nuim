@@ -25,8 +25,9 @@ pd.options.mode.chained_assignment = None  # default='warn'
 import utils
 
 # Set the file extension for the subdaily obs psv files
-
-EXTENSION = 'psv'
+IN_EXTENSION = ".psv"
+OUT_EXTENSION = ".psv"
+COMPRESSION = ".gz"
 
 OBS_TABLE_COLUMNS = ["observation_id", "report_id", "latitude","longitude","source_id","date_time"]
 
@@ -61,7 +62,7 @@ def main(station="", subset="", run_all=False, clobber=False):
 
     # Obtain list of station(s) to process (single/subset/all)
     all_filenames = utils.get_station_list_to_process(utils.DAILY_HEAD_IN_DIR,
-                                                      EXTENSION,
+                                                      f"{IN_EXTENSION}{COMPRESSION}",
                                                       station=station,
                                                       subset=subset,
                                                       run_all=run_all,
@@ -74,19 +75,20 @@ def main(station="", subset="", run_all=False, clobber=False):
     # To start at begining of files
     for filename in all_filenames:
         if not os.path.exists(filename):
-            print("Input {} file missing: {}".format(EXTENSION, filename))
+            print("Input {} file missing: {}".format(IN_EXTENSION, filename))
             continue
         else:
             print("Processing {}".format(filename))
         
-        obs_table_df = pd.read_csv(filename, sep="|", usecols = OBS_TABLE_COLUMNS)
-        # extract Station_ID from report_ID in obs table
-        
+        # Read in the dataframe
+        obs_table_df = pd.read_csv(filename, sep="|", usecols=OBS_TABLE_COLUMNS, compression="infer")
+        # extract Station_ID from report_ID in obs table        
         obs_table_df['Station_ID'] = obs_table_df['report_id'].str[:11]
+
         # Set up the output filenames, and check if they exist
         station_id = obs_table_df.iloc[1]["Station_ID"] # NOTE: this is renamed below to "primary_station_id" 
         outroot_cdmhead = os.path.join(utils.DAILY_CDM_HEAD_OUT_DIR, utils.DAILY_CDM_HEAD_FILE_ROOT) 
-        cdmhead_outfile = f"{outroot_cdmhead}{station_id}.psv"
+        cdmhead_outfile = f"{outroot_cdmhead}{station_id}{OUT_EXTENSION}{COMPRESSION}"
         if not clobber:
             # and both output files exist
             if os.path.exists(cdmhead_outfile):
@@ -211,7 +213,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         hdf['sub_region'] = hdf['sub_region'].astype(str).apply(lambda x: x.replace('.0',''))
         # Save CDM head table to directory 
         try:
-            hdf.to_csv(cdmhead_outfile, index=False, sep="|")
+            hdf.to_csv(cdmhead_outfile, index=False, sep="|", compression="infer")
             print(f"    {cdmhead_outfile}") 
         except IOError:
             # something wrong with file paths, despite checking

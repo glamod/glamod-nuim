@@ -22,29 +22,33 @@ config.read(os.path.abspath(CONFIG_FILE))
 # Paths
 SUBDAILY_QFF_IN_DIR = config.get("Paths", "subdaily_qff_indir")
 SUBDAILY_HEAD_IN_DIR = config.get("Paths", "subdaily_cdmhead_indir")
-SUBDAILY_QC_OUT_DIR = config.get("Paths", "subdaily_cdmqc_outdir")
 DAILY_CSV_IN_DIR = config.get("Paths", "daily_csv_indir")
 DAILY_HEAD_IN_DIR = config.get("Paths", "daily_cdmhead_csv_indir")
 MONTHLY_CSV_IN_DIR = config.get("Paths", "monthly_csv_indir")
 SUBDAILY_CDM_LITE_OUT_DIR = config.get("Paths", "subdaily_cdmlite_outdir")
+SUBDAILY_CDM_QC_OUT_DIR = config.get("Paths", "subdaily_cdmqc_outdir")
 SUBDAILY_CDM_OBS_OUT_DIR = config.get("Paths", "subdaily_cdmobs_outdir")
 SUBDAILY_CDM_HEAD_OUT_DIR = config.get("Paths", "subdaily_cdmhead_outdir")
 DAILY_CDM_LITE_OUT_DIR = config.get("Paths", "daily_cdmlite_outdir")
-DAILY_QC_OUT_DIR = config.get("Paths", "daily_cdmqc_outdir")
+DAILY_CDM_QC_OUT_DIR = config.get("Paths", "daily_cdmqc_outdir")
 DAILY_CDM_OBS_OUT_DIR = config.get("Paths", "daily_cdmobs_outdir")
+DAILY_CDM_HEAD_OUT_DIR = config.get("Paths", "daily_cdmhead_outdir")
 MONTHLY_CDM_LITE_OUT_DIR = config.get("Paths", "monthly_cdmlite_outdir")
+MONTHLY_CDM_QC_OUT_DIR = config.get("Paths", "monthly_cdmqc_outdir")
 MONTHLY_CDM_OBS_OUT_DIR = config.get("Paths", "monthly_cdmobs_outdir")
 MONTHLY_CDM_HEAD_OUT_DIR = config.get("Paths", "monthly_cdmhead_outdir")
 
 # make directories if they do not exist
-for path in (SUBDAILY_QC_OUT_DIR,
-             SUBDAILY_CDM_LITE_OUT_DIR,
+for path in (SUBDAILY_CDM_LITE_OUT_DIR,
+             SUBDAILY_CDM_QC_OUT_DIR,
              SUBDAILY_CDM_OBS_OUT_DIR,
              SUBDAILY_CDM_HEAD_OUT_DIR,
              DAILY_CDM_LITE_OUT_DIR,
-             DAILY_QC_OUT_DIR,
+             DAILY_CDM_QC_OUT_DIR,
              DAILY_CDM_OBS_OUT_DIR,
+             DAILY_CDM_HEAD_OUT_DIR,
              MONTHLY_CDM_LITE_OUT_DIR,
+             MONTHLY_CDM_QC_OUT_DIR,
              MONTHLY_CDM_OBS_OUT_DIR,
              MONTHLY_CDM_HEAD_OUT_DIR,
              ):

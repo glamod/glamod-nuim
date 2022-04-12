@@ -332,7 +332,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         try:
             unique_variables = df['observed_variable'].unique()
             print(unique_variables)
-
+            df.sort_values("date_time", inplace=True)
             df.to_csv(cdmobs_outfile, index=False, sep="|")
             print(f"    {cdmobs_outfile}")
             print("Done")

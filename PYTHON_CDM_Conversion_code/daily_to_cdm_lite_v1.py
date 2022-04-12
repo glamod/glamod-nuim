@@ -268,12 +268,14 @@ def main(station="", subset="", run_all=False, clobber=False):
         try:
             # Save CDM lite table to directory
             unique_variables = df['observed_variable'].unique()
-        
             print(unique_variables)
+        
+            df.sort_values("date_time", inplace=True)
             df.to_csv(cdmlite_outfile, index=False, sep="|")
             print(f"    {cdmlite_outfile}")
             
             # and the QC table
+            qct.sort_values("date_time", inplace=True)
             qct['qc_method'] = qct['qc_method'].str[:-1]
             unique_qc_methods = qct['qc_method'].unique()
             print(unique_qc_methods)

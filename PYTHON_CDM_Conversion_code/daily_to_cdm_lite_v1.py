@@ -97,7 +97,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         print(f"Processing {filename}")
 
         # Read in the dataframe
-        df = pd.read_csv(os.path.join(utils.DAILY_CSV_IN_DIR, filename), sep=",", low_memory=False, compression='gzip')
+        df = pd.read_csv(os.path.join(utils.DAILY_CSV_IN_DIR, filename), sep=",", low_memory=False, compression='gzip', header=None)
 
         # add column headers to df
         df.columns=["Station_ID", "Date", "observed_variable", "observation_value","quality_flag","Measurement_flag","Source_flag","hour"]

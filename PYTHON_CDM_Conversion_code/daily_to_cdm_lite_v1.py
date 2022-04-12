@@ -109,7 +109,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         outroot_cdmlite = os.path.join(utils.DAILY_CDM_LITE_OUT_DIR, utils.DAILY_CDM_LITE_FILE_ROOT)
         cdmlite_outfile = f"{outroot_cdmlite}{station_id}.psv"
 
-        outroot_qc= os.path.join(utils.DAILY_QC_OUT_DIR, utils.DAILY_QC_FILE_ROOT)
+        outroot_qc= os.path.join(utils.DAILY_CDM_QC_OUT_DIR, utils.DAILY_QC_FILE_ROOT)
         qc_outfile = f"{outroot_qc}{station_id}.psv"
 
         # if not overwriting
@@ -275,7 +275,7 @@ def main(station="", subset="", run_all=False, clobber=False):
             print(f"    {cdmlite_outfile}")
             
             # and the QC table
-            qct.sort_values("date_time", inplace=True)
+            qct.sort_values("report_id", inplace=True)
             qct['qc_method'] = qct['qc_method'].str[:-1]
             unique_qc_methods = qct['qc_method'].unique()
             print(unique_qc_methods)

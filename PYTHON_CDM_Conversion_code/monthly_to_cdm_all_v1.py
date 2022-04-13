@@ -32,7 +32,7 @@ import utils
 # Set the file extension for the monthly obs psv files
 IN_EXTENSION = ".csv"
 OUT_EXTENSION = ".psv"
-COMPRESSION = ".gz"
+COMPRESSION = ""
 
 LITE_COLS = ["STATION", "LATITUDE", "LONGITUDE", "ELEVATION", "DATE", "NAME", "PRCP", "TMIN", "TMAX", "TAVG", "SNOW", "AWND"]
 
@@ -653,11 +653,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         hdf["duplicates_report"] = hdf["report_id"] + '-' + hdf["station_record_number"].astype(str)
 
 
-
-        df2 = pd.read_csv(utils.MONTHLY_STATION_RECORD_ENTRIES_HEADER, encoding='latin-1')
-        hdf = hdf.astype(str)
-        df2 = df2.astype(str)
-        hdf = df2.merge(hdf, on=['primary_station_id_3'])
+        hdf = data_policy_df.merge(hdf, on=['primary_station_id_3'])
         hdf = hdf.rename(columns={"latitude_x":"latitude",})
         hdf = hdf.rename(columns={"longitude_x":"longitude",})
         hdf['height_of_station_above_sea_level'] = hdf['height_of_station_above_sea_level'].astype(str).apply(lambda x: x.replace('.0',''))

@@ -279,7 +279,7 @@ def main(station="", subset="", run_all=False, clobber=False):
             unique_variables = df['observed_variable'].unique()
             print(unique_variables)
             df.sort_values("date_time", inplace=True)
-            df.to_csv(cdmlite_outfile, index=False, sep="|"", compression="infer")
+            df.to_csv(cdmlite_outfile, index=False, sep="|", compression="infer")
             print(f"    {cdmlite_outfile}")
             
             # and the QC table

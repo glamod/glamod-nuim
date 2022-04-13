@@ -105,7 +105,7 @@ def get_station_list_to_process(indir, extension, station="", subset="", run_all
     # Obtain list of station(s) to process (single/subset/all)
     if station != "":
         print(f"Single station run: {station}")
-        all_filenames = [os.path.join(indir, f"{prepend}{station}.{extension}")]
+        all_filenames = [os.path.join(indir, f"{prepend}{station}{extension}")]
         
     elif subset != "":
         print(f"Subset of stations run defined in: {subset}")
@@ -116,7 +116,7 @@ def get_station_list_to_process(indir, extension, station="", subset="", run_all
                 #now add the path to the front
                 all_filenames = []
                 for infile in filenames:
-                    all_filenames += [os.path.join(indir, f"{prepend}{infile}.{extension}")]
+                    all_filenames += [os.path.join(indir, f"{prepend}{infile}{extension}")]
 
             print(f"   N = {len(all_filenames)}")
 
@@ -131,7 +131,7 @@ def get_station_list_to_process(indir, extension, station="", subset="", run_all
     elif run_all:
         print(f"All stations run in {indir}")
         # no prepend necessary as working from directory listing
-        all_filenames = [i for i in glob.glob(os.path.join(indir, f'*.{extension}'))]
+        all_filenames = [i for i in glob.glob(os.path.join(indir, f'*{extension}'))]
         print(f"   N = {len(all_filenames)}")
 
     return all_filenames

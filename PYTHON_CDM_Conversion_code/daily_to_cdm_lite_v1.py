@@ -106,7 +106,7 @@ def main(station="", subset="", run_all=False, clobber=False):
             print("Processing {}".format(filename))
 
         # Read in the dataframe
-        df = pd.read_csv(filename, sep=",", low_memory=False, compression='infer')
+        df = pd.read_csv(os.path.join(utils.DAILY_CSV_IN_DIR, filename), sep=",", low_memory=False, compression='infer', header=None)
 
         # add column headers to df
         df.columns=["Station_ID", "Date", "observed_variable", "observation_value","quality_flag","Measurement_flag","Source_flag","hour"]
@@ -226,7 +226,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         df['observation_id'] = df['primary_station_id'].astype(str) + '-' +\
                                df['record_number'].astype(str) + '-' + df['dates'].astype(str)
         df['observation_id'] = df['observation_id'].str.replace(r' ', '-')
-        df["observation_id"] = df["observation_id"] + df['observed_variable'] + '-' + df['value_significance']
+        df["observation_id"] = df["observation_id"] + '-' + df['observed_variable'] + '-' + df['value_significance']
 
 
 
@@ -277,12 +277,13 @@ def main(station="", subset="", run_all=False, clobber=False):
         try:
             # Save CDM lite table to directory
             unique_variables = df['observed_variable'].unique()
-        
             print(unique_variables)
-            df.to_csv(cdmlite_outfile, index=False, sep="|", compression="infer")
+            df.sort_values("date_time", inplace=True)
+            df.to_csv(cdmlite_outfile, index=False, sep="|"", compression="infer")
             print(f"    {cdmlite_outfile}")
             
             # and the QC table
+            qct.sort_values("report_id", inplace=True)
             qct['qc_method'] = qct['qc_method'].str[:-1]
             unique_qc_methods = qct['qc_method'].unique()
             print(unique_qc_methods)

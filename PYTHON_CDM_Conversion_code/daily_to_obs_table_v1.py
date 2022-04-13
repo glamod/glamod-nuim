@@ -133,7 +133,7 @@ def main(station="", subset="", run_all=False, clobber=False):
             print("Processing {}".format(filename))
 
         # Read in the dataframe
-        df = pd.read_csv(filename, sep=",", low_memory=False, compression='infer')
+        df = pd.read_csv(os.path.join(utils.DAILY_CSV_IN_DIR, filename), sep=",", low_memory=False, compression='infer', header=None)
 
         # add column headers to df
         df.columns = ["Station_ID", "Date", "observed_variable", "observation_value", "quality_flag", "Measurement_flag", "Source_flag", "hour"]
@@ -315,7 +315,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         # add observation id to dataframe
         df['observation_id'] = df['primary_station_id'].astype(str) + '-' + df['record_number'].astype(str) + '-' + df['dates'].astype(str)
         df['observation_id'] = df['observation_id'].str.replace(r' ', '-')
-        df["observation_id"] = df["observation_id"] + df['observed_variable'] + '-' + df['value_significance']
+        df["observation_id"] = df["observation_id"] + '-' + df['observed_variable'] + '-' + df['value_significance']
         df['report_id'] = df['primary_station_id'].astype(str) + '-' + df['record_number'].astype(str) + '-' + df['dates'].astype(str)
 
         # reorder df columns
@@ -338,7 +338,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         try:
             unique_variables = df['observed_variable'].unique()
             print(unique_variables)
-
+            df.sort_values("date_time", inplace=True)
             df.to_csv(cdmobs_outfile, index=False, sep="|", compression="infer")
             print(f"    {cdmobs_outfile}")
             print("Done")

@@ -27,7 +27,9 @@ import utils
 import hourly_qff_to_cdm_utils as h_utils
 
 # Set the file extension for the subdaily psv files
-EXTENSION = 'qff'
+IN_EXTENSION = ".qff"
+OUT_EXTENSION = ".psv"
+COMPRESSION = ""
 
 # Dictionaries to hold CDM codes.  In due course, read directly from those docs
 INITIAL_COLUMNS = ["observation_id","report_type","date_time","date_time_meaning",
@@ -174,7 +176,7 @@ def main(station="", subset="", run_all=False, clobber=False):
 
     # Obtain list of station(s) to process (single/subset/all)
     all_filenames = utils.get_station_list_to_process(utils.SUBDAILY_QFF_IN_DIR,
-                                                      EXTENSION,
+                                                      f"{IN_EXTENSION}{COMPRESSION}",
                                                       station=station,
                                                       subset=subset,
                                                       run_all=run_all,
@@ -188,23 +190,23 @@ def main(station="", subset="", run_all=False, clobber=False):
     # To start at begining of files
     for filename in all_filenames:
 
-        if not os.path.exists(os.path.join(utils.SUBDAILY_QFF_IN_DIR, filename)):
-            print("Input QFF file missing: {}".format(os.path.join(utils.SUBDAILY_QFF_IN_DIR, filename)))
+        if not os.path.exists(filename):
+            print("Input {} file missing: {}".format(IN_EXTENSION, filename))
             continue
         else:
-            print("Processing {}".format(os.path.join(utils.SUBDAILY_QFF_IN_DIR, filename)))
+            print("Processing {}".format(filename))
 
         # Read in the dataframe
-        df=pd.read_csv(os.path.join(utils.SUBDAILY_QFF_IN_DIR, filename), sep="|", low_memory=False)
+        df=pd.read_csv(filename, sep="|", low_memory=False, compression="infer")
 
         # Set up the output filenames, and check if they exist
         station_id=df.iloc[1]["Station_ID"] # NOTE: this is renamed below to "primary_station_id"
 
         outroot_cdmlite = os.path.join(utils.SUBDAILY_CDM_LITE_OUT_DIR, utils.SUBDAILY_CDM_LITE_FILE_ROOT)
-        cdmlite_outfile = f"{outroot_cdmlite}{station_id}.psv"
+        cdmlite_outfile = f"{outroot_cdmlite}{station_id}{OUT_EXTENSION}{COMPRESSION}"
 
-        outroot_qc= os.path.join(utils.SUBDAILY_QC_OUT_DIR, utils.SUBDAILY_QC_FILE_ROOT)
-        qc_outfile = f"{outroot_qc}{station_id}.psv"
+        outroot_qc= os.path.join(utils.SUBDAILY_CDM_QC_OUT_DIR, utils.SUBDAILY_QC_FILE_ROOT)
+        qc_outfile = f"{outroot_qc}{station_id}{OUT_EXTENSION}{COMPRESSION}"
 
         # if not overwriting
         if not clobber:
@@ -550,7 +552,7 @@ def main(station="", subset="", run_all=False, clobber=False):
             # Save CDM lite table to directory
             unique_variables = merged_df['observed_variable'].unique()
             print(unique_variables)
-            merged_df.to_csv(cdmlite_outfile, index=False, sep="|")
+            merged_df.to_csv(cdmlite_outfile, index=False, sep="|", compression="infer")
             print(f"    {cdmlite_outfile}")
 
             # Save QC table to directory
@@ -566,7 +568,7 @@ def main(station="", subset="", run_all=False, clobber=False):
             qc_station_id=merged_df.iloc[1]["primary_station_id"]
             unique_qc_methods = qc_merged_df['qc_method'].unique()
             print(unique_qc_methods)
-            qc_merged_df.to_csv(qc_outfile, index=False, sep="|")
+            qc_merged_df.to_csv(qc_outfile, index=False, sep="|", compression="infer")
             print(f"   {qc_outfile}")
             print("    Done")
         except IOError:

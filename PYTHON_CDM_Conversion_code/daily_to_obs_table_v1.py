@@ -29,7 +29,9 @@ import utils
 import daily_csv_to_cdm_utils as d_utils
 
 # Set the file extension for the subdaily psv files
-EXTENSION = 'csv.gz'
+IN_EXTENSION = ".csv"
+OUT_EXTENSION = ".psv"
+COMPRESSION = ".gz"
 
 ORIGINAL_UNITS = {
     "SNWD" : "715",
@@ -111,7 +113,7 @@ def main(station="", subset="", run_all=False, clobber=False):
 
     # Obtain list of station(s) to process (single/subset/all)
     all_filenames = utils.get_station_list_to_process(utils.DAILY_CSV_IN_DIR,
-                                                      EXTENSION,
+                                                      f"{IN_EXTENSION}{COMPRESSION}",
                                                       station=station,
                                                       subset=subset,
                                                       run_all=run_all,
@@ -124,10 +126,14 @@ def main(station="", subset="", run_all=False, clobber=False):
 
     # To start at begining of files
     for filename in all_filenames:
-        print(f"Processing {filename}")
+        if not os.path.exists(filename):
+            print("Input {} file missing: {}".format(IN_EXTENSION, filename))
+            continue
+        else:
+            print("Processing {}".format(filename))
 
         # Read in the dataframe
-        df = pd.read_csv(os.path.join(utils.DAILY_CSV_IN_DIR, filename), sep=",", low_memory=False, compression='gzip')
+        df = pd.read_csv(filename, sep=",", low_memory=False, compression='infer')
 
         # add column headers to df
         df.columns = ["Station_ID", "Date", "observed_variable", "observation_value", "quality_flag", "Measurement_flag", "Source_flag", "hour"]
@@ -136,7 +142,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         # Set up the output filenames, and check if they exist
         station_id=df.iloc[1]["Station_ID"] # NOTE: this is renamed below to "primary_station_id"
         outroot_cdmobs = os.path.join(utils.DAILY_CDM_OBS_OUT_DIR, utils.DAILY_CDM_OBS_FILE_ROOT)
-        cdmobs_outfile = f"{outroot_cdmobs}{station_id}.psv"
+        cdmobs_outfile = f"{outroot_cdmobs}{station_id}{OUT_EXTENSION}{COMPRESSION}"
 
         # if not overwriting
         if not clobber:
@@ -333,7 +339,7 @@ def main(station="", subset="", run_all=False, clobber=False):
             unique_variables = df['observed_variable'].unique()
             print(unique_variables)
 
-            df.to_csv(cdmobs_outfile, index=False, sep="|")
+            df.to_csv(cdmobs_outfile, index=False, sep="|", compression="infer")
             print(f"    {cdmobs_outfile}")
             print("Done")
         except IOError:

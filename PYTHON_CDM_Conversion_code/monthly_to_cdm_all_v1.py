@@ -30,7 +30,10 @@ import utils
 
 
 # Set the file extension for the monthly obs psv files
-EXTENSION = 'csv'
+IN_EXTENSION = ".csv"
+OUT_EXTENSION = ".psv"
+COMPRESSION = ".gz"
+
 LITE_COLS = ["STATION", "LATITUDE", "LONGITUDE", "ELEVATION", "DATE", "NAME", "PRCP", "TMIN", "TMAX", "TAVG", "SNOW", "AWND"]
 
 
@@ -240,7 +243,7 @@ def main(station="", subset="", run_all=False, clobber=False):
 
     # Obtain list of station(s) to process (single/subset/all)
     all_filenames = utils.get_station_list_to_process(utils.MONTHLY_CSV_IN_DIR,
-                                                      EXTENSION,
+                                                      f"{IN_EXTENSION}{COMPRESSION}",
                                                       station=station,
                                                       subset=subset,
                                                       run_all=run_all,
@@ -251,23 +254,27 @@ def main(station="", subset="", run_all=False, clobber=False):
     data_policy_df = data_policy_df.astype(str)
        
     for filename in all_filenames:
-        print(f"Processing {filename}")
+        if not os.path.exists(filename):
+            print("Input {} file missing: {}".format(IN_EXTENSION, filename))
+            continue
+        else:
+            print(f"Processing {filename}")
 
         # using lambda as no all columns present in each file
-        df = pd.read_csv(filename, sep=",", usecols=lambda c: c in LITE_COLS)
+        df = pd.read_csv(filename, sep=",", usecols=lambda c: c in LITE_COLS, compression='infer')
 
         # set output filenames
         station_id = df.iloc[1]["STATION"] # NOTE: this is renamed below to "primary_station_id"
         outroot_cdmlite = os.path.join(utils.MONTHLY_CDM_LITE_OUT_DIR, utils.MONTHLY_CDM_LITE_FILE_ROOT) 
         outroot_cdmobs = os.path.join(utils.MONTHLY_CDM_OBS_OUT_DIR, utils.MONTHLY_CDM_OBS_FILE_ROOT) 
         outroot_cdmhead = os.path.join(utils.MONTHLY_CDM_HEAD_OUT_DIR, utils.MONTHLY_CDM_HEAD_FILE_ROOT) 
-        cdmlite_outfile = f"{outroot_cdmlite}{station_id}.psv"
-        cdmobs_outfile = f"{outroot_cdmobs}{station_id}.psv"
-        cdmhead_outfile = f"{outroot_cdmhead}{station_id}.psv"
+        cdmlite_outfile = f"{outroot_cdmlite}{station_id}{OUT_EXTENSION}{COMPRESSION}"
+        cdmobs_outfile = f"{outroot_cdmobs}{station_id}{OUT_EXTENSION}{COMPRESSION}"
+        cdmhead_outfile = f"{outroot_cdmhead}{station_id}{OUT_EXTENSION}{COMPRESSION}"
 
         if not clobber:
-            # TODO - ensure all exist
-            if os.path.exists(cdmlite_outfile):
+            # all output files exist
+            if os.path.exists(cdmlite_outfile) and os.path.exists(cdmobs_outfile) and os.path.exists(cdmhead_outfile):
                 print(f"   Output files for {filename} already exist:") 
                 print(f"     {cdmlite_outfile}") 
                 print(f"     {cdmobs_outfile}") 
@@ -703,7 +710,7 @@ def main(station="", subset="", run_all=False, clobber=False):
 
 
         try:
-            df_lite_out.to_csv(cdmlite_outfile, index=False, sep="|")
+            df_lite_out.to_csv(cdmlite_outfile, index=False, sep="|", compression='infer')
             print(f"    {cdmlite_outfile}") 
         except IOError:
             print(f"Cannot save datafile: {cdmlite_outfile}")
@@ -712,14 +719,14 @@ def main(station="", subset="", run_all=False, clobber=False):
         try:
             unique_variables = dfobs['observed_variable'].unique()
             print(unique_variables)
-            dfobs.to_csv(cdmobs_outfile, index=False, sep="|")
+            dfobs.to_csv(cdmobs_outfile, index=False, sep="|", compression='infer')
             print(f"    {cdmobs_outfile}") 
         except IOError:
             print(f"Cannot save datafile: {cdmobs_outfile}")
             continue
 
         try: 
-            hdf.to_csv(cdmhead_outfile, index=False, sep="|")
+            hdf.to_csv(cdmhead_outfile, index=False, sep="|", compression='infer')
             print(f"    {cdmhead_outfile}") 
         except IOError:
             print(f"Cannot save datafile: {cdmhead_outfile}")

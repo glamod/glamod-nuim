@@ -9,7 +9,7 @@ Created on Thu Nov 11 16:31:58 2021
 import ftplib
 import os 
 import tarfile
-os.chdir(r"C:/Users/snoone/Dropbox/PYTHON_TRAINING/NEW_diff_ghcnd_ftp_download/output") 
+os.chdir(r"/gws/nopw/j04/c3s311a_lot2/data/level0/land/daily_data_processing/ghcnd_diff_updates") 
 #Open ftp connection works OK and get the last update tar.gz file (diff)
 ftp = ftplib.FTP('ftp.ncdc.noaa.gov')
 ftp.login(user='anonymous', passwd = 'anonymous')
@@ -49,8 +49,8 @@ else:
         output.write(str(filename))
         ftp.quit()
  ##download the last updated file (latest_file) to current directory
-SOURCE_DIR = "C:/Users/snoone/Dropbox/PYTHON_TRAINING/NEW_diff_ghcnd_ftp_download/output"
-OUTPUT_DIR = "C:/Users/snoone/Dropbox/PYTHON_TRAINING/NEW_diff_ghcnd_ftp_download/output"
+SOURCE_DIR = "/gws/nopw/j04/c3s311a_lot2/data/level0/land/daily_data_processing/ghcnd_diff_updates"
+OUTPUT_DIR = "/gws/nopw/j04/c3s311a_lot2/data/level0/land/daily_data_processing/ghcnd_diff_updates"
 last_file = open(os.path.join(SOURCE_DIR, 'last_file.txt'), 'r').read()
 dir_name = last_file.split(".")[0]
 dir_path = os.path.join(OUTPUT_DIR, dir_name)
@@ -62,7 +62,7 @@ tar_gz = os.path.join(SOURCE_DIR, last_file)
 print(f'[INFO] Untarring: {tar_gz} --> {last_file}')
 
 tf = tarfile.open(tar_gz)
-tf.extractall("C:/Users/snoone/Dropbox/PYTHON_TRAINING/NEW_diff_ghcnd_ftp_download/output")
+tf.extractall("/gws/nopw/j04/c3s311a_lot2/data/level0/land/daily_data_processing/ghcnd_diff_updates")
 
 ## strat processing the new daily update files.
 import glob
@@ -72,14 +72,14 @@ pd.options.mode.chained_assignment = None  # default='warn'
 
 #set all the output directories and initial working directory
 
-OUTDIR4 = "C:/Users/snoone/Dropbox/PYTHON_TRAINING/NEW_diff_ghcnd_ftp_download/output/cdm_out/head"
-OUTDIR3 = "C:/Users/snoone/Dropbox/PYTHON_TRAINING/NEW_diff_ghcnd_ftp_download/output/cdm_out/obs"
-OUTDIR2= "C:/Users/snoone/Dropbox/PYTHON_TRAINING/NEW_diff_ghcnd_ftp_download/output/cdm_out/qc_out"
-OUTDIR = "C:/Users/snoone/Dropbox/PYTHON_TRAINING/NEW_diff_ghcnd_ftp_download/output/cdm_out/lite"
-os.chdir("C:/Users/snoone/Dropbox/PYTHON_TRAINING/NEW_diff_ghcnd_ftp_download/output/")
+OUTDIR4 = "/gws/nopw/j04/c3s311a_lot2/data/level2/land/daily_updates/header_tables"
+OUTDIR3 = "/gws/nopw/j04/c3s311a_lot2/data/level2/land/daily_updates/observations_tables"
+OUTDIR2= "/gws/nopw/j04/c3s311a_lot2/data/level2/land/daily_updates/qc_tables"
+OUTDIR = "/gws/nopw/j04/c3s311a_lot2/data/level2/land/daily_updates/cdm_lite_tables"
+os.chdir("/gws/nopw/j04/c3s311a_lot2/data/level0/land/daily_data_processing/ghcnd_diff_updates")
 
 # read the last file processed details in last_f.txt whohc shwos tehlast date proecessed by the code
-last_f=pd.read_csv("C:/Users/snoone/Dropbox/PYTHON_TRAINING/NEW_diff_ghcnd_ftp_download/output/last_file.txt","sep=\t", header = None)
+last_f=pd.read_csv("/gws/nopw/j04/c3s311a_lot2/data/level0/land/daily_data_processing/ghcnd_diff_updates/last_file.txt","sep=\t", header = None)
 # remove unwanted text from the last_f to ceraet the details of the untarred dircetrpy where the  new insert.csv file exists
 # need to write that recognises a new daily update directory exists and contimues to process 
 last_f.columns=["file"]
@@ -91,7 +91,7 @@ filename=filename.iloc[0]["file"]
 last_f = last_f.iloc[0]["file"]
 
 # read in the insert.csv file for procesing
-df=pd.read_csv("C:/Users/snoone/Dropbox/PYTHON_TRAINING/NEW_diff_ghcnd_ftp_download/output/"+last_f+"/insert.csv", sep=",", header = None)
+df=pd.read_csv("/gws/nopw/j04/c3s311a_lot2/data/level0/land/daily_data_processing/ghcnd_diff_updates"+last_f+"/insert.csv", sep=",", header = None)
 # add column headers
 df.columns=["Station_ID", "Date", "observed_variable", "observation_value","quality_flag","Measurement_flag","Source_flag","hour"]
 df = df.astype(str)
@@ -246,7 +246,7 @@ df['source_id'] = df['source_id'].astype(str).apply(lambda x: x.replace('.0','')
 df['primary_station_id_2']=df['primary_station_id'].astype(str)+'-'+df['source_id'].astype(str)
  
 # add in location infromatin ro cdm lite station 
-df2=pd.read_csv("C:/Users/snoone/Dropbox/PYTHON_TRAINING/python_cdm_conversion/daily/config_files/record_id_dy.csv")
+df2=pd.read_csv("/gws/nopw/j04/c3s311a_lot2/data/level0/land/daily_data_processing/ghcnd_diff_updates/code/record_id_dy.csv")
 df['primary_station_id_2'] = df['primary_station_id_2'].astype(str)
 df2 = df2.astype(str)
 df= df2.merge(df, on=['primary_station_id_2'])
@@ -274,7 +274,7 @@ df["primary_id"]=df["primary_station_id"]
 # merge in station list csv that contains the stations with multilpe variables available for processing
 # this  removes all stations with only one variable
  
-station_list=pd.read_csv("C:/Users/snoone/Dropbox/data_release_config_files_code/station_list_dy.csv")
+station_list=pd.read_csv("/gws/nopw/j04/c3s311a_lot2/data/level0/land/daily_data_processing/ghcnd_diff_updates/code/station_list_dy.csv")
 df['primary_id'] = df['primary_id'].astype(str)
 station_list= station_list.astype(str)
 df= df.merge(station_list, on=['primary_id'])
@@ -328,14 +328,14 @@ df = df[["observation_id","report_type","date_time","date_time_meaning",
            ,"data_policy_licence","source_id"]]
  
 # save one of each file to relevant directory
-cdm_type=("qc_definition_updates_test_")
+cdm_type=("qc_definition_")
 outname2= os.path.join(OUTDIR2,cdm_type)
-qct.to_csv(outname2  +"_"+ filename +".psv", index=False, sep="|")
+qct.to_csv(outname2  +"_"+ filename +".psv.gz", index=False, sep="|",compression="gzip")
           
 
-cdm_type=("cdm_lite_daily_updates_test_")
+cdm_type=("cdm_lite_")
 outname = os.path.join(OUTDIR,cdm_type)
-df.to_csv(outname+ filename+ ".psv", index=False, sep="|")
+df.to_csv(outname + filename +".psv.gz", index=False, sep="|",compression="gzip")
 
 
     
@@ -485,7 +485,7 @@ df1['source_id'] = df1['source_id'].astype(str).apply(lambda x: x.replace('.0','
 df1['primary_station_id_2']=df1['primary_station_id'].astype(str)+'-'+df1['source_id'].astype(str)
 
 # add in location information to cdm obs
-df12=pd.read_csv("C:/Users/snoone/Dropbox/PYTHON_TRAINING/Python_CDM_conversion/daily/config_files/record_id_dy.csv")
+df12=pd.read_csv("/gws/nopw/j04/c3s311a_lot2/data/level0/land/daily_data_processing/ghcnd_diff_updates/code/record_id_dy.csv")
 df1['primary_station_id_2'] = df1['primary_station_id_2'].astype(str)
 df12 = df12.astype(str)
 df1= df12.merge(df1, on=['primary_station_id_2'])
@@ -527,14 +527,14 @@ df1 = df1[["observation_id","report_id","data_policy_licence","date_time",
 "advanced_assimilation_feedback","source_id"]]
 
 # save one file to relevant directory
-cdm_type=("cdm_obs_update_daily_test_")
-outname = os.path.join(OUTDIR3,cdm_type)
-df1.to_csv(outname +"_"+ filename +".psv", index=False, sep="|")
+cdm_type=("cdm_observations_")
+outname3 = os.path.join(OUTDIR3,cdm_type)
+df1.to_csv(outname3+"_"+ filename +".psv.gz", index=False, sep="|",compression="gzip")
 
 
 # make header from completed observations table
 
-os.chdir("C:/Users/snoone/Dropbox/PYTHON_TRAINING/NEW_diff_ghcnd_ftp_download/output/cdm_out/obs")
+os.chdir("/gws/nopw/j04/c3s311a_lot2/data/level2/land/daily_updates/observations_tables")
 col_list = ["observation_id", "report_id", "longitude", "latitude", "source_id","date_time"]
 extension = 'psv'
 all_filenames = [i for i in glob.glob('*.{}'.format(extension))]
@@ -590,7 +590,7 @@ for filenames in all_filenames:
        
     del merged_df
                      
-    df2=pd.read_csv("C:/Users/snoone/Dropbox/PYTHON_TRAINING/Python_CDM_conversion/daily/config_files/record_id_dy.csv")
+    df2=pd.read_csv("/gws/nopw/j04/c3s311a_lot2/data/level0/land/daily_data_processing/ghcnd_diff_updates/code/record_id_dy.csv")
     hdf = hdf.astype(str)
     df2 = df2.astype(str)
     hdf= df2.merge(hdf, on=['primary_station_id_3'])
@@ -628,23 +628,34 @@ for filenames in all_filenames:
     hdf['sub_region'] = hdf['sub_region'].astype(str).apply(lambda x: x.replace('.0',''))
     
     # save file to relevant directory 
-    cdm_type2=("cdm_head_update_daily_test_")
-    outname2 = os.path.join(OUTDIR4,cdm_type2)
-    hdf.to_csv(outname2  +"_"+ filename +".psv", index=False, sep="|")
-    
-
-
-    
-              
- 
-
-
-  
-       
-       
-       
-       
-    
+    cdm_type2=("cdm_header_")
+    outname4 = os.path.join(OUTDIR4,cdm_type2)
+    hdf.to_csv(outname4  +"_"+ filename +".psv.gz", index=False, sep="|",compression="gzip")
     
    
+        
+    
+# delete processed folder from directory
+import os 
+import shutil
+import glob
+import pandas as pd
+last_f=pd.read_csv("/gws/nopw/j04/c3s311a_lot2/data/level0/land/daily_data_processing/ghcnd_diff_updates/last_file.txt","sep=\t", header = None)
+# remove unwanted text from the last_f to create the details of the untarred directory where the  new insert.csv file exists
+last_f.columns=["file"]
+filename= last_f[["file"]]
+last_f["file"] = last_f["file"].str[:36]
+filename["file"] = filename["file"].str[:36]
+filename["file"] = filename["file"].str[16:]
+filename=filename.iloc[0]["file"]
+last_f = last_f.iloc[0]["file"]
+dir_path = "/gws/nopw/j04/c3s311a_lot2/data/level0/land/daily_data_processing/ghcnd_diff_updates/"+last_f
 
+try:
+    shutil.rmtree(dir_path)
+except OSError as e:
+    print("Error: %s : %s" % (dir_path, e.strerror))
+    
+    
+
+      

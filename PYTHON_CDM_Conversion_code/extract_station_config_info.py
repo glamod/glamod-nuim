@@ -15,12 +15,11 @@ Created on Thu Apr 28 11:47:32 2022
 """
 
 import os
-import glob
 import pandas as pd
 import numpy as np
-pd.options.mode.chained_assignment = None  # default='warn'
 import utils
-import hourly_qff_to_cdm_utils as h_utils
+
+pd.options.mode.chained_assignment = None  # default='warn'
 
 
 def main(station="", subset="", run_all=False, clobber=False, time=""):
@@ -30,7 +29,7 @@ def main(station="", subset="", run_all=False, clobber=False, time=""):
     Parameters
     ----------
 
-    station : `str` 
+    station : `str`
         Single station ID to process
 
     subset : `str`
@@ -47,35 +46,35 @@ def main(station="", subset="", run_all=False, clobber=False, time=""):
     """
 
     # set up the input and output file types
-    if time == "":
+    if time not in ["H", "D", "M"]:
         # just in case
         return
     elif time == "H":
         extension = ".psv"
         compression = ""
         indir = utils.SUBDAILY_CDM_LITE_OUT_DIR
-        inroot = utils.SUBDAILY_CDM_LITE_FILE_ROOT
+        # inroot = utils.SUBDAILY_CDM_LITE_FILE_ROOT
         outname = f"{indir}/sub_daily_station_config.dat"
     elif time == "D":
         extension = ".psv"
         compression = ".gz"
         indir = utils.DAILY_CDM_LITE_OUT_DIR
-        inroot = utils.DAILY_CDM_LITE_FILE_ROOT
+        # inroot = utils.DAILY_CDM_LITE_FILE_ROOT
         outname = f"{indir}/daily_station_config.dat"
     elif time == "M":
         extension = ".psv"
         compression = ""
         indir = utils.MONTHLY_CDM_LITE_OUT_DIR
-        inroot = utils.MONTHLY_CDM_LITE_FILE_ROOT
+        # inroot = utils.MONTHLY_CDM_LITE_FILE_ROOT
         outname = f"{indir}/monthly_station_config.dat"
 
     # check if output files exist
     if not clobber:
         # all output files exist
         if os.path.exists(outname):
-            print(f"   Output files for {time} already exist:") 
-            print(f"     {outname}") 
-            print("   exiting")  
+            print(f"   Output files for {time} already exist:")
+            print(f"     {outname}")
+            print("   exiting")
             return
 
     # Read in either single file, list of files or run all
@@ -107,7 +106,7 @@ def main(station="", subset="", run_all=False, clobber=False, time=""):
 
     for filename in all_filenames:
         if not os.path.exists(filename):
-            print("Input {} file missing: {}".format(extension, filename))
+            print(f"Input {extension} file missing: {filename}")
             continue
         else:
             print(f"Processing {filename}")
@@ -116,13 +115,13 @@ def main(station="", subset="", run_all=False, clobber=False, time=""):
         df = pd.read_csv(filename, sep="|", low_memory=False, compression="infer")
 
         primary_id = df['primary_station_id'].iloc[0]
-        record_id = df['observation_id'].str[12]
+        record_id = df['observation_id'].str[12] # 13th char of obs_id with python's zero indexing
 
-        unique_record_ids = record_id.unique() # 13th char of obs_id with python's zero indexing
+        unique_record_ids = record_id.unique()
 
         # spin through each record id, and extract information
         for rec_id in unique_record_ids:
-            
+
             locs, = np.where(record_id == rec_id)
 
             temp_df = df.iloc[locs]
@@ -145,8 +144,8 @@ def main(station="", subset="", run_all=False, clobber=False, time=""):
                                                 "end_year",
                                                 "observed_variables",
                                             ])
-        
-            config_df = pd.concat([config_df, temp_out_df], ignore_index=True) 
+
+            config_df = pd.concat([config_df, temp_out_df], ignore_index=True)
 
     print("")
     config_df.to_csv(outname, index=False, sep="|", compression="infer")
@@ -174,7 +173,12 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    if args.time == "":
+    if args.time not in ["H", "D", "M"]:
         print("Select which data resolution to be run on - H-hourly/D-daily/M-monthly")
     else:
-        main(station=args.station, subset=args.subset, run_all=args.run_all, clobber=args.clobber, time=args.time)
+        main(station=args.station,
+             subset=args.subset,
+             run_all=args.run_all,
+             clobber=args.clobber
+             time=args.time,
+        )

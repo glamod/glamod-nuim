@@ -179,6 +179,6 @@ if __name__ == "__main__":
         main(station=args.station,
              subset=args.subset,
              run_all=args.run_all,
-             clobber=args.clobber
+             clobber=args.clobber,
              time=args.time,
         )

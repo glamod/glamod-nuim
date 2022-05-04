@@ -8,6 +8,7 @@ snoone edited 22/02/2022
 """
 import os
 import configparser
+import glob
 
 
 # -------------------------------------------------------------
@@ -101,7 +102,7 @@ def get_station_list_to_process(indir, extension, station="", subset="", run_all
     prepend : `str`
         Text to insert before station ID for input filename
     """
-    
+
     # Obtain list of station(s) to process (single/subset/all)
     if station != "":
         print(f"Single station run: {station}")

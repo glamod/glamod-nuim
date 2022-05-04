@@ -32,25 +32,7 @@ IN_EXTENSION = ".csv"
 OUT_EXTENSION = ".psv"
 COMPRESSION = ".gz"
 
-QC_METHODS = {
-        "D" : "16,",
-        "H" : "30,",
-        "G" : "17,",
-        "I" : "18,",
-        "K" : "19,",
-        "M" : "20,",
-        "N" : "22,",
-        "O" : "23,",
-        "R" : "24,",
-        "S" : "25,",
-        "T" : "26,",
-        "W" : "27,",
-        "X" : "28,",
-        "V" : "12,",
-        "Z" : "29,",
-        "P" : "30,",
 
-}
 
 def main(station="", subset="", run_all=False, clobber=False):
     """
@@ -253,7 +235,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         qct.astype(str)
 
         # replace observed variable name by appropriate code
-        for qc_method, qc_code in QC_METHODS.items():
+        for qc_method, qc_code in d_utils.QC_METHODS.items():
             qct['qc_method'] = qct['qc_method'].str.replace(qc_method, qc_code)
 
         qct = qct.fillna("null")

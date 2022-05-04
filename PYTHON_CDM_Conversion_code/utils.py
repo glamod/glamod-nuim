@@ -84,6 +84,12 @@ DAILY_FTP_SERVER = config.get("DailyUpdates", "ftp")
 DAILY_FTP_DIR = config.get("DailyUpdates", "ftpdir")
 DAILY_UPDATE_OUTDIR = config.get("DailyUpdates", "daily_update_outdir")
 
+DAILY_UPDATE_CDM_HEADER_OUTDIR = config.get("DailyUpdates", "daily_update_cdmhead_outdir")
+DAILY_UPDATE_CDM_OBS_OUTDIR = config.get("DailyUpdates", "daily_update_cdmobs_outdir")
+DAILY_UPDATE_CDM_QC_OUTDIR = config.get("DailyUpdates", "daily_update_cdmqc_outdir")
+DAILY_UPDATE_CDM_LITE_OUTDIR = config.get("DailyUpdates", "daily_update_cdmlite_outdir")
+
+
 
 
 def get_station_list_to_process(indir, extension, station="", subset="", run_all=False, prepend=""):

@@ -16,7 +16,8 @@ import glob
 CONFIG_FILE = "configuration.txt"
 
 config = configparser.ConfigParser()
-config.read(os.path.abspath(CONFIG_FILE))
+# more convoluted to ensure it pulls the config_file even if called from another dir
+config.read(os.path.join(os.path.abspath(os.path.dirname( __file__ )), CONFIG_FILE))
 
 # -----------------
 # Subdaily/daily/monthly 
@@ -77,6 +78,12 @@ DAILY_STATION_RECORD_ENTRIES_OBS_LITE = config.get("Records", "daily_station_rec
 DAILY_STATION_RECORD_ENTRIES_HEADER = config.get("Records", "daily_station_records_header")
 MONTHLY_STATION_RECORD_ENTRIES_OBS_LITE = config.get("Records", "monthly_station_records_obs_lite")
 MONTHLY_STATION_RECORD_ENTRIES_HEADER = config.get("Records", "monthly_station_records_header")
+
+# Daily updates from GHCND
+DAILY_FTP_SERVER = config.get("DailyUpdates", "ftp")
+DAILY_FTP_DIR = config.get("DailyUpdates", "ftpdir")
+DAILY_UPDATE_OUTDIR = config.get("DailyUpdates", "daily_update_outdir")
+
 
 
 def get_station_list_to_process(indir, extension, station="", subset="", run_all=False, prepend=""):

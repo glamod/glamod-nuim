@@ -9,62 +9,131 @@ Created on Thu Nov 11 16:31:58 2021
 import ftplib
 import os 
 import tarfile
-os.chdir(r"/gws/nopw/j04/c3s311a_lot2/data/level0/land/daily_data_processing/ghcnd_diff_updates") 
-#Open ftp connection works OK and get the last update tar.gz file (diff)
-ftp = ftplib.FTP('ftp.ncdc.noaa.gov')
-ftp.login(user='anonymous', passwd = 'anonymous')
-names = ftp.nlst("/pub/data/ghcn/daily/superghcnd/*.tar.gz")
-#names ='*tar.gz'
-latest_time = None
-latest_name = None
+import sys
 
-for name in names:
-    time = ftp.voidcmd("MDTM " + name)
-    if (latest_time is None) or (time > latest_time):
+# add parent directory to access daily conversion scripts
+sys.path.append("../")
+import utils
+import daily_csv_to_cdm_utils as daily_utils
+
+# check FTP server and get filename to test if new
+
+def get_latest_ftp_file():
+    """
+    Obtain the most recent file from the FTP listing
+
+    Returns
+    -------
+
+    latest_file :  `str`
+        Most recent file on the FTP server
+    """
+
+    # log into FTP server and get list of files
+    ftp = ftplib.FTP(utils.DAILY_FTP_SERVER)
+    ftp.login(user='anonymous', passwd = 'anonymous')
+    names = ftp.nlst(f"{utils.DAILY_FTP_DIR}*.tar.gz")
+
+    names = sorted(names)
+    # spin through the files and find the latest update
+    latest_time = None
+    latest_name = None
+
+    # Goes through all 2k+ names - this will take longer and longer
+    #  as time goes on.  Using the version below, this starts and the
+    #  end and terminates the loop once an older file is found.
+
+    # for name in names:
+    #     print(name)
+    #     time = ftp.voidcmd("MDTM " + name)
+    #     if (latest_time is None) or (time > latest_time):
+    #         latest_name = name
+    #         latest_time = time
+
+    # Using sorted list, start at the back
+    #   presume that last filename is the most recent
+    for name in names[::-1]:
+        print(name)
+        time = ftp.voidcmd("MDTM " + name)
+        if (latest_time is None):
+            latest_name = name
+            latest_time = time
+        elif time < latest_time:
+            break           
         latest_name = name
         latest_time = time
 
+    # extract the filename of the most recent file    
+    latest_file = os.path.basename(latest_name)
+    print(f"Most recent diff file: {latest_file}")
 
-##split the string to remove the path and get the file name
-split=latest_name.split("/")
+    return latest_file  # get_latest_ftp_file
 
-latest_file=split[6]
-print(latest_file)
 
-last_file = open('last_file.txt', 'r').read()
-##compare todays file name with yesterdays if same quit else continue
-if latest_file == last_file:
+def get_update(filename):
+    """
+    Pull down the latest diff file from the FTP server
+
+    Parameters
+    ----------
+
+    filename :  `str`
+        File to pull from FTP server
+    """
+
+    # retrieve the file
+    ftp = ftplib.FTP(utils.DAILY_FTP_SERVER) 
+    ftp.login(user="anonymous", passwd="anonymous") 
+    ftp.cwd(utils.DAILY_FTP_DIR)
+    ftp.retrbinary("RETR " + filename,
+                   open(os.path.join(utils.DAILY_UPDATE_OUTDIR, filename), 'wb').write)
+
+    # overwrite the last file downloaded
+    with open(os.path.join(utils.DAILY_UPDATE_OUTDIR, "last_file.txt"), "w") as outfile:
+        outfile.write(str(filename))
+
+    # and change to make globally r+w permissions
+    os.chmod(os.path.join(utils.DAILY_UPDATE_OUTDIR, "last_file.txt"), 0o777)
     ftp.quit()
-    print ("not updated")
-else:
-    print("updated")
-    import ftplib
-    path = '/pub/data/ghcn/daily/superghcnd/'
-    filename = (latest_file)
-    ftp = ftplib.FTP("ftp.ncdc.noaa.gov") 
-    ftp.login("anonymous", "anonymous") 
-    ftp.cwd(path)
-    ftp.retrbinary("RETR " + filename, open(filename, 'wb').write)
-    with open("last_file.txt", "w") as output:
-        output.write(str(filename))
-        ftp.quit()
- ##download the last updated file (latest_file) to current directory
-SOURCE_DIR = "/gws/nopw/j04/c3s311a_lot2/data/level0/land/daily_data_processing/ghcnd_diff_updates"
-OUTPUT_DIR = "/gws/nopw/j04/c3s311a_lot2/data/level0/land/daily_data_processing/ghcnd_diff_updates"
-last_file = open(os.path.join(SOURCE_DIR, 'last_file.txt'), 'r').read()
-dir_name = last_file.split(".")[0]
-dir_path = os.path.join(OUTPUT_DIR, dir_name)
+    return  #  get_update
 
+
+# what's the latest file on the server
+latest_file = get_latest_ftp_file()
+
+# get FTP file if new enough
+with open(os.path.join(utils.DAILY_UPDATE_OUTDIR, 'last_file.txt'), 'r') as infile:
+    last_file = infile.read()
+# compare todays file name with yesterdays if same quit else continue
+if latest_file == last_file:
+    print("not updated")
+
+else:
+    print(f"updating from {utils.DAILY_FTP_SERVER}")
+    get_update(latest_file)
+    print("updated")
+
+    # Re-read what is the most recent file, and then untar archive
+    last_file = open(os.path.join(utils.DAILY_UPDATE_OUTDIR, 'last_file.txt'), 'r').read()
+    dir_name = last_file.split(".")[0]
+    dir_path = os.path.join(utils.DAILY_UPDATE_OUTDIR, dir_name)
 
     # use last_file to untar the most recent file
-tar_gz = os.path.join(SOURCE_DIR, last_file)
-    #tar_gz = os.path.join(OUTPUT_DIR, dir_name)
-print(f'[INFO] Untarring: {tar_gz} --> {last_file}')
+    tar_gz = os.path.join(utils.DAILY_UPDATE_OUTDIR, last_file)
+    print(f'[INFO] Untarring: {tar_gz} --> {dir_name}')
 
-tf = tarfile.open(tar_gz)
-tf.extractall("/gws/nopw/j04/c3s311a_lot2/data/level0/land/daily_data_processing/ghcnd_diff_updates")
+    tf = tarfile.open(tar_gz)
+    tf.extractall(utils.DAILY_UPDATE_OUTDIR)
 
-## strat processing the new daily update files.
+
+
+
+
+
+
+
+
+## start processing the new daily update files.
 import glob
 import pandas as pd
 import numpy as np

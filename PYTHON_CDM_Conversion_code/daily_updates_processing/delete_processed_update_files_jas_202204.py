@@ -9,8 +9,12 @@ Created on Wed Mar 23 15:32:21 2022
 import os 
 import glob
 
+# add parent directory to access daily conversion scripts
+sys.path.append("../")
+import utils
+
     
 # delete processed .gz from directory
-files = glob.glob('/gws/nopw/j04/c3s311a_lot2/data/level0/land/daily_data_processing/ghcnd_diff_updates/*.gz')
+files = glob.glob(f'{utils.DAILY_UPDATE_OUTDIR}/*.gz')
 for f in files:
     os.remove(f)

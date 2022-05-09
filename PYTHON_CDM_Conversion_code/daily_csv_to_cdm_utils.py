@@ -115,6 +115,74 @@ QUALITY_FLAGS = {
     'P' : '1',
 }
 
+QC_METHODS = {
+        "D" : "16,",
+        "H" : "30,",
+        "G" : "17,",
+        "I" : "18,",
+        "K" : "19,",
+        "M" : "20,",
+        "N" : "22,",
+        "O" : "23,",
+        "R" : "24,",
+        "S" : "25,",
+        "T" : "26,",
+        "W" : "27,",
+        "X" : "28,",
+        "V" : "12,",
+        "Z" : "29,",
+        "P" : "30,",
+
+}
+
+ORIGINAL_UNITS = {
+    "SNWD" : "715",
+    "PRCP" : "710",
+    "TMIN" : "350",
+    "TMAX" : "350",
+    "TAVG" : "350",
+    "SNOW" : "710",
+    "AWND" : "320",
+    "AWDR" : "731",
+    "WESD" : "710",
+}
+
+CONVERSION_FLAGS = {
+    "SNWD" : "2",
+    "PRCP" : "2",
+    "TMIN" : "0",
+    "TMAX" : "0",
+    "TAVG" : "0",
+    "SNOW" : "2",
+    "AWND" : "2",
+    "AWDR" : "2",
+    "WESD" : "2",
+}
+
+NUMERICAL_PRECISION = {
+    "SNWD" : "1",
+    "PRCP" : "0.1",
+    "TMIN" : "0.01",
+    "TMAX" : "0.01",
+    "TAVG" : "0.01",
+    "SNOW" : "0.1",
+    "AWND" : "0.1",
+    "AWDR" : "0.1",
+    "WESD" : "0.1",
+}
+
+ORIGINAL_PRECISION = {
+    "SNWD" : "1",
+    "PRCP" : "0.1",
+    "TMIN" : "0.1",
+    "TMAX" : "0.1",
+    "TAVG" : "0.1",
+    "SNOW" : "0.1",
+    "AWND" : "0.1",
+    "AWDR" : "1",
+    "WESD" : "0.1",
+}
+
 def add_data_policy(var_frame, policy_frame):
     """
     Merge in data policy information from another dataframe

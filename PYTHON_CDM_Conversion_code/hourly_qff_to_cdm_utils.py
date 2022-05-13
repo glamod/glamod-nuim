@@ -60,7 +60,6 @@ def construct_extra_ids(var_frame, all_frame, var_name):
     var_frame["source_id"] = all_frame[f"{var_name}_Source_Code"]
     var_frame["secondary_id"] = all_frame[f"{var_name}_Source_Station_ID"].astype('str')
     var_frame['secondary_id'] = var_frame['secondary_id'].astype(str).apply(lambda x: x.replace('.0', ''))
-
     return var_frame
 
 def extract_qc_info(var_frame, all_frame, var_name, do_report_id=False):
@@ -171,7 +170,7 @@ def construct_obs_id(var_frame):
 
     var_frame['observation_id'] = var_frame['observation_id'].str.replace(r' ', '-')
     
-    # Remove unwanted last two characters
+    # Remove unwanted last six characters
     var_frame['observation_id'] = var_frame['observation_id'].str[:-6]
     var_frame["observation_id"] = var_frame["observation_id"] + "-" + \
                                   var_frame['observed_variable'].astype(str) + "-" + \

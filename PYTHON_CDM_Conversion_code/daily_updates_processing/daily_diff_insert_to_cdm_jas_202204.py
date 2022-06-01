@@ -161,7 +161,9 @@ def main(diagnostics=False):
     # compare todays file name with yesterdays if same quit else continue
     if latest_file == last_file:
         print("not updated, not extracted")
-
+        print("exiting")
+        return
+    
     else:
         print(f"updating from {utils.DAILY_FTP_SERVER}")
         get_update(latest_file)
@@ -170,7 +172,9 @@ def main(diagnostics=False):
         extract_update()
         print("extracted")
 
-    # use last_file from step above to find extraction directory
+    # re-read last_file from step above to find extraction directory
+    with open(os.path.join(utils.DAILY_UPDATE_OUTDIR, LAST_FILE), 'r') as infile:
+        last_file = infile.read()
     last_file_dir = last_file.split(".")[0]
     out_filename = last_file_dir.split("_diff_")[-1]
 

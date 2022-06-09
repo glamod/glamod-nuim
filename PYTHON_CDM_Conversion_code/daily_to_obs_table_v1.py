@@ -268,7 +268,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         # add observation id to dataframe
         df['observation_id'] = df['primary_station_id'].astype(str) + '-' + df['record_number'].astype(str) + '-' + df['dates'].astype(str)
         df['observation_id'] = df['observation_id'].str.replace(r' ', '-')
-        df["observation_id"] = df["observation_id"] + '-' + df['observed_variable'] + '-' + df['value_significance']
+        df["observation_id"] = df["observation_id"] + df['observed_variable'] + '-' + df['value_significance']
         df['report_id'] = df['primary_station_id'].astype(str) + '-' + df['record_number'].astype(str) + '-' + df['dates'].astype(str)
 
         # reorder df columns

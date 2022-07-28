@@ -6,7 +6,7 @@ edited 8/03/2022 snnone
 
 Convert monthly OBSERVATIONS files to Lite, Obs and hedaer .psv files (one per station).
 
-
+s
 Call in one of three ways using:
 
 >python monthly_to_cdm_all_v1.py --station STATIONID
@@ -499,6 +499,14 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         # merge all the sperate variable df togther into one df    
         merged_df=pd.concat([dftmax, dftavg, dftmin, dftws, dfprc, dfsnow], axis=0)
+        # if no data that's being converted present in the input data frame
+        #    then no "observation_value" entry in final
+        if len(merged_df["observation_value"].unique()) == 1 and \
+           merged_df["observation_value"].unique() == "":
+            # all are blank strings, so don't output
+            print("No observations in the file, skipping output")
+            continue
+
         merged_df.sort_values("date_time", inplace=True)
 
         # sort locational metadata
@@ -611,7 +619,12 @@ def main(station="", subset="", run_all=False, clobber=False):
 
 
         # add required columns and set up values etc
-        hdf[['primary_station_id', 'station_record_number', '1', "2", "3"]] = hdf['report_id'].str.split('-', expand=True)                                                    
+        #   extra steps to handle files with dashes in them
+        hdf['extract_record'] = dfobs['report_id'].str[:-11]
+        hdf['station_record_number'] = hdf['extract_record'].str[12:]
+        hdf['primary_station_id'] = hdf['extract_record'].str[:11]
+
+        # hdf[['primary_station_id', 'station_record_number', '1', "2", "3"]] = hdf['report_id'].str.split('-', expand=True)
         hdf["report_id"] = dfobs["report_id"]
         hdf["application_area"] = ""
         hdf["observing_programme"] = ""

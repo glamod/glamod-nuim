@@ -234,10 +234,10 @@ def main(station="", subset="", run_all=False, clobber=False):
     # Read in either single file, list of files or run all
 
     # Check for sensible inputs
-    if station != "" and subset != "" and all:
+    if station != "" and subset != "" and run_all:
         print("Please select either single station, list of stations run or to run all")
         return
-    elif station == "" and subset == "" and not all:
+    elif station == "" and subset == "" and not run_all:
         print("Please select either single station, list of stations run or to run all")
         return
 
@@ -264,7 +264,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         df = pd.read_csv(filename, sep=",", usecols=lambda c: c in LITE_COLS, compression='infer')
 
         # set output filenames
-        station_id = df.iloc[1]["STATION"] # NOTE: this is renamed below to "primary_station_id"
+        station_id = df.iloc[0]["STATION"] # NOTE: this is renamed below to "primary_station_id"
         outroot_cdmlite = os.path.join(utils.MONTHLY_CDM_LITE_OUT_DIR, utils.MONTHLY_CDM_LITE_FILE_ROOT) 
         outroot_cdmobs = os.path.join(utils.MONTHLY_CDM_OBS_OUT_DIR, utils.MONTHLY_CDM_OBS_FILE_ROOT) 
         outroot_cdmhead = os.path.join(utils.MONTHLY_CDM_HEAD_OUT_DIR, utils.MONTHLY_CDM_HEAD_FILE_ROOT) 

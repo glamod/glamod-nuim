@@ -6,7 +6,7 @@ edited 8/03/2022 snnone
 
 Convert monthly OBSERVATIONS files to Lite, Obs and hedaer .psv files (one per station).
 
-
+s
 Call in one of three ways using:
 
 >python monthly_to_cdm_all_v1.py --station STATIONID
@@ -234,10 +234,10 @@ def main(station="", subset="", run_all=False, clobber=False):
     # Read in either single file, list of files or run all
 
     # Check for sensible inputs
-    if station != "" and subset != "" and all:
+    if station != "" and subset != "" and run_all:
         print("Please select either single station, list of stations run or to run all")
         return
-    elif station == "" and subset == "" and not all:
+    elif station == "" and subset == "" and not run_all:
         print("Please select either single station, list of stations run or to run all")
         return
 
@@ -264,7 +264,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         df = pd.read_csv(filename, sep=",", usecols=lambda c: c in LITE_COLS, compression='infer')
 
         # set output filenames
-        station_id = df.iloc[1]["STATION"] # NOTE: this is renamed below to "primary_station_id"
+        station_id = df.iloc[0]["STATION"] # NOTE: this is renamed below to "primary_station_id"
         outroot_cdmlite = os.path.join(utils.MONTHLY_CDM_LITE_OUT_DIR, utils.MONTHLY_CDM_LITE_FILE_ROOT) 
         outroot_cdmobs = os.path.join(utils.MONTHLY_CDM_OBS_OUT_DIR, utils.MONTHLY_CDM_OBS_FILE_ROOT) 
         outroot_cdmhead = os.path.join(utils.MONTHLY_CDM_HEAD_OUT_DIR, utils.MONTHLY_CDM_HEAD_FILE_ROOT) 
@@ -499,6 +499,14 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         # merge all the sperate variable df togther into one df    
         merged_df=pd.concat([dftmax, dftavg, dftmin, dftws, dfprc, dfsnow], axis=0)
+        # if no data that's being converted present in the input data frame
+        #    then no "observation_value" entry in final
+        if len(merged_df["observation_value"].unique()) == 1 and \
+           merged_df["observation_value"].unique() == "":
+            # all are blank strings, so don't output
+            print("No observations in the file, skipping output")
+            continue
+
         merged_df.sort_values("date_time", inplace=True)
 
         # sort locational metadata
@@ -611,7 +619,12 @@ def main(station="", subset="", run_all=False, clobber=False):
 
 
         # add required columns and set up values etc
-        hdf[['primary_station_id', 'station_record_number', '1', "2", "3"]] = hdf['report_id'].str.split('-', expand=True)                                                    
+        #   extra steps to handle files with dashes in them
+        hdf['extract_record'] = dfobs['report_id'].str[:-11]
+        hdf['station_record_number'] = hdf['extract_record'].str[12:]
+        hdf['primary_station_id'] = hdf['extract_record'].str[:11]
+
+        # hdf[['primary_station_id', 'station_record_number', '1', "2", "3"]] = hdf['report_id'].str.split('-', expand=True)
         hdf["report_id"] = dfobs["report_id"]
         hdf["application_area"] = ""
         hdf["observing_programme"] = ""

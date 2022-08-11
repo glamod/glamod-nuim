@@ -23,7 +23,7 @@ import monthly_to_cdm_all_v1 as m_utils
 EXTENSION = 'csv'
 
 # Read in the data policy dataframe (only read in if needed)
-data_policy_df = pd.read_csv(utils.MONTHLY_STATION_RECORD_ENTRIES_OBS_LITE, encoding='latin-1')
+data_policy_df = pd.read_csv(f"../{utils.MONTHLY_STATION_RECORD_ENTRIES_OBS_LITE}", encoding='latin-1')
 data_policy_df = data_policy_df.astype(str)
 
 
@@ -31,6 +31,7 @@ all_filenames = [i for i in glob.glob(f"{utils.MONTHLY_UPDATE_STNDIR}*.{EXTENSIO
 
 # just run through all filenames
 for filename in all_filenames:
+    print(filename)
 
     # pull out the columns we need
     usecols = m_utils.LITE_COLS
@@ -250,17 +251,31 @@ for filename in all_filenames:
         continue
 
                
+    # merge all the separate variable df togther into one df    
     try:
-        merged_df=pd.concat([dftmax,dftavg,dftmin,dftws,dfprc], axis=0)
+        merged_df = pd.concat([dftmax, dftavg, dftmin, dftws, dfprc], axis=0)
+        # if no data that's being converted present in the input data frame
+        #    then no "observation_value" entry in final
+        if len(merged_df["observation_value"].unique()) == 1 and \
+           merged_df["observation_value"].unique() == "":
+            # all are blank strings, so don't output
+            print("No observations in the file, skipping output")
+            continue
+
+
         merged_df.sort_values("date_time")
+
+        # sort locational metadata
         merged_df["latitude"] = pd.to_numeric(merged_df["latitude"],errors='coerce')
         merged_df["longitude"] = pd.to_numeric(merged_df["longitude"],errors='coerce')
         merged_df["latitude"]= merged_df["latitude"].round(3)
         merged_df["longitude"]= merged_df["longitude"].round(3)
+
         merged_df = merged_df[merged_df.observation_value != "nan"]
         merged_df["observation_value"] = pd.to_numeric(merged_df["observation_value"],errors='coerce')
         merged_df.dropna(subset = ["observation_value"], inplace=True)
         merged_df.dropna(subset = ["observation_id"], inplace=True)
+        # and store the CDM Lite dateframe
         df_lite_out = merged_df[["observation_id","report_type","date_time","date_time_meaning",
                       "latitude","longitude","observation_height_above_station_surface"
                       ,"observed_variable","units","observation_value",
@@ -269,6 +284,7 @@ for filename in all_filenames:
                       ,"data_policy_licence","source_id"]]
         
         
+        # extract columns for CDM Obs dataframe
         dfobs=merged_df[["observation_id","report_type","date_time","date_time_meaning",
                   "latitude","longitude","observation_height_above_station_surface"
                   ,"observed_variable","units","observation_value",
@@ -277,42 +293,23 @@ for filename in all_filenames:
                   ,"data_policy_licence","source_id","primary_station_id_2"]]
         
         # add region and sub region
-        df2=pd.read_csv("/gws/nopw/j04/c3s311a_lot2/data/incoming/code/record_id_mnth.csv")
-        dfobs = dfobs.astype(str)
-        df2 = df2.astype(str)
-        dfobs= df2.merge(dfobs, on=['primary_station_id_2'])
-        
-        dfobs["numerical_precision"]=""
-        dfobs.loc[dfobs['observed_variable'] == "85", 'numerical_precision'] = '0.01' 
-        dfobs.loc[dfobs['observed_variable'] == "44", 'numerical_precision'] = '0.1'
-        dfobs.loc[dfobs['observed_variable'] == "45", 'numerical_precision'] = '0.1'
-        dfobs.loc[dfobs['observed_variable'] == "55", 'numerical_precision'] = '0.1' 
-        dfobs.loc[dfobs['observed_variable'] == "106", 'numerical_precision'] = '0.1' 
-        dfobs.loc[dfobs['observed_variable'] == "107", 'numerical_precision'] = "0.1"
-        dfobs.loc[dfobs['observed_variable'] == "53", 'numerical_precision'] = "1"
+        dfobs = m_utils.add_data_policy(dfobs, data_policy_df)
 
-        dfobs["original_precision"]=""
-        dfobs.loc[dfobs['observed_variable'] == "85", 'original_precision'] = '0.01' 
-        dfobs.loc[dfobs['observed_variable'] == "44", 'original_precision'] = '0.1'
-        dfobs.loc[dfobs['observed_variable'] == "45", 'original_precision'] = '0.1'
-        dfobs.loc[dfobs['observed_variable'] == "55", "original_precision"] = '0.1' 
-        dfobs.loc[dfobs['observed_variable'] == "106", 'original_precision'] = '1' 
-        dfobs.loc[dfobs['observed_variable'] == "107", 'original_precision'] = "0.1"
-        dfobs.loc[dfobs['observed_variable'] == "53", 'original_precision'] = "1"
-            
+        dfobs["numerical_precision"] = ""
+        # so that the look up tables don't use the variable ID value, but the name
+        for obs_var, var_id in m_utils.VARIABLE_ID.items():
+            df.loc[df['observed_variable'] == var_id, 'numerical_precision'] = m_utils.NUMERICAL_PRECISION[obs_var]
+
+        dfobs["original_precision"] = ""
+        for obs_var, var_id in m_utils.VARIABLE_ID.items():
+            df.loc[df['observed_variable'] == var_id, 'original_precision'] = m_utils.ORIGINAL_PRECISION[obs_var]
+
         # add conversion flags
-        dfobs["conversion_flag"]=""
-        dfobs.loc[dfobs['observed_variable'] == "85", 'conversion_flag'] = '0' 
-        dfobs.loc[dfobs['observed_variable'] == "44", 'conversion_flag'] = '2'
-        dfobs.loc[dfobs['observed_variable'] == "45", 'conversion_flag'] = '2'
-        dfobs.loc[dfobs['observed_variable'] == "55", 'conversion_flag'] = '2' 
-        dfobs.loc[dfobs['observed_variable'] == "106", 'conversion_flag'] = '2' 
-        dfobs.loc[dfobs['observed_variable'] == "107", 'conversion_flag'] = "2"
-        dfobs.loc[dfobs['observed_variable'] == "53", 'conversion_flag'] = "2"
-      
-        # set conversion method for variables
-        dfobs["conversion_method"]=""
-        dfobs.loc[dfobs['observed_variable'] == "85", 'conversion_method'] = '1' 
+        dfobs["conversion_flag"] = ""
+        for obs_var, var_id in m_utils.VARIABLE_ID.items():
+            df.loc[df['observed_variable'] == var_id, 'original_precision'] = m_utils.CONVERSION_FLAGS[obs_var]
+       
+     
         # add all columns for obs table
         dfobs["date_time_meaning"]="1"
         dfobs["crs"]=""
@@ -349,6 +346,7 @@ for filename in all_filenames:
         dfobs["report_id"]=dfobs["station_id"].astype(str)+'-'+dfobs["record_id"].astype(str)+'-'+dfobs["date1"].astype(str)
         dfobs["original_value"]=dfobs["observation_value"]
         dfobs["original_units"]=dfobs["units"]
+        # set conversion method for variables
         dfobs["onversion_method"]=""
         dfobs.loc[dfobs['observed_variable'] == "85", 'original_units'] = '350'
         dfobs.loc[dfobs['observed_variable'] == "85", 'original_value'] = dfobs["observation_value"]-273.15
@@ -369,8 +367,8 @@ for filename in all_filenames:
                "processing_code","processing_level","adjustment_id","traceability",
                "advanced_qc","advanced_uncertainty","advanced_homogenisation",
                "advanced_assimilation_feedback","source_id"]]
-    except:
-            pass
+    except IOError:
+        continue
                    
     
     
@@ -379,9 +377,13 @@ for filename in all_filenames:
         col_list=dfobs [["observation_id","latitude","longitude","report_id","source_id","date_time"]]
         hdf=col_list.copy()
         
-        
         # add required columns and set up values etc
-        hdf[['primary_station_id', 'station_record_number', '1',"2,","3"]] = hdf['report_id'].str.split('-', expand=True)                                                    
+        #   extra steps to handle files with dashes in them
+        hdf['extract_record'] = dfobs['report_id'].str[:-11]
+        hdf['station_record_number'] = hdf['extract_record'].str[12:]
+        hdf['primary_station_id'] = hdf['extract_record'].str[:11]
+        
+        # hdf[['primary_station_id', 'station_record_number', '1',"2,","3"]] = hdf['report_id'].str.split('-', expand=True)                                                    
         # hdf["observation_id"]=merged_df["observation_id"]                                                  
         hdf["report_id"]=dfobs["report_id"]
         hdf["application_area"]=""
@@ -424,15 +426,11 @@ for filename in all_filenames:
         
             
               
-        df2=pd.read_csv("/gws/nopw/j04/c3s311a_lot2/data/incoming/code/record_id_mnth.csv")
-        hdf = hdf.astype(str)
-        df2 = df2.astype(str)
-        hdf= df2.merge(hdf, on=['primary_station_id_3'])
-        hdf['height_of_station_above_sea_level'] = hdf['height_of_station_above_sea_level'].astype(str).apply(lambda x: x.replace('.0',''))
-        hdf["source_id"]=hdf["source_id_x"]
-            #added in thsi bit of code#
+        hdf = data_policy_df.merge(hdf, on=['primary_station_id_3'])
         hdf = hdf.rename(columns={"latitude_x":"latitude",})
         hdf = hdf.rename(columns={"longitude_x":"longitude",})
+        hdf['height_of_station_above_sea_level'] = hdf['height_of_station_above_sea_level'].astype(str).apply(lambda x: x.replace('.0',''))
+        hdf["source_id"]=hdf["source_id_x"]
         hdf["latitude"] = pd.to_numeric(hdf["latitude"],errors='coerce')
         hdf["longitude"] = pd.to_numeric(hdf["longitude"],errors='coerce')
         hdf["latitude"]= hdf["latitude"].round(3)
@@ -478,49 +476,44 @@ for filename in all_filenames:
       
         hdf['region'] = hdf['region'].astype(str).apply(lambda x: x.replace('.0',''))
         hdf['sub_region'] = hdf['sub_region'].astype(str).apply(lambda x: x.replace('.0',''))
-    except:
-            # Continue to next iteration.
-            continue
+    except IOError:
+        # Continue to next iteration.
+        continue
 
     
 
     # output merged cdmlite file
 
     
-    try:
-      
-                     
-        
+    try:                     
         cdm_type=("cdm_lite_monthly_update_")
-        outname = os.path.join(utils.MONTHLY_UPDATE_CDM_LITE_OUTDIR,cdm_type)
+        outname = os.path.join(utils.MONTHLY_UPDATE_CDM_LITE_OUTDIR, cdm_type)
         df_lite_out.to_csv(outname+ month_date_id + ".psv", index=False, sep="|")
      
-    except:
+    except IOError:
+        print(f"Cannot save datafile: {outname}")
         # Continue to next iteration.
         continue  
     
     # output of cdm observations files
     try:
-                          
-        
         cdm_type=("cdm_obs_monthly_update_")
         outname = os.path.join(utils.MONTHLY_UPDATE_CDM_OBS_OUTDIR, cdm_type)
         dfobs.to_csv(outname+ month_date_id + ".psv", index=False, sep="|")
      
-    except:
+    except IOError:
+        print(f"Cannot save datafile: {outname}")
         # Continue to next iteration.
         continue  
     
     # output of cdm header files
     try:
-       #  table output
-       # header table output
-        
         cdm_type=("cdm_head_monthly_update")
         outname = os.path.join(utils.MONTHLY_UPDATE_CDM_HEADER_OUTDIR, cdm_type)
         hdf.to_csv(outname+ month_date_id + ".psv", index=False, sep="|")
               
-    except:
+    except IOError:
+        print(f"Cannot save datafile: {outname}")
         # Continue to next iteration.
         continue
     

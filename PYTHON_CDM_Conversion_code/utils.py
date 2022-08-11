@@ -105,12 +105,20 @@ MONTHLY_UPDATE_OUTDIR = config.get("MonthlyUpdates", "monthly_update_outdir")
 MONTHLY_UPDATE_EXTRACTDIR = config.get("MonthlyUpdates", "monthly_update_extractdir")
 MONTHLY_UPDATE_TEMPDIR = config.get("MonthlyUpdates", "monthly_update_tempdir")
 MONTHLY_UPDATE_STNDIR = config.get("MonthlyUpdates", "monthly_update_stndir")
+MONTHLY_UPDATE_CDM_HEADER_OUTDIR = config.get("MonthlyUpdates", "monthly_update_cdmhead_outdir")
+MONTHLY_UPDATE_CDM_OBS_OUTDIR = config.get("MonthlyUpdates", "monthly_update_cdmobs_outdir")
+MONTHLY_UPDATE_CDM_QC_OUTDIR = config.get("MonthlyUpdates", "monthly_update_cdmqc_outdir")
+MONTHLY_UPDATE_CDM_LITE_OUTDIR = config.get("MonthlyUpdates", "monthly_update_cdmlite_outdir")
 # make directories if they do not exist
 for path in (MONTHLY_UPDATE_OUTDIR,
              MONTHLY_UPDATE_EXTRACTDIR,
              MONTHLY_UPDATE_TEMPDIR,
              MONTHLY_UPDATE_STNDIR,
-             ):
+             MONTHLY_UPDATE_CDM_HEADER_OUTDIR,
+             MONTHLY_UPDATE_CDM_OBS_OUTDIR,
+             MONTHLY_UPDATE_CDM_QC_OUTDIR,
+             MONTHLY_UPDATE_CDM_LITE_OUTDIR
+         ):
     os.makedirs(path, exist_ok=True)
 
 

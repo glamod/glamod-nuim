@@ -4,34 +4,39 @@
 Created on Wed Jul 17 14:22:41 2019
 
 @author: snoone
-
-
-
 """
+
+# step 2 converts the monthly GSOM update into files for the CDM
 
 import os
 import glob
 import pandas as pd
-
-
-
-# convert the monthly update gsom csv file to CDM files
-
+import sys
 pd.options.mode.chained_assignment = None  # default='warn'
 
-OUTDIR3= "/gws/nopw/j04/c3s311a_lot2/data/level2/land/r202208/daily_updates/cdm_head"
-OUTDIR2= "/gws/nopw/j04/c3s311a_lot2/data/level2/land/r202208/daily_updates/cdm_obs"
-OUTDIR = "/gws/nopw/j04/c3s311a_lot2/data/level2/land/r202208/daily_updates/cdm_lite"
-os.chdir("/gws/nopw/j04/c3s311a_lot2/data/incoming/monthly_gsom_update/stns")
-extension = 'csv'
+# add parent directory to access daily conversion scripts
+sys.path.append("../")
+import utils
+import monthly_to_cdm_all_v1 as m_utils
 
-all_filenames = [i for i in glob.glob('*.{}'.format(extension))]
 
+EXTENSION = 'csv'
+
+# Read in the data policy dataframe (only read in if needed)
+data_policy_df = pd.read_csv(utils.MONTHLY_STATION_RECORD_ENTRIES_OBS_LITE, encoding='latin-1')
+data_policy_df = data_policy_df.astype(str)
+
+
+all_filenames = [i for i in glob.glob(f"{utils.MONTHLY_UPDATE_STNDIR}*.{EXTENSION}")]
+
+# just run through all filenames
 for filename in all_filenames:
 
-    usecols = ["STATION","LATITUDE","LONGITUDE","ELEVATION","DATE","NAME", "PRCP", "TMIN", "TMAX", "TAVG", "SNOW", "AWND"]
-    df=pd.read_csv(filename, sep=",",usecols=lambda c: c in set(usecols))
-    month_date_id=df.iloc[1]["DATE"]
+    # pull out the columns we need
+    usecols = m_utils.LITE_COLS
+
+    df = pd.read_csv(filename, sep=",", usecols=lambda c: c in set(usecols))
+    month_date_id = df.iloc[1]["DATE"]
     
     # add required columnns
     df["report_type"]="2"
@@ -68,305 +73,182 @@ for filename in all_filenames:
     
     # extract precip
     try:
-        dfprc = df[["observation_id","report_type","date_time","date_time_meaning",
-                  "latitude","longitude","observation_height_above_station_surface"
-                  ,"observed_variable","units","observation_value",
-                  "value_significance","observation_duration","platform_type",
-                  "station_type","primary_station_id","station_name","quality_flag"
-                  ,"data_policy_licence"]]
-        
-       # change for each variable to convertto cdm compliant values
-        dfprc["observation_value"]=df["PRCP"]
-        #change for each variable if required
-        dfprc["observation_height_above_station_surface"]="1"
-        dfprc["units"]="710"
-        dfprc["observed_variable"]="44"
-        #set up matching values for merging with record_id_month to add information source_id for first configuration only due yto lack of information
-        dfprc["record_number"]="1"   
-        dfprc['primary_station_id_2']=dfprc['primary_station_id'].astype(str)+'-'+dfprc['record_number'].astype(str)
-        dfprc["report_id"]=dfprc["date_time"]
-        
-        ##merge with record_id_mnth.csv to add source id
-        df2=pd.read_csv("/gws/nopw/j04/c3s311a_lot2/data/incoming/code/record_id_mnth.csv")
-        dfprc = dfprc.astype(str)
-        df2 = df2.astype(str)
-        dfprc= df2.merge(dfprc, on=['primary_station_id_2'])
-        # added this bit of code
-        dfprc = dfprc.rename(columns={"station_name_x":"station_name",})
-        dfprc = dfprc.rename(columns={"source_id_x":"source_id",})
-        dfprc['observation_id']=dfprc['primary_station_id'].astype(str)+'-'+dfprc['record_number'].astype(str)+'-'+dfprc['date_time'].astype(str)
-        dfprc['observation_id'] = dfprc['observation_id'].str.replace(r' ', '-')
-        # remove unwanted last twpo characters
-        dfprc['observation_id'] = dfprc['observation_id'].str[:-12]
-        dfprc["observation_id"]=dfprc["observation_id"]+'-'+dfprc['observed_variable'].astype(str)+'-'+dfprc['value_significance'].astype(str)
-        
+        dfprc = df[m_utils.INITIAL_VAR_COLUMNS]
+
+        # change for each variable to convert to cdm compliant values
+        dfprc["observation_value"] = df["PRCP"]
+
+        # change for each variable if required
+        dfprc = m_utils.set_units_etc(dfprc, "PRCP")
+
+        # merge with record_id_mnth.csv to add source id
+        dfprc = m_utils.add_data_policy(dfprc, data_policy_df, rename=True)
+
+        dfprc = m_utils.build_observation_id(dfprc)
+
         # reorder columns and drop unwanted columns
-        dfprc = dfprc[["observation_id","report_type","date_time","date_time_meaning",
-                  "latitude","longitude","observation_height_above_station_surface"
-                  ,"observed_variable","units","observation_value",
-                  "value_significance","observation_duration","platform_type",
-                  "station_type","primary_station_id","station_name","quality_flag"
-                  ,"data_policy_licence","source_id","primary_station_id_2"]]
-    except:
-            pass
-    
+        dfprc = dfprc[m_utils.FINAL_VAR_COLUMNS]
+    except KeyError:
+        # this variable doesn't exist in the file
+        pass
+    except RuntimeError:
+        # station not available because of upstream QC
+        # continue to next station
+        continue
+  
    
-    
     # extract SNOW
     try:
-        dfsnow = df[["observation_id","report_type","date_time","date_time_meaning",
-                  "latitude","longitude","observation_height_above_station_surface"
-                  ,"observed_variable","units","observation_value",
-                  "value_significance","observation_duration","platform_type",
-                  "station_type","primary_station_id","station_name","quality_flag"
-                  ,"data_policy_licence"]]
-        
+        dfsnow = df[m_utils.INITIAL_VAR_COLUMNS]
+
         # change for each variable to convert to cdm compliant values
-        
-        dfsnow["observation_value"]=df["SNOW"]
+        dfsnow["observation_value"] = df["SNOW"]
         dfsnow = dfsnow.fillna("Null")
         dfsnow = dfsnow[dfsnow.observation_value != "Null"]
-        #change for each variable if required
-        dfsnow["observation_height_above_station_surface"]="0"
-        dfsnow["units"]="710"
-        dfsnow["observed_variable"]="45"
-        #set up matching values for merging with record_id_month to add information source_id for first configuration only due yto lack of information
-        dfsnow["record_number"]="1"   
-        dfsnow['primary_station_id_2']=dfsnow['primary_station_id'].astype(str)+'-'+dfsnow['record_number'].astype(str)
-        dfsnow["report_id"]=dfsnow["date_time"]
-        
-        # merge with record_id_mnth.csv to add source id
-        df2=pd.read_csv("/gws/nopw/j04/c3s311a_lot2/data/incoming/code/record_id_mnth.csv")
-        dfsnow = dfsnow.astype(str)
-        df2 = df2.astype(str)
-        dfsnow= df2.merge(dfsnow, on=['primary_station_id_2'])
-                ##added this bit of code
-        dfsnow = dfsnow.rename(columns={"station_name_x":"station_name",})
-        dfsnow = dfsnow.rename(columns={"source_id_x":"source_id",})
-        dfsnow['observation_id']=dfsnow['primary_station_id'].astype(str)+'-'+dfsnow['record_number'].astype(str)+'-'+dfsnow['date_time'].astype(str)
-        dfsnow['observation_id'] = dfsnow['observation_id'].str.replace(r' ', '-')
-        ##remove unwanted last twpo characters
-        dfsnow['observation_id'] = dfsnow['observation_id'].str[:-12]
-        dfsnow["observation_id"]=dfsnow["observation_id"]+'-'+dfsnow['observed_variable'].astype(str)+'-'+dfsnow['value_significance'].astype(str)
-        
-        # reorder columns and drop unwanted columns
-        dfsnow = dfsnow[["observation_id","report_type","date_time","date_time_meaning",
-                  "latitude","longitude","observation_height_above_station_surface"
-                  ,"observed_variable","units","observation_value",
-                  "value_significance","observation_duration","platform_type",
-                  "station_type","primary_station_id","station_name","quality_flag"
-                  ,"data_policy_licence","source_id","primary_station_id_2"]]
-    except:
-            pass
-    
-    
 
-      # extract tmax
+        #change for each variable if required
+        dfsnow = m_utils.set_units_etc(dfsnow, "SNOW")
+
+        # merge with record_id_mnth.csv to add source id
+        dfsnow = m_utils.add_data_policy(dfsnow, data_policy_df, rename=True)
+
+        dfsnow = m_utils.build_observation_id(dfsnow)
+
+        # reorder columns and drop unwanted columns
+        dfsnow = dfsnow[m_utils.FINAL_VAR_COLUMNS]
+    except KeyError:
+        # this variable doesn't exist in the file
+        pass
+    except RuntimeError:
+        # station not available because of upstream QC
+        # continue to next station
+        continue
+
+   
+    # extract tmax
     try:
-        dftmax = df[["observation_id","report_type","date_time","date_time_meaning",
-                  "latitude","longitude","observation_height_above_station_surface"
-                  ,"observed_variable","units","observation_value",
-                  "value_significance","observation_duration","platform_type",
-                  "station_type","primary_station_id","station_name","quality_flag"
-                  ,"data_policy_licence"]]
-        
+        dftmax = df[m_utils.INITIAL_VAR_COLUMNS]
+
         # change for each variable to convert to cdm compliant values
-        dftmax["observation_value"]=df["TMAX"]
+        dftmax["observation_value"] = df["TMAX"]
         dftmax = dftmax.fillna("Null")
         dftmax = dftmax[dftmax.observation_value != "Null"]
-        dftmax["observation_value"] = pd.to_numeric(dftmax["observation_value"],errors='coerce')
-        dftmax["observation_value"]=dftmax["observation_value"]+273.15
-        dftmax["observation_value"] = pd.to_numeric(dftmax["observation_value"],errors='coerce')
-        dftmax["observation_value"]=dftmax["observation_value"].round(2)
-        # change for each variable if required
-        dftmax["observation_height_above_station_surface"]="2"
-        dftmax["units"]="5"
-        dftmax["observed_variable"]="85"
-        dftmax["value_significance"]="0" 
-        # set up matching values for merging with record_id_month to add information source_id for first configuration only due yto lack of information
-        dftmax["record_number"]="1"   
-        dftmax['primary_station_id_2']=dftmax['primary_station_id'].astype(str)+'-'+dftmax['record_number'].astype(str)
-        dftmax["report_id"]=dftmax["date_time"]
-        
+        dftmax = m_utils.convert_to_kelvin(dftmax)
+
+        #change for each variable if required
+        dftmax = m_utils.set_units_etc(dftmax, "TMAX")
+        dftmax["value_significance"] = "0" 
+
         # merge with record_id_mnth.csv to add source id
-        df2=pd.read_csv("/gws/nopw/j04/c3s311a_lot2/data/incoming/code/record_id_mnth.csv")
-        dftmax = dftmax.astype(str)
-        df2 = df2.astype(str)
-        dftmax= df2.merge(dftmax, on=['primary_station_id_2'])
-        dftmax = dftmax.rename(columns={"station_name_x":"station_name",})
-        dftmax = dftmax.rename(columns={"source_id_x":"source_id",})
-        dftmax['observation_id']=dftmax['primary_station_id'].astype(str)+'-'+dftmax['record_number'].astype(str)+'-'+dftmax['date_time'].astype(str)
-        dftmax['observation_id'] = dftmax['observation_id'].str.replace(r' ', '-')
-        ##remove unwanted last twpo characters
-        dftmax['observation_id'] = dftmax['observation_id'].str[:-12]
-        dftmax["observation_id"]=dftmax["observation_id"]+'-'+dftmax['observed_variable'].astype(str)+'-'+dftmax['value_significance'].astype(str)
-        
+        dftmax = m_utils.add_data_policy(dftmax, data_policy_df, rename=True)
+
+        dftmax = m_utils.build_observation_id(dftmax)
+
         # reorder columns and drop unwanted columns
-        dftmax = dftmax[["observation_id","report_type","date_time","date_time_meaning",
-                  "latitude","longitude","observation_height_above_station_surface"
-                  ,"observed_variable","units","observation_value",
-                  "value_significance","observation_duration","platform_type",
-                  "station_type","primary_station_id","station_name","quality_flag"
-                  ,"data_policy_licence","source_id","primary_station_id_2"]]
-    except:
-                pass
+        dftmax = dftmax[m_utils.FINAL_VAR_COLUMNS]
+
+    except KeyError:
+        # this variable doesn't exist in the file
+        pass
+    except RuntimeError:
+        # station not available because of upstream QC
+        # continue to next station
+        continue
     
-    
-    
+
     # extract tmin
     try:
-         dftmin = df[["observation_id","report_type","date_time","date_time_meaning",
-                   "latitude","longitude","observation_height_above_station_surface"
-                   ,"observed_variable","units","observation_value",
-                   "value_significance","observation_duration","platform_type",
-                   "station_type","primary_station_id","station_name","quality_flag"
-                   ,"data_policy_licence"]]
-         
-         # change for each variable to convert to cdm compliant values
-         dftmin["observation_value"]=df["TMIN"]
-         dftmin = dftmin.fillna("Null")
-         dftmin = dftmin[dftmin.observation_value != "Null"]
-         dftmin["observation_value"] = pd.to_numeric(dftmin["observation_value"],errors='coerce')
-         dftmin["observation_value"]=dftmin["observation_value"]+273.15
-         dftmin["observation_value"] = pd.to_numeric(dftmin["observation_value"],errors='coerce')
-         dftmin["observation_value"]=dftmin["observation_value"].round(2)
-         # change for each variable if required
-         dftmin["observation_height_above_station_surface"]="2"
-         dftmin["units"]="5"
-         dftmin["observed_variable"]="85"
-         dftmin["value_significance"]="1" 
-         # set up matching values for merging with record_id_month to add information source_id for first configuration only due yto lack of information
-         dftmin["record_number"]="1"   
-         dftmin['primary_station_id_2']=dftmin['primary_station_id'].astype(str)+'-'+dftmin['record_number'].astype(str)
-         dftmin["report_id"]=dftmin["date_time"]
-         
-         # merge with record_id_mnth.csv to add source id
-         df2=pd.read_csv("/gws/nopw/j04/c3s311a_lot2/data/incoming/code/record_id_mnth.csv")
-         dftmin = dftmin.astype(str)
-         df2 = df2.astype(str)
-         dftmin= df2.merge(dftmin, on=['primary_station_id_2'])
-         dftmin = dftmin.rename(columns={"station_name_x":"station_name",})
-         dftmin = dftmin.rename(columns={"source_id_x":"source_id",})
-         
-         dftmin['observation_id']=dftmin['primary_station_id'].astype(str)+'-'+dftmin['record_number'].astype(str)+'-'+dftmin['date_time'].astype(str)
-         dftmin['observation_id'] = dftmin['observation_id'].str.replace(r' ', '-')
-         # remove unwanted last twpo characters
-         dftmin['observation_id'] = dftmin['observation_id'].str[:-12]
-         dftmin["observation_id"]=dftmin["observation_id"]+'-'+dftmin['observed_variable'].astype(str)+'-'+dftmin['value_significance'].astype(str)
-         
-         # reorder columns and drop unwanted columns
-         dftmin = dftmin[["observation_id","report_type","date_time","date_time_meaning",
-                   "latitude","longitude","observation_height_above_station_surface"
-                   ,"observed_variable","units","observation_value",
-                   "value_significance","observation_duration","platform_type",
-                   "station_type","primary_station_id","station_name","quality_flag"
-                   ,"data_policy_licence","source_id","primary_station_id_2"]]
-    except:
-                pass
-       
-   
-    
+        dftmin = df[m_utils.INITIAL_VAR_COLUMNS]
+
+        # change for each variable to convert to cdm compliant values
+        dftmin["observation_value"] = df["TMIN"]
+        dftmin = dftmin.fillna("Null")
+        dftmin = dftmin[dftmin.observation_value != "Null"]
+        dftmin = m_utils.convert_to_kelvin(dftmin)
+
+        # change for each variable if required
+        dftmin = m_utils.set_units_etc(dftmin, "TMIN")
+        dftmin["value_significance"] = "1" 
+
+        # merge with record_id_mnth.csv to add source id
+        dftmin = m_utils.add_data_policy(dftmin, data_policy_df, rename=True)
+
+        dftmin = m_utils.build_observation_id(dftmin)
+
+        # reorder columns and drop unwanted columns
+        dftmin = dftmin[m_utils.FINAL_VAR_COLUMNS]
+    except KeyError:
+        # this variable doesn't exist in the file
+        pass
+    except RuntimeError:
+        # station not available because of upstream QC
+        # continue to next station
+        continue
+
+
     # extract tavg
     try:
-        dftavg = df[["observation_id","report_type","date_time","date_time_meaning",
-                  "latitude","longitude","observation_height_above_station_surface"
-                  ,"observed_variable","units","observation_value",
-                  "value_significance","observation_duration","platform_type",
-                  "station_type","primary_station_id","station_name","quality_flag"
-                  ,"data_policy_licence"]]
-        
+        dftavg = df[m_utils.INITIAL_VAR_COLUMNS]
+
         # change for each variable to convert to cdm compliant values
         dftavg["observation_value"]=df["TAVG"]
         dftavg = dftavg.fillna("Null")
         dftavg = dftavg[dftavg.observation_value != "Null"]
-        dftavg["observation_value"] = pd.to_numeric(dftavg["observation_value"],errors='coerce')
-        dftavg["observation_value"]=dftavg["observation_value"]+273.15
-        dftavg["observation_value"] = pd.to_numeric(dftavg["observation_value"],errors='coerce')
-        dftavg["observation_value"]=dftavg["observation_value"].round(2)
+        dftavg = m_utils.convert_to_kelvin(dftavg)
+
         # change for each variable if required
-        dftavg["observation_height_above_station_surface"]="2"
-        dftavg["units"]="5"
-        dftavg["observed_variable"]="85"
+        dftavg = m_utils.set_units_etc(dftavg, "TAVG")
         dftavg["value_significance"]="2" 
-        # set up matching values for merging with record_id_month to add information source_id for first configuration only due yto lack of information
-        dftavg["record_number"]="1"   
-        dftavg['primary_station_id_2']=dftavg['primary_station_id'].astype(str)+'-'+dftavg['record_number'].astype(str)
-        dftavg["report_id"]=dftavg["date_time"]
-        
+
         # merge with record_id_mnth.csv to add source id
-        df2=pd.read_csv("/gws/nopw/j04/c3s311a_lot2/data/incoming/code/record_id_mnth.csv")
-        dftavg = dftavg.astype(str)
-        df2 = df2.astype(str)
-        dftavg= df2.merge(dftavg, on=['primary_station_id_2'])
-        dftavg = dftavg.rename(columns={"station_name_x":"station_name",})
-        dftavg = dftavg.rename(columns={"source_id_x":"source_id",})
-        dftavg['observation_id']=dftavg['primary_station_id'].astype(str)+'-'+dftavg['record_number'].astype(str)+'-'+dftavg['date_time'].astype(str)
-        dftavg['observation_id'] = dftavg['observation_id'].str.replace(r' ', '-')
-        # remove unwanted last twpo characters
-        dftavg['observation_id'] = dftavg['observation_id'].str[:-12]
-        dftavg["observation_id"]=dftavg["observation_id"]+'-'+dftavg['observed_variable'].astype(str)+'-'+dftavg['value_significance'].astype(str)
-        
+        dftavg = m_utils.add_data_policy(dftavg, data_policy_df, rename=True)
+
+        dftavg = m_utils.build_observation_id(dftavg)
+
         # reorder columns and drop unwanted columns
-        dftavg = dftavg[["observation_id","report_type","date_time","date_time_meaning",
-                  "latitude","longitude","observation_height_above_station_surface"
-                  ,"observed_variable","units","observation_value",
-                  "value_significance","observation_duration","platform_type",
-                  "station_type","primary_station_id","station_name","quality_flag"
-                  ,"data_policy_licence","source_id","primary_station_id_2"]]
-    except:
-                  pass
-               
-    
-   
+        dftavg = dftavg[m_utils.FINAL_VAR_COLUMNS]
+    except KeyError:
+        # this variable doesn't exist in the file
+        pass
+    except RuntimeError:
+        # station not available because of upstream QC
+        # continue to next station
+        continue
+
+
+
     # extract wind speed avge
     try:
-        dftws = df[["observation_id","report_type","date_time","date_time_meaning",
-                  "latitude","longitude","observation_height_above_station_surface"
-                  ,"observed_variable","units","observation_value",
-                  "value_significance","observation_duration","platform_type",
-                  "station_type","primary_station_id","station_name","quality_flag"
-                  ,"data_policy_licence"]]
-        
+        dftws = df[m_utils.INITIAL_VAR_COLUMNS]
+
         # change for each variable to convert to cdm compliant values
-        dftws["observation_value"]=df["AWND"]
+        dftws["observation_value"] = df["AWND"]
         dftws = dftws.fillna("Null")
         dftws = dftws[dftws.observation_value != "Null"]
+
+        # fix observation_value
         dftws["observation_value"] = pd.to_numeric(dftws["observation_value"],errors='coerce')
-        dftws["observation_value"]=dftws["observation_value"]
-        dftws["observation_value"] = pd.to_numeric(dftws["observation_value"],errors='coerce')
-        dftws["observation_value"]=dftws["observation_value"].round(2)
+        dftws["observation_value"] = dftws["observation_value"].round(2)
+
         # change for each variable if required
-        dftws["observation_height_above_station_surface"]="2"
-        dftws["units"]="732"
-        dftws["observed_variable"]="107"
-        dftws["value_significance"]="2" 
-        # et up matching values for merging with record_id_month to add information source_id for first configuration only due yto lack of information
-        dftws["record_number"]="1"   
-        dftws['primary_station_id_2']=dftws['primary_station_id'].astype(str)+'-'+dftws['record_number'].astype(str)
-        dftws["report_id"]=dftws["date_time"]
-        
+        dftws = m_utils.set_units_etc(dftws, "AWND")
+        dftws["value_significance"] = "2" 
+
         # merge with record_id_mnth.csv to add source id
-        df2=pd.read_csv("/gws/nopw/j04/c3s311a_lot2/data/incoming/code/record_id_mnth.csv")
-        dftws = dftws.astype(str)
-        df2 = df2.astype(str)
-        dftws= df2.merge(dftws, on=['primary_station_id_2'])
-        dftws = dftws.rename(columns={"station_name_x":"station_name",})
-        dftws = dftws.rename(columns={"source_id_x":"source_id",})
-        dftws['observation_id']=dftws['primary_station_id'].astype(str)+'-'+dftws['record_number'].astype(str)+'-'+dftws['date_time'].astype(str)
-        dftws['observation_id'] = dftws['observation_id'].str.replace(r' ', '-')
-        # remove unwanted last twpo characters
-        dftws['observation_id'] = dftws['observation_id'].str[:-12]
-        dftws["observation_id"]=dftws["observation_id"]+'-'+dftws['observed_variable'].astype(str)+'-'+dftws['value_significance'].astype(str)
-        
+        dftws = m_utils.add_data_policy(dftws, data_policy_df, rename=True)
+
+        dftws = m_utils.build_observation_id(dftws)
+
         # reorder columns and drop unwanted columns
-        dftws = dftws[["observation_id","report_type","date_time","date_time_meaning",
-                  "latitude","longitude","observation_height_above_station_surface"
-                  ,"observed_variable","units","observation_value",
-                  "value_significance","observation_duration","platform_type",
-                  "station_type","primary_station_id","station_name","quality_flag"
-                  ,"data_policy_licence","source_id","primary_station_id_2"]]
-    except:
-                   pass 
+        dftws = dftws[m_utils.FINAL_VAR_COLUMNS]
+    except KeyError:
+        # this variable doesn't exist in the file
+        pass 
+    except RuntimeError:
+        # station not available because of upstream QC
+        # continue to next station
+        continue
+
                
     try:
         merged_df=pd.concat([dftmax,dftavg,dftmin,dftws,dfprc], axis=0)
@@ -610,7 +492,7 @@ for filename in all_filenames:
                      
         
         cdm_type=("cdm_lite_monthly_update_")
-        outname = os.path.join(OUTDIR,cdm_type)
+        outname = os.path.join(utils.MONTHLY_UPDATE_CDM_LITE_OUTDIR,cdm_type)
         df_lite_out.to_csv(outname+ month_date_id + ".psv", index=False, sep="|")
      
     except:
@@ -622,7 +504,7 @@ for filename in all_filenames:
                           
         
         cdm_type=("cdm_obs_monthly_update_")
-        outname = os.path.join(OUTDIR2,cdm_type)
+        outname = os.path.join(utils.MONTHLY_UPDATE_CDM_OBS_OUTDIR, cdm_type)
         dfobs.to_csv(outname+ month_date_id + ".psv", index=False, sep="|")
      
     except:
@@ -635,7 +517,7 @@ for filename in all_filenames:
        # header table output
         
         cdm_type=("cdm_head_monthly_update")
-        outname = os.path.join(OUTDIR3,cdm_type)
+        outname = os.path.join(utils.MONTHLY_UPDATE_CDM_HEADER_OUTDIR, cdm_type)
         hdf.to_csv(outname+ month_date_id + ".psv", index=False, sep="|")
               
     except:

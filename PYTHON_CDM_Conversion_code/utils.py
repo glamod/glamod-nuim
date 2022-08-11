@@ -88,7 +88,30 @@ DAILY_UPDATE_CDM_HEADER_OUTDIR = config.get("DailyUpdates", "daily_update_cdmhea
 DAILY_UPDATE_CDM_OBS_OUTDIR = config.get("DailyUpdates", "daily_update_cdmobs_outdir")
 DAILY_UPDATE_CDM_QC_OUTDIR = config.get("DailyUpdates", "daily_update_cdmqc_outdir")
 DAILY_UPDATE_CDM_LITE_OUTDIR = config.get("DailyUpdates", "daily_update_cdmlite_outdir")
+# make directories if they do not exist
+for path in (DAILY_UPDATE_OUTDIR,
+             DAILY_UPDATE_CDM_HEADER_OUTDIR,
+             DAILY_UPDATE_CDM_OBS_OUTDIR,
+             DAILY_UPDATE_CDM_QC_OUTDIR,
+             DAILY_UPDATE_CDM_LITE_OUTDIR,
+             ):
+    os.makedirs(path, exist_ok=True)
 
+# Monthly updates from GHCND
+MONTHLY_URL_HOST = config.get("MonthlyUpdates", "url")
+MONTHLY_URL_DIR = config.get("MonthlyUpdates", "urldir")
+MONTHLY_UPDATE_FILE = config.get("MonthlyUpdates", "monthly_file")
+MONTHLY_UPDATE_OUTDIR = config.get("MonthlyUpdates", "monthly_update_outdir")
+MONTHLY_UPDATE_EXTRACTDIR = config.get("MonthlyUpdates", "monthly_update_extractdir")
+MONTHLY_UPDATE_TEMPDIR = config.get("MonthlyUpdates", "monthly_update_tempdir")
+MONTHLY_UPDATE_STNDIR = config.get("MonthlyUpdates", "monthly_update_stndir")
+# make directories if they do not exist
+for path in (MONTHLY_UPDATE_OUTDIR,
+             MONTHLY_UPDATE_EXTRACTDIR,
+             MONTHLY_UPDATE_TEMPDIR,
+             MONTHLY_UPDATE_STNDIR,
+             ):
+    os.makedirs(path, exist_ok=True)
 
 
 

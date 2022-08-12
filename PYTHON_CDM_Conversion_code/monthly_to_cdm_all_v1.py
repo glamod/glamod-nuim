@@ -497,7 +497,7 @@ def main(station="", subset="", run_all=False, clobber=False):
             continue
 
 
-        # merge all the sperate variable df togther into one df    
+        # merge all the separate variable df togther into one df
         merged_df=pd.concat([dftmax, dftavg, dftmin, dftws, dfprc, dfsnow], axis=0)
         # if no data that's being converted present in the input data frame
         #    then no "observation_value" entry in final

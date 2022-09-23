@@ -261,8 +261,8 @@ def main(station="", subset="", run_all=False, clobber=False):
                           df["Hour"].map(str) + ":" + \
                           df["Minute"].map(str) + ":" + \
                           df["Seconds"].map(str) 
-        df['date_time'] =  pd.to_datetime(df['date_time'], format="%Y/%m/%d %H:%M")
-        df['date_time'] = df['date_time'].astype('str')
+        df['date_time'] =  pd.to_datetime(df['date_time'], format="%Y/%m/%d %H:%M:%S")
+        df['date_time'] = df['date_time'].dt.strftime("%Y-%m-%d %H:%M:%S")
         df.date_time = df.date_time + '+00'
 
         # =========================================================================================

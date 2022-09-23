@@ -250,15 +250,15 @@ def main(station="", subset="", run_all=False, clobber=False):
         df["primary_station_id"] = df["Station_ID"]
         df["Timestamp2"] = df["Year"].map(str) + "-" +\
             df["Month"].map(str) + "-" +\
-            df["Day"].map(str)  
+            df["Day"].map(str)
         df["Seconds"] = "00"
         df["offset"] = "+00"
         df["date_time"] = df["Timestamp2"].map(str) + " " + \
             df["Hour"].map(str) + ":" + \
             df["Minute"].map(str) + ":" + \
-            df["Seconds"].map(str) 
-        df['date_time'] = pd.to_datetime(df['date_time'], format='%Y/%m/%d' " ""%H:%M")
-        df['date_time'] = df['date_time'].astype('str')
+            df["Seconds"].map(str)
+        df['date_time'] = pd.to_datetime(df['date_time'], format="%Y/%m/%d %H:%M:%S")
+        df['date_time'] = df['date_time'].dt.strftime("%Y-%m-%d %H:%M:%S")
         df.date_time = df.date_time + '+00'
 
 
@@ -532,7 +532,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         del dfws
 
         if merged_df.shape[0] == 0:
-            print(f"No data in merged CDM Lite file for: {filename}")
+            print(f"No data in merged CDM Obs file for: {filename}")
             continue
 
         # Sort by date/times and fix metadata

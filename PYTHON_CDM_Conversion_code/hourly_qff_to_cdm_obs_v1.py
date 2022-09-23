@@ -176,8 +176,12 @@ def main(station="", subset="", run_all=False, clobber=False):
         # Read in the dataframe
         df = pd.read_csv(filename, sep="|", low_memory=False, compression="infer")
         
+        if df.shape[0] == 0:
+            print(f"No data in file: {filename}")
+            continue
+
         # Set up the output filenames, and check if they exist
-        station_id = df.iloc[1]["Station_ID"] # NOTE: this is renamed below to "primary_station_id"
+        station_id = df.iloc[0]["Station_ID"] # NOTE: this is renamed below to "primary_station_id"
         outroot_cdmobs = os.path.join(utils.SUBDAILY_CDM_OBS_OUT_DIR, utils.SUBDAILY_CDM_OBS_FILE_ROOT)
         cdmobs_outfile = f"{outroot_cdmobs}{station_id}{OUT_EXTENSION}{COMPRESSION}"
 
@@ -246,15 +250,15 @@ def main(station="", subset="", run_all=False, clobber=False):
         df["primary_station_id"] = df["Station_ID"]
         df["Timestamp2"] = df["Year"].map(str) + "-" +\
             df["Month"].map(str) + "-" +\
-            df["Day"].map(str)  
+            df["Day"].map(str)
         df["Seconds"] = "00"
         df["offset"] = "+00"
         df["date_time"] = df["Timestamp2"].map(str) + " " + \
             df["Hour"].map(str) + ":" + \
             df["Minute"].map(str) + ":" + \
-            df["Seconds"].map(str) 
-        df['date_time'] = pd.to_datetime(df['date_time'], format='%Y/%m/%d' " ""%H:%M")
-        df['date_time'] = df['date_time'].astype('str')
+            df["Seconds"].map(str)
+        df['date_time'] = pd.to_datetime(df['date_time'], format="%Y/%m/%d %H:%M:%S")
+        df['date_time'] = df['date_time'].dt.strftime("%Y-%m-%d %H:%M:%S")
         df.date_time = df.date_time + '+00'
 
 
@@ -526,6 +530,10 @@ def main(station="", subset="", run_all=False, clobber=False):
         del dfmslp
         del dfwd
         del dfws
+
+        if merged_df.shape[0] == 0:
+            print(f"No data in merged CDM Obs file for: {filename}")
+            continue
 
         # Sort by date/times and fix metadata
         merged_df.sort_values("date_time", inplace=True)

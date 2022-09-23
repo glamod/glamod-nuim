@@ -114,6 +114,10 @@ def main(station="", subset="", run_all=False, clobber=False, time=""):
         # Read in the dataframe
         df = pd.read_csv(filename, sep="|", low_memory=False, compression="infer")
 
+        if df.shape[0] == 0:
+            print(f"No data in file: {filename}")
+            continue
+
         primary_id = df['primary_station_id'].iloc[0]
         record_id = df['observation_id'].str[12] # 13th char of obs_id with python's zero indexing
 

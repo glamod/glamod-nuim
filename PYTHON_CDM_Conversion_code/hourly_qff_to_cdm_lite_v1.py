@@ -94,11 +94,15 @@ def construct_report_type(var_frame, all_frame, id_field):
     # convert all missings to NULL
     var_frame["report_type"] = var_frame["report_type"].fillna("NULL")
     # extract first four characters
-    var_frame["report_type"] = var_frame["report_type"].str[:4].astype('str')
-    # retain those matching "ICAO" and replace with "0" otherwise
-    var_frame["report_type"] = np.where(var_frame["report_type"].isin(["ICAO"]), var_frame["report_type"] ,"0")
-    # replace all ICAO with "4"
-    var_frame["report_type"] = var_frame["report_type"].replace({'ICAO':'4',})
+    try:
+        var_frame["report_type"] = var_frame["report_type"].str[:4].astype('str')
+        # retain those matching "ICAO" and replace with "0" otherwise
+        var_frame["report_type"] = np.where(var_frame["report_type"].isin(["ICAO"]), var_frame["report_type"] ,"0")
+        # replace all ICAO with "4"
+        var_frame["report_type"] = var_frame["report_type"].replace({'ICAO':'4',})
+    except AttributeError:
+        # if Station ID is numbers only (misformed)
+        var_frame["report_type"] = '0'
     
     return var_frame
 
@@ -199,8 +203,12 @@ def main(station="", subset="", run_all=False, clobber=False):
         # Read in the dataframe
         df=pd.read_csv(filename, sep="|", low_memory=False, compression="infer")
 
+        if df.shape[0] == 0:
+            print(f"No data in file: {filename}")
+            continue
+
         # Set up the output filenames, and check if they exist
-        station_id=df.iloc[1]["Station_ID"] # NOTE: this is renamed below to "primary_station_id"
+        station_id=df.iloc[0]["Station_ID"] # NOTE: this is renamed below to "primary_station_id"
 
         outroot_cdmlite = os.path.join(utils.SUBDAILY_CDM_LITE_OUT_DIR, utils.SUBDAILY_CDM_LITE_FILE_ROOT)
         cdmlite_outfile = f"{outroot_cdmlite}{station_id}{OUT_EXTENSION}{COMPRESSION}"
@@ -253,8 +261,8 @@ def main(station="", subset="", run_all=False, clobber=False):
                           df["Hour"].map(str) + ":" + \
                           df["Minute"].map(str) + ":" + \
                           df["Seconds"].map(str) 
-        df['date_time'] =  pd.to_datetime(df['date_time'], format="%Y/%m/%d %H:%M")
-        df['date_time'] = df['date_time'].astype('str')
+        df['date_time'] =  pd.to_datetime(df['date_time'], format="%Y/%m/%d %H:%M:%S")
+        df['date_time'] = df['date_time'].dt.strftime("%Y-%m-%d %H:%M:%S")
         df.date_time = df.date_time + '+00'
 
         # =========================================================================================
@@ -539,6 +547,10 @@ def main(station="", subset="", run_all=False, clobber=False):
         # Merge all dataframes into one CDMlite frame
         merged_df=pd.concat([dfdpt,dft,dfslp,dfmslp,dfwd,dfws], axis=0)
 
+        if merged_df.shape[0] == 0:
+            print(f"No data in merged CDM Lite file for: {filename}")
+            continue
+
         # Sort by date/times and fix metadata
         merged_df.sort_values("date_time", inplace=True)
         merged_df["latitude"] = pd.to_numeric(merged_df["latitude"],errors='coerce')
@@ -565,7 +577,7 @@ def main(station="", subset="", run_all=False, clobber=False):
 
             # Remove unwanted "," from column
             qc_merged_df['qc_method'] = qc_merged_df['qc_method'].str[:-1]
-            qc_station_id=merged_df.iloc[1]["primary_station_id"]
+            qc_station_id=merged_df.iloc[0]["primary_station_id"]
             unique_qc_methods = qc_merged_df['qc_method'].unique()
             print(unique_qc_methods)
             qc_merged_df.to_csv(qc_outfile, index=False, sep="|", compression="infer")

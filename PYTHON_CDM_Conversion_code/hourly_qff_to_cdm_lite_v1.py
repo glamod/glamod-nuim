@@ -94,11 +94,15 @@ def construct_report_type(var_frame, all_frame, id_field):
     # convert all missings to NULL
     var_frame["report_type"] = var_frame["report_type"].fillna("NULL")
     # extract first four characters
-    var_frame["report_type"] = var_frame["report_type"].str[:4].astype('str')
-    # retain those matching "ICAO" and replace with "0" otherwise
-    var_frame["report_type"] = np.where(var_frame["report_type"].isin(["ICAO"]), var_frame["report_type"] ,"0")
-    # replace all ICAO with "4"
-    var_frame["report_type"] = var_frame["report_type"].replace({'ICAO':'4',})
+    try:
+        var_frame["report_type"] = var_frame["report_type"].str[:4].astype('str')
+        # retain those matching "ICAO" and replace with "0" otherwise
+        var_frame["report_type"] = np.where(var_frame["report_type"].isin(["ICAO"]), var_frame["report_type"] ,"0")
+        # replace all ICAO with "4"
+        var_frame["report_type"] = var_frame["report_type"].replace({'ICAO':'4',})
+    except AttributeError:
+        # if Station ID is numbers only (misformed)
+        var_frame["report_type"] = '0'
     
     return var_frame
 
@@ -542,6 +546,10 @@ def main(station="", subset="", run_all=False, clobber=False):
         # =================================================================================
         # Merge all dataframes into one CDMlite frame
         merged_df=pd.concat([dfdpt,dft,dfslp,dfmslp,dfwd,dfws], axis=0)
+
+        if merged_df.shape[0] == 0:
+            print(f"No data in merged CDM Lite file for: {filename}")
+            continue
 
         # Sort by date/times and fix metadata
         merged_df.sort_values("date_time", inplace=True)

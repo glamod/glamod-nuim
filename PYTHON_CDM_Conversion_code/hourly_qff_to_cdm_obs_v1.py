@@ -531,6 +531,10 @@ def main(station="", subset="", run_all=False, clobber=False):
         del dfwd
         del dfws
 
+        if merged_df.shape[0] == 0:
+            print(f"No data in merged CDM Lite file for: {filename}")
+            continue
+
         # Sort by date/times and fix metadata
         merged_df.sort_values("date_time", inplace=True)
         merged_df["latitude"] = pd.to_numeric(merged_df["latitude"],errors='coerce')

@@ -25,7 +25,7 @@ pd.options.mode.chained_assignment = None  # default='warn'
 import utils
 
 # Set the file extension for the subdaily obs psv files
-IN_EXTENSION = ".qff"
+IN_EXTENSION = ".psv"
 OUT_EXTENSION = ".psv"
 COMPRESSION = ""
 
@@ -83,6 +83,11 @@ def main(station="", subset="", run_all=False, clobber=False):
             print("Processing {}".format(filename))
         
         obs_table_df=pd.read_csv(filename, sep="|", usecols=OBS_TABLE_COLUMNS, compression="infer")
+
+        if obs_table_df.shape[0] == 0:
+            print(f"No data in file: {filename}")
+            continue
+        
         
         # extract Station_ID from report_ID in obs table
         obs_table_df['Station_ID'] = obs_table_df['report_id'].str[:11]

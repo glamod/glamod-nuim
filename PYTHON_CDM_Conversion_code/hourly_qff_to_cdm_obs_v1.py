@@ -176,8 +176,12 @@ def main(station="", subset="", run_all=False, clobber=False):
         # Read in the dataframe
         df = pd.read_csv(filename, sep="|", low_memory=False, compression="infer")
         
+        if df.shape[0] == 0:
+            print(f"No data in file: {filename}")
+            continue
+
         # Set up the output filenames, and check if they exist
-        station_id = df.iloc[1]["Station_ID"] # NOTE: this is renamed below to "primary_station_id"
+        station_id = df.iloc[0]["Station_ID"] # NOTE: this is renamed below to "primary_station_id"
         outroot_cdmobs = os.path.join(utils.SUBDAILY_CDM_OBS_OUT_DIR, utils.SUBDAILY_CDM_OBS_FILE_ROOT)
         cdmobs_outfile = f"{outroot_cdmobs}{station_id}{OUT_EXTENSION}{COMPRESSION}"
 

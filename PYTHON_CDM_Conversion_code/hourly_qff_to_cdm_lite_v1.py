@@ -199,8 +199,12 @@ def main(station="", subset="", run_all=False, clobber=False):
         # Read in the dataframe
         df=pd.read_csv(filename, sep="|", low_memory=False, compression="infer")
 
+        if df.shape[0] == 0:
+            print(f"No data in file: {filename}")
+            continue
+
         # Set up the output filenames, and check if they exist
-        station_id=df.iloc[1]["Station_ID"] # NOTE: this is renamed below to "primary_station_id"
+        station_id=df.iloc[0]["Station_ID"] # NOTE: this is renamed below to "primary_station_id"
 
         outroot_cdmlite = os.path.join(utils.SUBDAILY_CDM_LITE_OUT_DIR, utils.SUBDAILY_CDM_LITE_FILE_ROOT)
         cdmlite_outfile = f"{outroot_cdmlite}{station_id}{OUT_EXTENSION}{COMPRESSION}"
@@ -565,7 +569,7 @@ def main(station="", subset="", run_all=False, clobber=False):
 
             # Remove unwanted "," from column
             qc_merged_df['qc_method'] = qc_merged_df['qc_method'].str[:-1]
-            qc_station_id=merged_df.iloc[1]["primary_station_id"]
+            qc_station_id=merged_df.iloc[0]["primary_station_id"]
             unique_qc_methods = qc_merged_df['qc_method'].unique()
             print(unique_qc_methods)
             qc_merged_df.to_csv(qc_outfile, index=False, sep="|", compression="infer")

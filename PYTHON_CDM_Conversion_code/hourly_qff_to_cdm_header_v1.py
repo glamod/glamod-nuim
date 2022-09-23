@@ -86,7 +86,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         
         # extract Station_ID from report_ID in obs table
         obs_table_df['Station_ID'] = obs_table_df['report_id'].str[:11]
-        station_id = obs_table_df.iloc[1]["Station_ID"] # NOTE: this is renamed below to "primary_station_id" 
+        station_id = obs_table_df.iloc[0]["Station_ID"] # NOTE: this is renamed below to "primary_station_id" 
         outroot_cdmhead = os.path.join(utils.SUBDAILY_CDM_HEAD_OUT_DIR, utils.SUBDAILY_CDM_HEAD_FILE_ROOT) 
         cdmhead_outfile = f"{outroot_cdmhead}{station_id}{OUT_EXTENSION}{COMPRESSION}"
 

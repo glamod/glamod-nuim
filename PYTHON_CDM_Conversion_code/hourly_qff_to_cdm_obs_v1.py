@@ -382,12 +382,16 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         dfslp = dfslp[FINAL_COLUMNS]
 
+        dfslp.dropna(subset = ["observation_value"], inplace=True)
+
+        null_index = dfslp[dfslp['observation_value'] == "Null"].index
+        dfslp = dfslp.drop(index=null_index)
         dfslp['observation_value'] = dfslp['observation_value'].map(float)
         dfslp['observation_value'] = (dfslp['observation_value']*100)
         dfslp['observation_value'] = dfslp['observation_value'].map(int)
 
         # Ensure correct number of decimal places
-        dft = h_utils.fix_decimal_places(dft, do_obs_value=True)
+        dfslp = h_utils.fix_decimal_places(dfslp, do_obs_value=True)
 
 
         # ===========================================================================================
@@ -426,6 +430,9 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         dfmslp = dfmslp[FINAL_COLUMNS]
 
+        dfmslp.dropna(subset = ["observation_value"], inplace=True) 
+        null_index = dfmslp[dfmslp['observation_value'] == "Null"].index
+        dfmslp = dfmslp.drop(index=null_index)
         dfmslp['observation_value'] = dfmslp['observation_value'].map(float)
         dfmslp['observation_value'] = (dfmslp['observation_value']*100)
         dfmslp['observation_value'] = dfmslp['observation_value'].map(int)

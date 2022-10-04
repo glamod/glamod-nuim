@@ -1,0 +1,20 @@
+##new GSOM CRON job
+###ftp_download_gsom_.gz
+MAILTO="simon.noone@mu.ie"
+0 18 27 * * /home/users/sjnoone/bin/gsom_diff_down
+###python_end_cron_ftp
+
+### run disgregate files on Lotus
+MAILTO="simon.noone@mu.ie"
+0 20 27 * * /home/users/sjnoone/bin/gsom_update
+##end
+
+### run remove all processed.csv and .gz
+MAILTO="simon.noone@mu.ie"
+0 07 28 * * /home/users/sjnoone/bin/rmv_gsom_csv
+##end
+
+### cron ftp_download_ghcnd_diff
+MAILTO="simon.noone@mu.ie"
+25 19 * * * /gws/nopw/j04/c3s311a_lot2/data/level2/land/r202208/daily_updates/code/run_diff_process
+#python_end_cron_ftp

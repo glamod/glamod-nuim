@@ -28,7 +28,8 @@ import hourly_qff_to_cdm_utils as h_utils
 # Set the file extension for the subdaily psv files
 IN_EXTENSION = ".qff"
 OUT_EXTENSION = ".psv"
-COMPRESSION = ""
+IN_COMPRESSION = ".gz"
+OUT_COMPRESSION = ".gz"
 
 
 INITIAL_COLUMNS = ["observation_id","report_id","data_policy_licence","date_time",
@@ -154,7 +155,7 @@ def main(station="", subset="", run_all=False, clobber=False):
 
     # Obtain list of station(s) to process (single/subset/all)
     all_filenames = utils.get_station_list_to_process(utils.SUBDAILY_QFF_IN_DIR,
-                                                      f"{IN_EXTENSION}{COMPRESSION}",
+                                                      f"{IN_EXTENSION}{IN_COMPRESSION}",
                                                       station=station,
                                                       subset=subset,
                                                       run_all=run_all,
@@ -183,7 +184,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         # Set up the output filenames, and check if they exist
         station_id = df.iloc[0]["Station_ID"] # NOTE: this is renamed below to "primary_station_id"
         outroot_cdmobs = os.path.join(utils.SUBDAILY_CDM_OBS_OUT_DIR, utils.SUBDAILY_CDM_OBS_FILE_ROOT)
-        cdmobs_outfile = f"{outroot_cdmobs}{station_id}{OUT_EXTENSION}{COMPRESSION}"
+        cdmobs_outfile = f"{outroot_cdmobs}{station_id}{OUT_EXTENSION}{OUT_COMPRESSION}"
 
         # if not overwriting
         if not clobber:

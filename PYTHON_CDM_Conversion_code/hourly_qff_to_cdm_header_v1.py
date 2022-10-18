@@ -27,7 +27,8 @@ import utils
 # Set the file extension for the subdaily obs psv files
 IN_EXTENSION = ".psv"
 OUT_EXTENSION = ".psv"
-COMPRESSION = ""
+IN_COMPRESSION = ".gz"
+OUT_COMPRESSION = ".gz"
 
 OBS_TABLE_COLUMNS = ["observation_id", "report_id", "latitude","longitude","source_id","date_time"]
 
@@ -65,7 +66,7 @@ def main(station="", subset="", run_all=False, clobber=False):
 
     # Obtain list of station(s) to process (single/subset/all)
     all_filenames = utils.get_station_list_to_process(utils.SUBDAILY_HEAD_IN_DIR,
-                                                      f"{IN_EXTENSION}{COMPRESSION}",
+                                                      f"{IN_EXTENSION}{IN_COMPRESSION}",
                                                       station=station,
                                                       subset=subset,
                                                       run_all=run_all,
@@ -93,7 +94,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         obs_table_df['Station_ID'] = obs_table_df['report_id'].str[:11]
         station_id = obs_table_df.iloc[0]["Station_ID"] # NOTE: this is renamed below to "primary_station_id" 
         outroot_cdmhead = os.path.join(utils.SUBDAILY_CDM_HEAD_OUT_DIR, utils.SUBDAILY_CDM_HEAD_FILE_ROOT) 
-        cdmhead_outfile = f"{outroot_cdmhead}{station_id}{OUT_EXTENSION}{COMPRESSION}"
+        cdmhead_outfile = f"{outroot_cdmhead}{station_id}{OUT_EXTENSION}{OUT_COMPRESSION}"
 
         if not clobber:
             # and output file exists
@@ -140,7 +141,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         hdf["longitude"] = obs_table_df["longitude"]
         hdf["latitude"] = obs_table_df["latitude"]
         hdf["source_id"] = obs_table_df["source_id"]
-        hdf['record_timestamp'] = pd.to_datetime('now').strftime("%Y-%m-%d %H:%M:%S")
+        hdf['record_timestamp'] = pd.to_datetime("now", utc=True).strftime("%Y-%m-%d %H:%M:%S")
         hdf.record_timestamp = hdf.record_timestamp + '+00'
         hdf["history"]=""
         hdf["processing_level"] = "0"

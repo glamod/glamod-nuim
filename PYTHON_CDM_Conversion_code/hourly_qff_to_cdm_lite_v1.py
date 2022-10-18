@@ -29,7 +29,8 @@ import hourly_qff_to_cdm_utils as h_utils
 # Set the file extension for the subdaily psv files
 IN_EXTENSION = ".qff"
 OUT_EXTENSION = ".psv"
-COMPRESSION = ""
+IN_COMPRESSION = ".gz"
+OUT_COMPRESSION = ".gz"
 
 # Dictionaries to hold CDM codes.  In due course, read directly from those docs
 INITIAL_COLUMNS = ["observation_id","report_type","date_time","date_time_meaning",
@@ -180,7 +181,7 @@ def main(station="", subset="", run_all=False, clobber=False):
 
     # Obtain list of station(s) to process (single/subset/all)
     all_filenames = utils.get_station_list_to_process(utils.SUBDAILY_QFF_IN_DIR,
-                                                      f"{IN_EXTENSION}{COMPRESSION}",
+                                                      f"{IN_EXTENSION}{IN_COMPRESSION}",
                                                       station=station,
                                                       subset=subset,
                                                       run_all=run_all,
@@ -211,10 +212,10 @@ def main(station="", subset="", run_all=False, clobber=False):
         station_id=df.iloc[0]["Station_ID"] # NOTE: this is renamed below to "primary_station_id"
 
         outroot_cdmlite = os.path.join(utils.SUBDAILY_CDM_LITE_OUT_DIR, utils.SUBDAILY_CDM_LITE_FILE_ROOT)
-        cdmlite_outfile = f"{outroot_cdmlite}{station_id}{OUT_EXTENSION}{COMPRESSION}"
+        cdmlite_outfile = f"{outroot_cdmlite}{station_id}{OUT_EXTENSION}{OUT_COMPRESSION}"
 
         outroot_qc= os.path.join(utils.SUBDAILY_CDM_QC_OUT_DIR, utils.SUBDAILY_QC_FILE_ROOT)
-        qc_outfile = f"{outroot_qc}{station_id}{OUT_EXTENSION}{COMPRESSION}"
+        qc_outfile = f"{outroot_qc}{station_id}{OUT_EXTENSION}{OUT_COMPRESSION}"
 
         # if not overwriting
         if not clobber:

@@ -29,7 +29,7 @@ import hourly_qff_to_cdm_utils as h_utils
 # Set the file extension for the subdaily psv files
 IN_EXTENSION = ".qff"
 OUT_EXTENSION = ".psv"
-IN_COMPRESSION = ""
+IN_COMPRESSION = ".gz"
 OUT_COMPRESSION = ".gz"
 
 # Dictionaries to hold CDM codes.  In due course, read directly from those docs

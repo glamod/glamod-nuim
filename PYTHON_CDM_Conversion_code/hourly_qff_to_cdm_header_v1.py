@@ -141,7 +141,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         hdf["longitude"] = obs_table_df["longitude"]
         hdf["latitude"] = obs_table_df["latitude"]
         hdf["source_id"] = obs_table_df["source_id"]
-        hdf['record_timestamp'] = pd.to_datetime('now').strftime("%Y-%m-%d %H:%M:%S")
+        hdf['record_timestamp'] = pd.to_datetime("now", utc=True).strftime("%Y-%m-%d %H:%M:%S")
         hdf.record_timestamp = hdf.record_timestamp + '+00'
         hdf["history"]=""
         hdf["processing_level"] = "0"

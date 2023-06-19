@@ -91,7 +91,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         df = pd.read_csv(os.path.join(utils.DAILY_CSV_IN_DIR, filename), sep=",", low_memory=False, compression='infer', header=None)
 
         # add column headers to df
-        df.columns=["Station_ID", "Date", "observed_variable", "observation_value","quality_flag","Measurement_flag","Source_flag","hour"]
+        df.columns=["Station_ID", "Date", "observed_variable", "observation_value", "Measurement_flag", "quality_flag", "Source_flag", "hour"]
         df = df.astype(str)
 
         # Set up the output filenames, and check if they exist

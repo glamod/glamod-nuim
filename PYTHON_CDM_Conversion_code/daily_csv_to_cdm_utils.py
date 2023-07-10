@@ -73,7 +73,7 @@ HEIGHTS = {
 }
 
 VALUE_SIGNIFICANCE = {
-    "SNWD" : "13",
+    "SNWD" : "12",
     "PRCP" : "13",
     "TMIN" : "1",
     "TMAX" : "0",

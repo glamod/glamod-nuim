@@ -75,6 +75,18 @@ HEIGHTS = {
     "WESD" : "1",
 }
 
+VALUE_SIGNIFICANCE = {
+    "SNWD" : "12",
+    "PRCP" : "13",
+    "TMIN" : "1",
+    "TMAX" : "0",
+    "TAVG" : "2",
+    "SNOW" : "13",
+    "AWND" : "2",
+    "AWDR" : "2",
+    "WESD" : "13",
+}
+
 VARIABLE_ID = {
     "SNWD" : "53",
     "PRCP" : "44",
@@ -295,7 +307,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         df["latitude"] = df["LATITUDE"]
         df["longitude"] = df["LONGITUDE"]
         df["observed_variable"] = ""  
-        df["value_significance"] = "13" 
+        df["value_significance"] = "" 
         df["observation_duration"] = "14"
         df["observation_value"] = ""
         df["platform_type"] = ""
@@ -324,6 +336,7 @@ def main(station="", subset="", run_all=False, clobber=False):
 
             # change for each variable if required
             dfprc = set_units_etc(dfprc, "PRCP")
+            dfprc["value_significance"] = VALUE_SIGNIFICANCE["PRCP"]
 
             # merge with record_id_mnth.csv to add source id
             dfprc = add_data_policy(dfprc, data_policy_df, rename=True)
@@ -354,6 +367,7 @@ def main(station="", subset="", run_all=False, clobber=False):
 
             #change for each variable if required
             dfsnow = set_units_etc(dfsnow, "SNOW")
+            dfsnow["value_significance"] = VALUE_SIGNIFICANCE["SNOW"]
 
             # merge with record_id_mnth.csv to add source id
             dfsnow = add_data_policy(dfsnow, data_policy_df, rename=True)
@@ -383,7 +397,7 @@ def main(station="", subset="", run_all=False, clobber=False):
 
             #change for each variable if required
             dftmax = set_units_etc(dftmax, "TMAX")
-            dftmax["value_significance"] = "0" 
+            dftmax["value_significance"] = VALUE_SIGNIFICANCE["TMAX"]
 
             # merge with record_id_mnth.csv to add source id
             dftmax = add_data_policy(dftmax, data_policy_df, rename=True)
@@ -414,7 +428,7 @@ def main(station="", subset="", run_all=False, clobber=False):
 
             # change for each variable if required
             dftmin = set_units_etc(dftmin, "TMIN")
-            dftmin["value_significance"] = "1" 
+            dftmin["value_significance"] = VALUE_SIGNIFICANCE["TMIN"]
 
             # merge with record_id_mnth.csv to add source id
             dftmin = add_data_policy(dftmin, data_policy_df, rename=True)
@@ -445,7 +459,7 @@ def main(station="", subset="", run_all=False, clobber=False):
 
             # change for each variable if required
             dftavg = set_units_etc(dftavg, "TAVG")
-            dftavg["value_significance"]="2" 
+            dftavg["value_significance"] = VALUE_SIGNIFICANCE["TAVG"]
 
             # merge with record_id_mnth.csv to add source id
             dftavg = add_data_policy(dftavg, data_policy_df, rename=True)
@@ -479,7 +493,7 @@ def main(station="", subset="", run_all=False, clobber=False):
 
             # change for each variable if required
             dftws = set_units_etc(dftws, "AWND")
-            dftws["value_significance"] = "2" 
+            dftws["value_significance"] = VALUE_SIGNIFICANCE["AWND"]
 
             # merge with record_id_mnth.csv to add source id
             dftws = add_data_policy(dftws, data_policy_df, rename=True)

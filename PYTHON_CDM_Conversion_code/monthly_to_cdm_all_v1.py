@@ -32,7 +32,8 @@ import utils
 # Set the file extension for the monthly obs psv files
 IN_EXTENSION = ".csv"
 OUT_EXTENSION = ".psv"
-COMPRESSION = ""
+IN_COMPRESSION = ""
+OUT_COMPRESSION = ""#".gz"
 
 LITE_COLS = ["STATION", "LATITUDE", "LONGITUDE", "ELEVATION", "DATE", "NAME", "PRCP", "TMIN", "TMAX", "TAVG", "SNOW", "AWND"]
 
@@ -186,6 +187,7 @@ def add_data_policy(var_frame, policy_frame, rename=False):
         # rename columns
         var_frame = var_frame.rename(columns={"station_name_x":"station_name",})
         var_frame = var_frame.rename(columns={"source_id_x":"source_id",})
+        var_frame['source_id'] = var_frame['source_id'].astype(str).apply(lambda x: x.replace('.0', ''))
 
     return var_frame
 
@@ -255,7 +257,7 @@ def main(station="", subset="", run_all=False, clobber=False):
 
     # Obtain list of station(s) to process (single/subset/all)
     all_filenames = utils.get_station_list_to_process(utils.MONTHLY_CSV_IN_DIR,
-                                                      f"{IN_EXTENSION}{COMPRESSION}",
+                                                      f"{IN_EXTENSION}{IN_COMPRESSION}",
                                                       station=station,
                                                       subset=subset,
                                                       run_all=run_all,
@@ -263,6 +265,9 @@ def main(station="", subset="", run_all=False, clobber=False):
  
     # Read in the data policy dataframe (only read in if needed)
     data_policy_df = pd.read_csv(utils.MONTHLY_STATION_RECORD_ENTRIES_OBS_LITE, encoding='latin-1')
+    # record_id and source_id need to be converted to integers in case of malformed records file
+    data_policy_df['record_id'] = data_policy_df['record_id'].astype(str).apply(lambda x: x.replace('.0', ''))
+    data_policy_df['source_id'] = data_policy_df['source_id'].astype(str).apply(lambda x: x.replace('.0', ''))
     data_policy_df = data_policy_df.astype(str)
        
     for filename in all_filenames:
@@ -280,9 +285,9 @@ def main(station="", subset="", run_all=False, clobber=False):
         outroot_cdmlite = os.path.join(utils.MONTHLY_CDM_LITE_OUT_DIR, utils.MONTHLY_CDM_LITE_FILE_ROOT) 
         outroot_cdmobs = os.path.join(utils.MONTHLY_CDM_OBS_OUT_DIR, utils.MONTHLY_CDM_OBS_FILE_ROOT) 
         outroot_cdmhead = os.path.join(utils.MONTHLY_CDM_HEAD_OUT_DIR, utils.MONTHLY_CDM_HEAD_FILE_ROOT) 
-        cdmlite_outfile = f"{outroot_cdmlite}{station_id}{OUT_EXTENSION}{COMPRESSION}"
-        cdmobs_outfile = f"{outroot_cdmobs}{station_id}{OUT_EXTENSION}{COMPRESSION}"
-        cdmhead_outfile = f"{outroot_cdmhead}{station_id}{OUT_EXTENSION}{COMPRESSION}"
+        cdmlite_outfile = f"{outroot_cdmlite}{station_id}{OUT_EXTENSION}{OUT_COMPRESSION}"
+        cdmobs_outfile = f"{outroot_cdmobs}{station_id}{OUT_EXTENSION}{OUT_COMPRESSION}"
+        cdmhead_outfile = f"{outroot_cdmhead}{station_id}{OUT_EXTENSION}{OUT_COMPRESSION}"
 
         if not clobber:
             # all output files exist
@@ -597,6 +602,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         dfobs["spatial_representativeness"] = ""
         dfobs["original_code_table"] = ""
         dfobs["source_id"] = dfobs["source_id_x"]
+        dfobs['source_id'] = dfobs['source_id'].astype(str).apply(lambda x: x.replace('.0', ''))
         dfobs['date1'] = dfobs["date_time"].str[:-11]
         dfobs['date1'] = dfobs['date1'].str.strip()
         dfobs["observation_value"] = pd.to_numeric(dfobs["observation_value"],errors='coerce')
@@ -630,7 +636,6 @@ def main(station="", subset="", run_all=False, clobber=False):
         # set up the header table from the obs table
         col_list = dfobs[["observation_id","latitude","longitude","report_id","source_id","date_time"]]
         hdf = col_list.copy()
-
 
         # add required columns and set up values etc
         #   extra steps to handle files with dashes in them
@@ -669,7 +674,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         hdf["duplicate_status"] = "4"
         hdf["duplicates"] = ""
         hdf["source_record_id"] = ""
-        hdf ["processing_codes"] = ""
+        hdf["processing_codes"] = ""
         hdf['record_timestamp'] = pd.to_datetime('now').strftime("%Y-%m-%d %H:%M:%S")
         hdf.record_timestamp = hdf.record_timestamp + '+00'
         hdf["history"] = ""
@@ -679,8 +684,8 @@ def main(station="", subset="", run_all=False, clobber=False):
             hdf['source_id'].astype(str)
         hdf["duplicates_report"] = hdf["report_id"] + '-' + hdf["station_record_number"].astype(str)
 
-
         hdf = data_policy_df.merge(hdf, on=['primary_station_id_3'])
+
         hdf = hdf.rename(columns={"latitude_x":"latitude",})
         hdf = hdf.rename(columns={"longitude_x":"longitude",})
         hdf['height_of_station_above_sea_level'] = hdf['height_of_station_above_sea_level'].astype(str).apply(lambda x: x.replace('.0',''))
@@ -730,7 +735,6 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         hdf['region'] = hdf['region'].astype(str).apply(lambda x: x.replace('.0',''))
         hdf['sub_region'] = hdf['sub_region'].astype(str).apply(lambda x: x.replace('.0',''))
-
 
         try:
             df_lite_out.to_csv(cdmlite_outfile, index=False, sep="|", compression='infer')

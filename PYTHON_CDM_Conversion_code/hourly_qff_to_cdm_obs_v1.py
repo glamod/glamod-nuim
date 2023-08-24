@@ -203,7 +203,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         df["observation_id"] = ""
         df["data_policy_licence"] = ""
         df["date_time_meaning"] = "1"
-        df["observation_duration"] = "0"
+        df["observation_duration"] = ""
         df["latitude"] = df["Latitude"]
         df["longitude"] = df["Longitude"]
         df["crs"] = ""
@@ -213,7 +213,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         df["observed_variable"] = ""  
         df["secondary_variable"] = ""
         df["observation_value"] = ""
-        df["value_significance"] = "12" 
+        df["value_significance"] = "" 
         df["secondary_value"] = ""
         df["units"] = ""
         df["code_table"] = ""

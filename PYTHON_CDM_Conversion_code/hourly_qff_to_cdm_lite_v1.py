@@ -238,8 +238,8 @@ def main(station="", subset="", run_all=False, clobber=False):
         df["latitude"] = df["Latitude"]
         df["longitude"] = df["Longitude"]
         df["observed_variable"] = ""  
-        df["value_significance"] = "12" 
-        df["observation_duration"] = "0"
+        df["value_significance"] = "" 
+        df["observation_duration"] = ""
         df["observation_value"] = ""
         df["platform_type"] = ""
         df["station_type"] = "1"

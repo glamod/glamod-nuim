@@ -40,6 +40,22 @@ MISSING_DATA = {
     "wind_direction" : -999,
     "wind_speed" : -999,
 }
+VALUE_SIGNIFICANCE = {
+    "temperature" : "12",
+    "dew_point_temperature" : "12",
+    "station_level_pressure" : "12",
+    "sea_level_pressure" : "12",
+    "wind_direction" : "2",
+    "wind_speed" : "2",
+}
+OBSERVATION_DURATION = {
+    "temperature" : "0",
+    "dew_point_temperature" : "0",
+    "station_level_pressure" : "0",
+    "sea_level_pressure" : "0",
+    "wind_direction" : "8",
+    "wind_speed" : "8",
+}
 
 
 
@@ -108,6 +124,8 @@ def overwrite_variable_info(var_frame, var_name):
     var_frame["observation_height_above_station_surface"] = HEIGHTS[var_name]
     var_frame["units"] = UNITS[var_name]
     var_frame["observed_variable"] = VARIABLE_ID[var_name]
+    var_frame["value_significance"] = VALUE_SIGNIFICANCE[var_name]
+    var_frame["observation_duration"] = OBSERVATION_DURATION[var_name]
    
     return var_frame
 

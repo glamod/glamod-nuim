@@ -450,7 +450,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         # change for each variable to convert to cdm compliant values
         dfwd["observation_value"] = df["wind_direction"]
         dfwd["original_value"] = df["wind_direction"]
-        dfwd["measurement_flag"] = df["wind_direction_Measurement_Code"]
+        dfwd["measurement_code"] = df["wind_direction_Measurement_Code"]
 
         dfwd = h_utils.construct_extra_ids(dfwd, df, "wind_direction")
 
@@ -499,7 +499,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         # change for each variable to convert to cdm compliant values
         dfws["secondary_id"]=df["wind_speed_Source_Station_ID"].astype(str)
         dfws['secondary_id'] = dfws['secondary_id'].astype(str).apply(lambda x: x.replace('.0', ''))
-        dfws["measurement_flag"] = df["wind_speed_Measurement_Code"]
+        dfws["measurement_code"] = df["wind_speed_Measurement_Code"]
 
         dfws = h_utils.construct_extra_ids(dfws, df, "wind_speed")
 

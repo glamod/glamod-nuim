@@ -497,8 +497,8 @@ def main(station="", subset="", run_all=False, clobber=False):
         dfws = df[INITIAL_COLUMNS]
 
         # change for each variable to convert to cdm compliant values
-        dfws["secondary_id"]=df["wind_speed_Source_Station_ID"].astype(str)
-        dfws['secondary_id'] = dfws['secondary_id'].astype(str).apply(lambda x: x.replace('.0', ''))
+        dfws["observation_value"] = df["wind_speed"]
+        dfws["original_value"] = df["wind_speed"]
         dfws["measurement_code"] = df["wind_speed_Measurement_Code"]
 
         dfws = h_utils.construct_extra_ids(dfws, df, "wind_speed")

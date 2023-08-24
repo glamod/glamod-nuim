@@ -222,3 +222,14 @@ def fix_decimal_places(var_frame, do_obs_value=True):
     return var_frame
 
 
+def apply_wind_measurement_code(var_frame, retained_measurement_codes_list):
+    """
+    Remove values associated with all measurement codes except those specified
+
+    var_frame : `dataframe`
+        Dataframe for variable
+    """
+
+    input("stop")
+
+    return var_frame

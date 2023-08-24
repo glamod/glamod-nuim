@@ -460,7 +460,11 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         # Change for each variable to convert to CDM compliant values
         dfwd["observation_value"] = df["wind_direction"]
+        dfwd["measurement_flag"] = df["wind_direction_Measurement_Code"]
         dfwd = h_utils.construct_extra_ids(dfwd, df, "wind_direction")
+
+        # Mask wind_direction_Measurement_Code to retain only specified data
+        dfwd = h_utils.apply_wind_measurement_codes(dfwd, ["", "N-Normal", "C-Calm"])
 
         # Extract QC information for QC tables
         dfwd = h_utils.extract_qc_info(dfwd, df, "wind_direction", do_report_id=True)
@@ -505,7 +509,11 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         # Change for each variable to convert to CDM compliant values
         dfws["observation_value"] = df["wind_speed"]
+        dfws["measurement_flag"] = df["wind_speed_Measurement_Code"]
         dfws = h_utils.construct_extra_ids(dfws, df, "wind_speed")
+
+        # Mask wind_speed_Measurement_Code to retain only specified data
+        dfws = h_utils.apply_wind_measurement_codes(dfws, ["", "N-Normal", "C-Calm"])
 
         # Extract QC information for QC tables
         dfws = h_utils.extract_qc_info(dfws, df, "wind_speed", do_report_id=True)

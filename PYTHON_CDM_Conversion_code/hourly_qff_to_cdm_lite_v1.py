@@ -482,7 +482,6 @@ def main(station="", subset="", run_all=False, clobber=False):
         
         # Add data policy and record numbers to datframe
         dfwd = h_utils.add_data_policy(dfwd, data_policy_df)
-
         # Restrict to required columns
         dfwd = dfwd[INTERMED_COLUMNS]
 
@@ -495,11 +494,10 @@ def main(station="", subset="", run_all=False, clobber=False):
         # Restrict to required columns
         dfwd = dfwd[FINAL_COLUMNS]
 
-        # Make sure no decimal places and round value to reuquired number of decimal places
+        # Make sure no decimal places and round value to required number of decimal places
         dfwd['observation_value'] = dfwd['observation_value'].astype(str).apply(lambda x: x.replace('.0', ''))
         dfwd = h_utils.fix_decimal_places(dfwd, do_obs_value=False)
         
-
         #===========================================================================
         # Convert wind speed to CDM lite
         dfws = df[INITIAL_COLUMNS]
@@ -550,7 +548,6 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         # Ensure correct number of decimal places
         dfws = h_utils.fix_decimal_places(dfws)
-
 
         # =================================================================================
         # Merge all dataframes into one CDMlite frame

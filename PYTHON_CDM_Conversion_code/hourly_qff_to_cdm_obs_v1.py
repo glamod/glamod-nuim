@@ -323,7 +323,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         # Change for each variable if required
         dfdpt = h_utils.overwrite_variable_info(dfdpt, "dew_point_temperature")
 
-        # remove unwanted mising data rows
+        # remove unwanted missing data rows
         dfdpt = h_utils.remove_missing_data_rows(dfdpt, "dew_point_temperature")
 
         # concatenate columns for joining df for next step
@@ -366,7 +366,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         # Change for each variable if required
         dfslp = h_utils.overwrite_variable_info(dfslp, "station_level_pressure")
 
-        # remove unwanted mising data rows
+        # remove unwanted missing data rows
         dfslp = h_utils.remove_missing_data_rows(dfslp, "station_level_pressure")
         
         # concatenate columns for joining df for next step
@@ -414,7 +414,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         # Change for each variable if required
         dfmslp = h_utils.overwrite_variable_info(dfmslp, "sea_level_pressure")
 
-        # remove unwanted mising data rows
+        # remove unwanted missing data rows
         dfmslp = h_utils.remove_missing_data_rows(dfmslp, "sea_level_pressure")
 
         # concatenate columns for joining df for next step
@@ -465,13 +465,13 @@ def main(station="", subset="", run_all=False, clobber=False):
         # Change for each variable if required
         dfwd = h_utils.overwrite_variable_info(dfwd, "wind_direction")
 
-        # remove unwanted mising data rows
+        # remove unwanted missing data rows
         dfwd = h_utils.remove_missing_data_rows(dfwd, "wind_direction")
 
         # concatenate columns for joining df for next step
         dfwd['source_id'] = dfwd['source_id'].astype(str).apply(lambda x: x.replace('.0', ''))
         dfwd['primary_station_id_2'] = dfwd['secondary_id'].astype(str) + '-' + dfwd['source_id'].astype(str)
-        dfwd["observation_value"] = pd.to_numeric(dfwd["observation_value"], errors='coerce')
+#        dfwd["observation_value"] = pd.to_numeric(dfwd["observation_value"], errors='coerce')
 
         # add data policy and record number to df
         dfwd = h_utils.add_data_policy(dfwd, data_policy_df)
@@ -490,7 +490,6 @@ def main(station="", subset="", run_all=False, clobber=False):
         dfwd['observation_value'] = dfwd['observation_value'].astype(str).apply(lambda x: x.replace('.0', ''))
         dfwd = h_utils.fix_decimal_places(dfwd, do_obs_value=False)
 
-        
         # ===========================================================================
         # convert wind speed
 
@@ -514,13 +513,13 @@ def main(station="", subset="", run_all=False, clobber=False):
         # Change for each variable if required
         dfws = h_utils.overwrite_variable_info(dfws, "wind_speed")
 
-        # remove unwanted mising data rows
+        # remove unwanted missing data rows
         dfws = h_utils.remove_missing_data_rows(dfws, "wind_speed")
 
         # concatenate columns for joining df for next step
         dfws['source_id'] = dfws['source_id'].astype(str).apply(lambda x: x.replace('.0', ''))
         dfws['primary_station_id_2']=dfws['secondary_id'].astype(str) + '-' + dfws['source_id'].astype(str)
-        dfws["observation_value"] = pd.to_numeric(dfws["observation_value"], errors='coerce')
+#        dfws["observation_value"] = pd.to_numeric(dfws["observation_value"], errors='coerce')
 
         # add data policy and record number to df
         dfws = h_utils.add_data_policy(dfws, data_policy_df)

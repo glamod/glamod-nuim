@@ -248,16 +248,21 @@ def apply_wind_measurement_codes(var_frame, retained_measurement_codes_list):
 
     for c, code in enumerate(retained_measurement_codes_list):
         if code == "":
-            # Empty flags converted to NaNs on reading
-            code = float("nan")
-        if c == 0:
-            # Initialise
-            mask = (var_frame["measurement_code"] == code)
+            # Empty flags converted to NaNs on reading, numerical comparison
+            code = float("NaN")
+            if c == 0:
+                mask = (var_frame["measurement_code"] == code)
+            else:
+                mask = (var_frame["measurement_code"] == code) | mask
         else:
-            # Combine using or
-            #   If code = "N-Normal" or "C-Calm" or "" set True
-            mask = (var_frame["measurement_code"] == code) |\
-                   mask
+            # Doing string comparison
+            if c == 0:
+                # Initialise
+                mask = (var_frame["measurement_code"].str.startswith(code))
+            else:
+                # Combine using or
+                #   If code = "N-Normal" or "C-Calm" or "" set True
+                mask = (var_frame["measurement_code"].str.startswith(code)) | mask
 
     # Now invert mask using "~" and replace with NaNs (to be filtered later)
     var_frame.loc[~mask, "observation_value"] = np.nan

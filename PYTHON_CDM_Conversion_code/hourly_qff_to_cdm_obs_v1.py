@@ -457,7 +457,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         dfwd = overwrite_conversion_precision_info(dfwd, "wind_direction")
         
         # Mask wind_direction_Measurement_Code to retain only specified data
-        dfwd = h_utils.apply_wind_measurement_codes(dfwd, ["", "N-Normal", "C-Calm"])
+        dfwd = h_utils.apply_wind_measurement_codes(dfwd, ["", "N-Normal", "C-Calm", "V-Variable", "9-Missing"])
 
         # Extract QC information
         dfwd = h_utils.extract_qc_info(dfwd, df, "wind_direction")
@@ -505,7 +505,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         dfws = overwrite_conversion_precision_info(dfws, "wind_speed")
         
         # Mask wind_speed_Measurement_Code to retain only specified data
-        dfws = h_utils.apply_wind_measurement_codes(dfws, ["", "N-Normal", "C-Calm"])
+        dfws = h_utils.apply_wind_measurement_codes(dfws, ["", "N-Normal", "C-Calm", "V-Variable", "9-Missing"])
 
         # Extract QC information
         dfws = h_utils.extract_qc_info(dfws, df, "wind_speed")

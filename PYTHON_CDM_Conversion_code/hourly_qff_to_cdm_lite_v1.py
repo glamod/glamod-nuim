@@ -238,8 +238,8 @@ def main(station="", subset="", run_all=False, clobber=False):
         df["latitude"] = df["Latitude"]
         df["longitude"] = df["Longitude"]
         df["observed_variable"] = ""  
-        df["value_significance"] = "12" 
-        df["observation_duration"] = "0"
+        df["value_significance"] = "" 
+        df["observation_duration"] = ""
         df["observation_value"] = ""
         df["platform_type"] = ""
         df["station_type"] = "1"
@@ -460,7 +460,11 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         # Change for each variable to convert to CDM compliant values
         dfwd["observation_value"] = df["wind_direction"]
+        dfwd["measurement_code"] = df["wind_direction_Measurement_Code"]
         dfwd = h_utils.construct_extra_ids(dfwd, df, "wind_direction")
+
+        # Mask wind_direction_Measurement_Code to retain only specified data
+        dfwd = h_utils.apply_wind_measurement_codes(dfwd, ["", "N-Normal", "C-Calm", "V-Variable", "9-Missing"])
 
         # Extract QC information for QC tables
         dfwd = h_utils.extract_qc_info(dfwd, df, "wind_direction", do_report_id=True)
@@ -478,7 +482,6 @@ def main(station="", subset="", run_all=False, clobber=False):
         
         # Add data policy and record numbers to datframe
         dfwd = h_utils.add_data_policy(dfwd, data_policy_df)
-
         # Restrict to required columns
         dfwd = dfwd[INTERMED_COLUMNS]
 
@@ -491,11 +494,10 @@ def main(station="", subset="", run_all=False, clobber=False):
         # Restrict to required columns
         dfwd = dfwd[FINAL_COLUMNS]
 
-        # Make sure no decimal places and round value to reuquired number of decimal places
+        # Make sure no decimal places and round value to required number of decimal places
         dfwd['observation_value'] = dfwd['observation_value'].astype(str).apply(lambda x: x.replace('.0', ''))
         dfwd = h_utils.fix_decimal_places(dfwd, do_obs_value=False)
         
-
         #===========================================================================
         # Convert wind speed to CDM lite
         dfws = df[INITIAL_COLUMNS]
@@ -505,7 +507,11 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         # Change for each variable to convert to CDM compliant values
         dfws["observation_value"] = df["wind_speed"]
+        dfws["measurement_code"] = df["wind_speed_Measurement_Code"]
         dfws = h_utils.construct_extra_ids(dfws, df, "wind_speed")
+
+        # Mask wind_speed_Measurement_Code to retain only specified data
+        dfws = h_utils.apply_wind_measurement_codes(dfws, ["", "N-Normal", "C-Calm", "V-Variable", "9-Missing"])
 
         # Extract QC information for QC tables
         dfws = h_utils.extract_qc_info(dfws, df, "wind_speed", do_report_id=True)
@@ -542,7 +548,6 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         # Ensure correct number of decimal places
         dfws = h_utils.fix_decimal_places(dfws)
-
 
         # =================================================================================
         # Merge all dataframes into one CDMlite frame

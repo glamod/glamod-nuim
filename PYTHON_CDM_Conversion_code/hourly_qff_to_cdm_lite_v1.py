@@ -197,6 +197,10 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         if not os.path.exists(filename):
             print("Input {} file missing: {}".format(IN_EXTENSION, filename))
+            # For logging, useful to know if there's a reason why its missing
+            temp_id = filename.split("/")[-1]
+            if os.path.exists(os.path.join(utils.SUBDAILY_QFF_IN_DIR, "bad_stations", temp_id)):
+                print("    Withheld station due to high flagging.")
             continue
         else:
             print("Processing {}".format(filename))

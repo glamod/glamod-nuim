@@ -191,7 +191,12 @@ def main(station="", subset="", run_all=False, clobber=False):
     # Read in the data policy dataframe (only read in if needed)
     data_policy_df = pd.read_csv(utils.SUBDAILY_STATION_RECORD_ENTRIES_OBS_LITE, encoding='latin-1')
     data_policy_df = data_policy_df.astype(str)
-              
+
+
+    # Read in the location dataframe (only read in if needed - Rel 7 fix)
+    location_df = pd.read_csv(utils.SUBDAILY_STATION_RECORD_ENTRIES_LOCATION, encoding='latin-1')
+    location_df = location_df.astype(str)
+ 
     # To start at begining of files
     for filename in all_filenames:
 
@@ -567,6 +572,10 @@ def main(station="", subset="", run_all=False, clobber=False):
         merged_df["longitude"] = pd.to_numeric(merged_df["longitude"],errors='coerce')
         merged_df["latitude"]= merged_df["latitude"].round(3)
         merged_df["longitude"]= merged_df["longitude"].round(3)
+        
+        # Release 7 only
+        # add location information  from location.csv to overwrite 
+        merged_df = h_utils.add_location(merged_df, location_df)
 
         # Write the output files
         #   name the cdm_lite files e.g. cdm_lite _"insert date of run"_EG000062417.psv)

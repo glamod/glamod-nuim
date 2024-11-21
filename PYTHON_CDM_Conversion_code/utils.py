@@ -78,6 +78,7 @@ DAILY_STATION_RECORD_ENTRIES_OBS_LITE = config.get("Records", "daily_station_rec
 DAILY_STATION_RECORD_ENTRIES_HEADER = config.get("Records", "daily_station_records_header")
 MONTHLY_STATION_RECORD_ENTRIES_OBS_LITE = config.get("Records", "monthly_station_records_obs_lite")
 MONTHLY_STATION_RECORD_ENTRIES_HEADER = config.get("Records", "monthly_station_records_header")
+SUBDAILY_STATION_RECORD_ENTRIES_LOCATION= config.get("Records", "subdaily_station_records_location")
 
 # Daily updates from GHCND
 DAILY_FTP_SERVER = config.get("DailyUpdates", "ftp")

@@ -208,8 +208,13 @@ def main(station="", subset="", run_all=False, clobber=False):
     # Read in the data policy dataframe (only read in if needed)
     data_policy_df = pd.read_csv(utils.SUBDAILY_STATION_RECORD_ENTRIES_OBS_CORE, encoding='latin-1')
     data_policy_df = data_policy_df.astype(str)
-              
-    # To start at begining of files
+
+
+    # Read in the location dataframe (only read in if needed - Rel 7 fix)
+    location_df = pd.read_csv(utils.SUBDAILY_STATION_RECORD_ENTRIES_LOCATION, encoding='latin-1')
+    location_df = location_df.astype(str)
+    
+   # To start at begining of files
     for filename in all_filenames:
 
         if not os.path.exists(filename):
@@ -604,6 +609,10 @@ def main(station="", subset="", run_all=False, clobber=False):
                                  "units","observation_value","quality_flag","source_id","data_policy_licence",
                                  "report_type","value_significance"]]
         
+        # Release 7 only
+        # add location information  from location.csv to overwrite 
+        merged_df = h_utils.add_location(merged_df, location_df)
+
         # Write the output files
         #   name the cdm_core files e.g. cdm_core _"insert date of run"_EG000062417.psv)
         try:

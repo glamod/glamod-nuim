@@ -9,6 +9,7 @@ snoone edited 22/02/2022
 import os
 import configparser
 import glob
+import json
 
 
 # -------------------------------------------------------------
@@ -125,6 +126,18 @@ for path in (MONTHLY_UPDATE_OUTDIR,
          ):
     os.makedirs(path, exist_ok=True)
 
+
+
+# Extraction variables and path for subsets outside of usual C3S delivery
+# e.g. SLP and Station pressure for Ed Hawkins
+# Variable IDs need to be strings, so convert, and allow for none.
+EXTRACTION_VARIABLE_IDS = []
+_extraction_vars = config.get("Extraction", "variables")
+if len(_extraction_vars) > 0:
+    EXTRACTION_VARIABLE_IDS = [str(s) for s in json.loads(_extraction_vars)]
+
+EXTRACTION_FILE_PATH = config.get("Extraction", "out_path")
+EXTRACTION_FILE_NAME = config.get("Extraction", "file_name")
 
 
 def get_station_list_to_process(indir, extension, station="", subset="", run_all=False, prepend=""):

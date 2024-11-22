@@ -577,6 +577,23 @@ def main(station="", subset="", run_all=False, clobber=False):
             merged_df.to_csv(cdmlite_outfile, index=False, sep="|", compression="infer")
             print(f"    {cdmlite_outfile}")
 
+            # Extract subsets of variables
+            #    E.g.: slp and mslp for 20cr Ed Hawkins
+            if len(utils.EXTRACTION_VARIABLE_IDS) != 0:
+                # Some variables set for extracction
+
+                # Filter the DataFrame to keep rows where 'observed_variable' is either "57" or "58"
+                filtered_df = merged_df[merged_df['observed_variable'].isin(utils.EXTRACTION_VARIABLE_IDS)]
+
+                # Iterate over each unique 'primary_station_id' and save filtered rows to separate files
+                for station_id, group_df in filtered_df.groupby('primary_station_id'):
+                    # Define the output file path
+                    file_path = f"{utils.EXTRACTION_FILE_PATH}/{station_id}_{utils.EXTRACTION_FILE_NAME}.psv"
+
+                    # Save the group to a pipe-separated file
+                    group_df.to_csv(file_path, sep='|', index=False, compression="infer")
+
+
             # Save QC table to directory
             qc_merged_df=pd.concat([qcdpt,qct,qcslp,qcmslp,qcwd,qcws], axis=0)
             qc_merged_df.astype(str)

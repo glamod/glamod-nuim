@@ -150,6 +150,21 @@ def construct_qc_df(var_frame):
     return qc_frame
 
 
+def extract_report_id(obs_id):
+    """
+    Function to split observation id and return a new report id
+
+    obs_id : `str`
+        String to parse
+    
+    returns : `str`
+    """
+    
+    parts = obs_id.split('-')
+    report_id = '-'.join(parts[:-2])
+    return report_id
+
+
 def main(station="", subset="", run_all=False, clobber=False):
     """
     Run processing of hourly QFF to CDM lite & QC tables
@@ -244,8 +259,8 @@ def main(station="", subset="", run_all=False, clobber=False):
         df["source_id"] = ""
         df["observation_height_above_station_surface"] = ""
         df["date_time_meaning"] = "1"
-        df["latitude"] = df["Latitude"]
-        df["longitude"] = df["Longitude"]
+        df["latitude"] = ""
+        df["longitude"] = ""
         df["observed_variable"] = ""  
         df["value_significance"] = "" 
         df["observation_duration"] = ""
@@ -565,6 +580,9 @@ def main(station="", subset="", run_all=False, clobber=False):
         if merged_df.shape[0] == 0:
             print(f"No data in merged CDM Lite file for: {filename}")
             continue
+
+        # Apply the function to create the new column report_id
+        merged_df['report_id'] = merged_df['observation_id'].apply(extract_report_id)
 
         # Sort by date/times and fix metadata
         merged_df.sort_values("date_time", inplace=True)

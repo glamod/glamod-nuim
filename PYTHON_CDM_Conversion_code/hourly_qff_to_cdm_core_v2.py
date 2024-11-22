@@ -149,8 +149,7 @@ def construct_qc_df(var_frame):
     qc_frame = qc_frame[qc_frame['quality_flag'] != 0]
 
     return qc_frame
-
-        
+    
         
 def extract_report_id(obs_id):
     """
@@ -260,10 +259,10 @@ def main(station="", subset="", run_all=False, clobber=False):
         df["units"] = ""
         df["source_id"] = ""
         df["observation_height_above_station_surface"] = ""
-        df["height_of_station_above_sea_level"]=df["Elevation"]
+        df["height_of_station_above_sea_level"]=""
         df["date_time_meaning"] = "1"
-        df["latitude"] = df["Latitude"]
-        df["longitude"] = df["Longitude"]
+        df["latitude"] = ""
+        df["longitude"] = ""
         df["observed_variable"] = ""  
         df["value_significance"] = "" 
         df["observation_duration"] = ""
@@ -584,6 +583,7 @@ def main(station="", subset="", run_all=False, clobber=False):
             print(f"No data in merged CDM Core file for: {filename}")
             continue
 
+       
         # rename merged_df columns to cdm-core and create report_id
         merged_df["height_of_station_above_sea_level"] = df["height_of_station_above_sea_level"]
         merged_df["height_of_station_above_sea_level"] = merged_df["height_of_station_above_sea_level"].astype(int)
@@ -594,7 +594,6 @@ def main(station="", subset="", run_all=False, clobber=False):
         # Apply the function to create the new column report_id
         merged_df['report_id'] = merged_df['observation_id'].apply(extract_report_id)
 
-                
         # Sort by date/times and fix metadata
         merged_df.sort_values("date_time", inplace=True)
         merged_df["latitude"] = pd.to_numeric(merged_df["latitude"],errors='coerce')

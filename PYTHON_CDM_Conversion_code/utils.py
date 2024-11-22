@@ -29,6 +29,7 @@ DAILY_CSV_IN_DIR = config.get("Paths", "daily_csv_indir")
 DAILY_HEAD_IN_DIR = config.get("Paths", "daily_cdmhead_csv_indir")
 MONTHLY_CSV_IN_DIR = config.get("Paths", "monthly_csv_indir")
 SUBDAILY_CDM_LITE_OUT_DIR = config.get("Paths", "subdaily_cdmlite_outdir")
+SUBDAILY_CDM_CORE_OUT_DIR = config.get("Paths", "subdaily_cdmcore_outdir")
 SUBDAILY_CDM_QC_OUT_DIR = config.get("Paths", "subdaily_cdmqc_outdir")
 SUBDAILY_CDM_OBS_OUT_DIR = config.get("Paths", "subdaily_cdmobs_outdir")
 SUBDAILY_CDM_HEAD_OUT_DIR = config.get("Paths", "subdaily_cdmhead_outdir")
@@ -43,6 +44,7 @@ MONTHLY_CDM_HEAD_OUT_DIR = config.get("Paths", "monthly_cdmhead_outdir")
 
 # make directories if they do not exist
 for path in (SUBDAILY_CDM_LITE_OUT_DIR,
+             SUBDAILY_CDM_CORE_OUT_DIR,
              SUBDAILY_CDM_QC_OUT_DIR,
              SUBDAILY_CDM_OBS_OUT_DIR,
              SUBDAILY_CDM_HEAD_OUT_DIR,
@@ -75,6 +77,7 @@ MONTHLY_CDM_HEAD_FILE_ROOT = config.get("Filenames", "monthly_cdmhead_file")
 # Station records (note there are two different record_id .csv files needed one for
 #  observations tables and one for the header table
 SUBDAILY_STATION_RECORD_ENTRIES_OBS_LITE = config.get("Records", "subdaily_station_records_obs_lite")
+SUBDAILY_STATION_RECORD_ENTRIES_OBS_CORE = config.get("Records", "subdaily_station_records_obs_core")
 SUBDAILY_STATION_RECORD_ENTRIES_HEADER = config.get("Records", "subdaily_station_records_header")
 DAILY_STATION_RECORD_ENTRIES_OBS_LITE = config.get("Records", "daily_station_records_obs_lite")
 DAILY_STATION_RECORD_ENTRIES_HEADER = config.get("Records", "daily_station_records_header")

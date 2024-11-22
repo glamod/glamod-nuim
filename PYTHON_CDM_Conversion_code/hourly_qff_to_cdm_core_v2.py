@@ -586,7 +586,6 @@ def main(station="", subset="", run_all=False, clobber=False):
        
         # rename merged_df columns to cdm-core and create report_id
         merged_df["height_of_station_above_sea_level"] = df["height_of_station_above_sea_level"]
-        merged_df["height_of_station_above_sea_level"] = merged_df["height_of_station_above_sea_level"].astype(int)
         merged_df["report_timestamp"] = merged_df["date_time"]
         merged_df["report_meaning_of_time_stamp"] = merged_df["date_time_meaning"]
         merged_df["report_duration"] = merged_df["observation_duration"]
@@ -611,6 +610,24 @@ def main(station="", subset="", run_all=False, clobber=False):
         # Release 7 only
         # add location information  from location.csv to overwrite 
         merged_df = h_utils.add_location(merged_df, location_df)
+
+        # This duplication from 10 lines above is apparently needed.
+        merged_df = merged_df[["station_name","primary_station_id","report_id","observation_id",
+                                 "longitude","latitude","height_of_station_above_sea_level","report_timestamp",
+                                 "report_meaning_of_time_stamp","report_duration","observed_variable",
+                                 "units","observation_value","quality_flag","source_id","data_policy_licence",
+                                 "report_type","value_significance"]]
+
+        # Convert the column to numeric first
+        merged_df['height_of_station_above_sea_level'] = pd.to_numeric(merged_df['height_of_station_above_sea_level'])
+        
+        # Then round or convert to integers
+        merged_df['height_of_station_above_sea_level'] = merged_df['height_of_station_above_sea_level'].round(0).astype(int)
+        
+        merged_df["latitude"] = pd.to_numeric(merged_df["latitude"],errors='coerce')
+        merged_df["longitude"] = pd.to_numeric(merged_df["longitude"],errors='coerce')
+        merged_df["latitude"]= merged_df["latitude"].round(3)
+        merged_df["longitude"]= merged_df["longitude"].round(3)
 
         # Write the output files
         #   name the cdm_core files e.g. cdm_core _"insert date of run"_EG000062417.psv)

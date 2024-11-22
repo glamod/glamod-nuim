@@ -150,21 +150,6 @@ def construct_qc_df(var_frame):
     return qc_frame
 
 
-def extract_report_id(obs_id):
-    """
-    Function to split observation id and return a new report id
-
-    obs_id : `str`
-        String to parse
-    
-    returns : `str`
-    """
-    
-    parts = obs_id.split('-')
-    report_id = '-'.join(parts[:-2])
-    return report_id
-
-
 def main(station="", subset="", run_all=False, clobber=False):
     """
     Run processing of hourly QFF to CDM lite & QC tables
@@ -206,11 +191,6 @@ def main(station="", subset="", run_all=False, clobber=False):
     # Read in the data policy dataframe (only read in if needed)
     data_policy_df = pd.read_csv(utils.SUBDAILY_STATION_RECORD_ENTRIES_OBS_LITE, encoding='latin-1')
     data_policy_df = data_policy_df.astype(str)
-
-
-    # Read in the location dataframe (only read in if needed - Rel 7 fix)
-    location_df = pd.read_csv(utils.SUBDAILY_STATION_RECORD_ENTRIES_LOCATION, encoding='latin-1')
-    location_df = location_df.astype(str)
  
     # To start at begining of files
     for filename in all_filenames:
@@ -259,8 +239,8 @@ def main(station="", subset="", run_all=False, clobber=False):
         df["source_id"] = ""
         df["observation_height_above_station_surface"] = ""
         df["date_time_meaning"] = "1"
-        df["latitude"] = ""
-        df["longitude"] = ""
+        df["latitude"] = df["Latitude"]
+        df["longitude"] = df["Longitude"]
         df["observed_variable"] = ""  
         df["value_significance"] = "" 
         df["observation_duration"] = ""
@@ -581,9 +561,6 @@ def main(station="", subset="", run_all=False, clobber=False):
             print(f"No data in merged CDM Lite file for: {filename}")
             continue
 
-        # Apply the function to create the new column report_id
-        merged_df['report_id'] = merged_df['observation_id'].apply(extract_report_id)
-
         # Sort by date/times and fix metadata
         merged_df.sort_values("date_time", inplace=True)
         merged_df["latitude"] = pd.to_numeric(merged_df["latitude"],errors='coerce')
@@ -591,10 +568,6 @@ def main(station="", subset="", run_all=False, clobber=False):
         merged_df["latitude"]= merged_df["latitude"].round(3)
         merged_df["longitude"]= merged_df["longitude"].round(3)
         
-        # Release 7 only
-        # add location information  from location.csv to overwrite 
-        merged_df = h_utils.add_location(merged_df, location_df)
-
         # Write the output files
         #   name the cdm_lite files e.g. cdm_lite _"insert date of run"_EG000062417.psv)
         try:

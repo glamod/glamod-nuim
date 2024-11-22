@@ -1,21 +1,22 @@
 # -*- coding: utf-8 -*-
 """
-Convert QFF files to CDM Lite .psv files (one per station).
+Convert QFF files to CDM Core .psv files (one per station).
 
-CDM Lite files have all variables, one after another.
+CDM Core files have all variables, one after another.
 
 Call in one of three ways using:
 
->python hourly_qff_to_cdm_lite_v1.py --station STATIONID
->python hourly_qff_to_cdm_lite_v1.py --subset FILENAME
->python hourly_qff_to_cdm_lite_v1.py --run_all
->python hourly_qff_to_cdm_lite_v1.py --help
+>python hourly_qff_to_cdm_core_v2.py --station STATIONID
+>python hourly_qff_to_cdm_core_v2.py --subset FILENAME
+>python hourly_qff_to_cdm_core_v2.py --run_all
+>python hourly_qff_to_cdm_core_v2.py --help
 
 Created on Thu Nov 11 16:31:58 2021
 
 @author: snoone
 
 Edited: rjhd2, February 2022
+Edited: rjhd2, November 2024
 """
 
 import os
@@ -111,7 +112,7 @@ def construct_report_type(var_frame, all_frame, id_field):
 
 def construct_qc_df(var_frame):
     """
-    Construct data frame for CDM-lite QC table
+    Construct data frame for CDM-Core QC table
 
     var_frame : `dataframe`
         Dataframe for variable
@@ -149,10 +150,26 @@ def construct_qc_df(var_frame):
 
     return qc_frame
 
+        
+        
+def extract_report_id(obs_id):
+    """
+    Function to split observation id and return a new report id
+
+    obs_id : `str`
+        String to parse
+    
+    returns : `str`
+    """
+    
+    parts = obs_id.split('-')
+    report_id = '-'.join(parts[:-2])
+    return report_id
+    
 
 def main(station="", subset="", run_all=False, clobber=False):
     """
-    Run processing of hourly QFF to CDM lite & QC tables
+    Run processing of hourly QFF to CDM Core & QC tables
 
     Parameters
     ----------
@@ -189,14 +206,9 @@ def main(station="", subset="", run_all=False, clobber=False):
 
 
     # Read in the data policy dataframe (only read in if needed)
-    data_policy_df = pd.read_csv(utils.SUBDAILY_STATION_RECORD_ENTRIES_OBS_LITE, encoding='latin-1')
+    data_policy_df = pd.read_csv(utils.SUBDAILY_STATION_RECORD_ENTRIES_OBS_CORE, encoding='latin-1')
     data_policy_df = data_policy_df.astype(str)
-
-
-    # Read in the location dataframe (only read in if needed - Rel 7 fix)
-    location_df = pd.read_csv(utils.SUBDAILY_STATION_RECORD_ENTRIES_LOCATION, encoding='latin-1')
-    location_df = location_df.astype(str)
- 
+              
     # To start at begining of files
     for filename in all_filenames:
 
@@ -220,8 +232,8 @@ def main(station="", subset="", run_all=False, clobber=False):
         # Set up the output filenames, and check if they exist
         station_id=df.iloc[0]["Station_ID"] # NOTE: this is renamed below to "primary_station_id"
 
-        outroot_cdmlite = os.path.join(utils.SUBDAILY_CDM_LITE_OUT_DIR, utils.SUBDAILY_CDM_LITE_FILE_ROOT)
-        cdmlite_outfile = f"{outroot_cdmlite}{station_id}{OUT_EXTENSION}{OUT_COMPRESSION}"
+        outroot_cdmcore = os.path.join(utils.SUBDAILY_CDM_CORE_OUT_DIR, utils.SUBDAILY_CDM_CORE_FILE_ROOT)
+        cdmcore_outfile = f"{outroot_cdmcore}{station_id}{OUT_EXTENSION}{OUT_COMPRESSION}"
 
         outroot_qc= os.path.join(utils.SUBDAILY_CDM_QC_OUT_DIR, utils.SUBDAILY_QC_FILE_ROOT)
         qc_outfile = f"{outroot_qc}{station_id}{OUT_EXTENSION}{OUT_COMPRESSION}"
@@ -229,9 +241,9 @@ def main(station="", subset="", run_all=False, clobber=False):
         # if not overwriting
         if not clobber:
             # and both output files exist
-            if os.path.exists(cdmlite_outfile) and os.path.exists(qc_outfile):
+            if os.path.exists(cdmcore_outfile) and os.path.exists(qc_outfile):
                 print(f"   Output files for {filename} already exist:")
-                print(f"     {cdmlite_outfile}")
+                print(f"     {cdmcore_outfile}")
                 print(f"     {qc_outfile}")
                 print("   Skipping to next station")
                 continue 
@@ -243,6 +255,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         df["units"] = ""
         df["source_id"] = ""
         df["observation_height_above_station_surface"] = ""
+        df["height_of_station_above_sea_level"]=df["Elevation"]
         df["date_time_meaning"] = "1"
         df["latitude"] = df["Latitude"]
         df["longitude"] = df["Longitude"]
@@ -365,7 +378,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         dfdpt = h_utils.fix_decimal_places(dfdpt)
 
         #====================================================================================
-        # Convert station level pressure  to cdmlite
+        # Convert station level pressure  to cdmcore
         dfslp = df[INITIAL_COLUMNS]
 
         # set report type to 4 for ICAO or 0 for all other hourly stations
@@ -413,7 +426,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         dfslp = h_utils.fix_decimal_places(dfslp, do_obs_value=False)
 
         #===========================================================================================
-        # Convert sea level pressure to CDM lite
+        # Convert sea level pressure to CDM Core
         dfmslp = df[INITIAL_COLUMNS]
 
         # set report type to 4 for ICAO or 0 for all other hourly stations
@@ -461,7 +474,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         dfmslp = h_utils.fix_decimal_places(dfmslp, do_obs_value=False)
 
         #===================================================================================
-        # Convert wind direction to CDM lite
+        # Convert wind direction to CDM Core
         dfwd = df[INITIAL_COLUMNS]
 
         # set report type to 4 for ICAO or 0 for all other hourly stations
@@ -508,7 +521,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         dfwd = h_utils.fix_decimal_places(dfwd, do_obs_value=False)
         
         #===========================================================================
-        # Convert wind speed to CDM lite
+        # Convert wind speed to CDM Core
         dfws = df[INITIAL_COLUMNS]
 
         # set report type to 4 for ICAO or 0 for all other hourly stations
@@ -559,32 +572,46 @@ def main(station="", subset="", run_all=False, clobber=False):
         dfws = h_utils.fix_decimal_places(dfws)
 
         # =================================================================================
-        # Merge all dataframes into one CDMlite frame
+        # Merge all dataframes into one CDM Core frame
         merged_df=pd.concat([dfdpt,dft,dfslp,dfmslp,dfwd,dfws], axis=0)
 
         if merged_df.shape[0] == 0:
-            print(f"No data in merged CDM Lite file for: {filename}")
+            print(f"No data in merged CDM Core file for: {filename}")
             continue
 
+        # rename merged_df columns to cdm-core and create report_id
+        merged_df["height_of_station_above_sea_level"] = df["height_of_station_above_sea_level"]
+        merged_df["height_of_station_above_sea_level"] = merged_df["height_of_station_above_sea_level"].astype(int)
+        merged_df["report_timestamp"] = merged_df["date_time"]
+        merged_df["report_meaning_of_time_stamp"] = merged_df["date_time_meaning"]
+        merged_df["report_duration"] = merged_df["observation_duration"]
+             
+        # Apply the function to create the new column report_id
+        merged_df['report_id'] = merged_df['observation_id'].apply(extract_report_id)
+
+                
         # Sort by date/times and fix metadata
         merged_df.sort_values("date_time", inplace=True)
         merged_df["latitude"] = pd.to_numeric(merged_df["latitude"],errors='coerce')
         merged_df["longitude"] = pd.to_numeric(merged_df["longitude"],errors='coerce')
         merged_df["latitude"]= merged_df["latitude"].round(3)
         merged_df["longitude"]= merged_df["longitude"].round(3)
-        
-        # Release 7 only
-        # add location information  from location.csv to overwrite 
-        merged_df = h_utils.add_location(merged_df, location_df)
 
+        # and only retain columns in specified order
+        merged_df = merged_df[["station_name","primary_station_id","report_id","observation_id",
+                                 "longitude","latitude","height_of_station_above_sea_level","report_timestamp",
+                                 "report_meaning_of_time_stamp","report_duration","observed_variable",
+                                 "units","observation_value","quality_flag","source_id","data_policy_licence",
+                                 "report_type","value_significance"]]
+        
         # Write the output files
-        #   name the cdm_lite files e.g. cdm_lite _"insert date of run"_EG000062417.psv)
+        #   name the cdm_core files e.g. cdm_core _"insert date of run"_EG000062417.psv)
         try:
-            # Save CDM lite table to directory
+            # Save CDM core table to directory
             unique_variables = merged_df['observed_variable'].unique()
             print(unique_variables)
-            merged_df.to_csv(cdmlite_outfile, index=False, sep="|", compression="infer")
-            print(f"    {cdmlite_outfile}")
+            merged_df.to_csv(cdmcore_outfile, index=False, sep="|", compression="infer")
+            print(f"    {cdmcore_outfile}")
 
             # Extract subsets of variables
             #    E.g.: slp and mslp for 20cr Ed Hawkins
@@ -607,7 +634,7 @@ def main(station="", subset="", run_all=False, clobber=False):
             qc_merged_df=pd.concat([qcdpt,qct,qcslp,qcmslp,qcwd,qcws], axis=0)
             qc_merged_df.astype(str)
 
-            # Replace flag characters with numbers for CDM lite
+            # Replace flag characters with numbers for CDM core
             for qc_flag, qc_value in SUB_DAILY_QC_FLAGS.items():
                 qc_merged_df['qc_method'] = qc_merged_df['qc_method'].str.replace(qc_flag, qc_value)
 
@@ -621,7 +648,7 @@ def main(station="", subset="", run_all=False, clobber=False):
             print("    Done")
         except IOError:
             # something wrong with file paths, despite checking
-            print(f"Cannot save datafile: {cdmlite_outfile}")
+            print(f"Cannot save datafile: {cdmcore_outfile}")
         except RuntimeError:
             print("Runtime error")
         # TODO add logging for these errors

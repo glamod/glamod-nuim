@@ -191,7 +191,7 @@ def main(station="", subset="", run_all=False, clobber=False):
     # Read in the data policy dataframe (only read in if needed)
     data_policy_df = pd.read_csv(utils.SUBDAILY_STATION_RECORD_ENTRIES_OBS_LITE, encoding='latin-1')
     data_policy_df = data_policy_df.astype(str)
-              
+ 
     # To start at begining of files
     for filename in all_filenames:
 
@@ -567,7 +567,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         merged_df["longitude"] = pd.to_numeric(merged_df["longitude"],errors='coerce')
         merged_df["latitude"]= merged_df["latitude"].round(3)
         merged_df["longitude"]= merged_df["longitude"].round(3)
-
+        
         # Write the output files
         #   name the cdm_lite files e.g. cdm_lite _"insert date of run"_EG000062417.psv)
         try:

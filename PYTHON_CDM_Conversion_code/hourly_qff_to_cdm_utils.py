@@ -188,6 +188,29 @@ def add_data_policy(var_frame, policy_frame):
     return var_frame
 
 
+def add_location(var_frame, location_frame):
+    """
+    Merge in location information from another dataframe
+
+    var_frame : `dataframe`
+        Dataframe for variable
+
+    location_frame : `dataframe`
+        Dataframe for the location
+    """
+    var_frame = var_frame.astype(str)
+
+    # merge policy frame into var_frame
+    var_frame = location_frame.merge(var_frame, on=['primary_station_id'])
+
+    # rename column and remove ".0"
+    var_frame['latitude'] = var_frame['latitude_x']
+    var_frame['longitude'] = var_frame['longitude_x']
+    var_frame['height_of_station_above_sea_level'] = var_frame['height_of_station_above_sea_level_x']
+
+    return var_frame
+
+
 def construct_obs_id(var_frame):
     """
     construct `observation_id` field

@@ -149,8 +149,7 @@ def construct_qc_df(var_frame):
     qc_frame = qc_frame[qc_frame['quality_flag'] != 0]
 
     return qc_frame
-
-        
+    
         
 def extract_report_id(obs_id):
     """
@@ -208,8 +207,13 @@ def main(station="", subset="", run_all=False, clobber=False):
     # Read in the data policy dataframe (only read in if needed)
     data_policy_df = pd.read_csv(utils.SUBDAILY_STATION_RECORD_ENTRIES_OBS_CORE, encoding='latin-1')
     data_policy_df = data_policy_df.astype(str)
-              
-    # To start at begining of files
+
+
+    # Read in the location dataframe (only read in if needed - Rel 7 fix)
+    location_df = pd.read_csv(utils.SUBDAILY_STATION_RECORD_ENTRIES_LOCATION, encoding='latin-1')
+    location_df = location_df.astype(str)
+    
+   # To start at begining of files
     for filename in all_filenames:
 
         if not os.path.exists(filename):
@@ -255,10 +259,10 @@ def main(station="", subset="", run_all=False, clobber=False):
         df["units"] = ""
         df["source_id"] = ""
         df["observation_height_above_station_surface"] = ""
-        df["height_of_station_above_sea_level"]=df["Elevation"]
+        df["height_of_station_above_sea_level"]=""
         df["date_time_meaning"] = "1"
-        df["latitude"] = df["Latitude"]
-        df["longitude"] = df["Longitude"]
+        df["latitude"] = ""
+        df["longitude"] = ""
         df["observed_variable"] = ""  
         df["value_significance"] = "" 
         df["observation_duration"] = ""
@@ -579,9 +583,9 @@ def main(station="", subset="", run_all=False, clobber=False):
             print(f"No data in merged CDM Core file for: {filename}")
             continue
 
+       
         # rename merged_df columns to cdm-core and create report_id
         merged_df["height_of_station_above_sea_level"] = df["height_of_station_above_sea_level"]
-        merged_df["height_of_station_above_sea_level"] = merged_df["height_of_station_above_sea_level"].astype(int)
         merged_df["report_timestamp"] = merged_df["date_time"]
         merged_df["report_meaning_of_time_stamp"] = merged_df["date_time_meaning"]
         merged_df["report_duration"] = merged_df["observation_duration"]
@@ -589,7 +593,6 @@ def main(station="", subset="", run_all=False, clobber=False):
         # Apply the function to create the new column report_id
         merged_df['report_id'] = merged_df['observation_id'].apply(extract_report_id)
 
-                
         # Sort by date/times and fix metadata
         merged_df.sort_values("date_time", inplace=True)
         merged_df["latitude"] = pd.to_numeric(merged_df["latitude"],errors='coerce')
@@ -604,6 +607,28 @@ def main(station="", subset="", run_all=False, clobber=False):
                                  "units","observation_value","quality_flag","source_id","data_policy_licence",
                                  "report_type","value_significance"]]
         
+        # Release 7 only
+        # add location information  from location.csv to overwrite 
+        merged_df = h_utils.add_location(merged_df, location_df)
+
+        # This duplication from 10 lines above is apparently needed.
+        merged_df = merged_df[["station_name","primary_station_id","report_id","observation_id",
+                                 "longitude","latitude","height_of_station_above_sea_level","report_timestamp",
+                                 "report_meaning_of_time_stamp","report_duration","observed_variable",
+                                 "units","observation_value","quality_flag","source_id","data_policy_licence",
+                                 "report_type","value_significance"]]
+
+        # Convert the column to numeric first
+        merged_df['height_of_station_above_sea_level'] = pd.to_numeric(merged_df['height_of_station_above_sea_level'])
+        
+        # Then round or convert to integers
+        merged_df['height_of_station_above_sea_level'] = merged_df['height_of_station_above_sea_level'].round(0).astype(int)
+        
+        merged_df["latitude"] = pd.to_numeric(merged_df["latitude"],errors='coerce')
+        merged_df["longitude"] = pd.to_numeric(merged_df["longitude"],errors='coerce')
+        merged_df["latitude"]= merged_df["latitude"].round(3)
+        merged_df["longitude"]= merged_df["longitude"].round(3)
+
         # Write the output files
         #   name the cdm_core files e.g. cdm_core _"insert date of run"_EG000062417.psv)
         try:

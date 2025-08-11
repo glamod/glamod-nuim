@@ -54,19 +54,20 @@ def main(station="", subset="", run_all=False, clobber=False, time=""):
         compression = ""
         indir = utils.SUBDAILY_CDM_LITE_OUT_DIR
         # inroot = utils.SUBDAILY_CDM_LITE_FILE_ROOT
-        outname = f"{indir}/sub_daily_station_config.dat"
+        outnameroot = f"{indir}/sub_daily_station_config"
     elif time == "D":
         extension = ".psv"
         compression = ".gz"
         indir = utils.DAILY_CDM_LITE_OUT_DIR
         # inroot = utils.DAILY_CDM_LITE_FILE_ROOT
-        outname = f"{indir}/daily_station_config.dat"
+        outnameroot = f"{indir}/daily_station_config"
     elif time == "M":
         extension = ".psv"
         compression = ""
         indir = utils.MONTHLY_CDM_LITE_OUT_DIR
         # inroot = utils.MONTHLY_CDM_LITE_FILE_ROOT
-        outname = f"{indir}/monthly_station_config.dat"
+        outnameroot = f"{indir}/monthly_station_config"
+
 
     # check if output files exist
     if not clobber:
@@ -79,10 +80,10 @@ def main(station="", subset="", run_all=False, clobber=False, time=""):
 
     # Read in either single file, list of files or run all
     # Check for sensible inputs
-    if station != "" and subset != "" and all:
+    if station != "" and subset != "" and run_all:
         print("Please select either single station, list of stations run or to run all")
         return
-    elif station == "" and subset == "" and not all:
+    elif station == "" and subset == "" and not run_all:
         print("Please select either single station, list of stations run or to run all")
         return
 
@@ -93,6 +94,19 @@ def main(station="", subset="", run_all=False, clobber=False, time=""):
                                                       subset=subset,
                                                       run_all=run_all,
                                                       )
+
+    # set the outnames
+    if station != "":
+        # append station ID to outfile
+        outname = f"{outnameroot}_{station}.dat"
+    elif station != "":
+        # append station ID to outfile
+        start_id = os.path.splitext(os.path.basename(all_filenames[0]))[0]
+        end_id = os.path.splitext(os.path.basename(all_filenames[-1]))[0]
+        outname = f"{outnameroot}_{start_id}-{end_id}.dat"
+    elif run_all:
+        # No station IDs in final file
+        outname = f"{outnameroot}.dat"
 
 
     config_df = pd.DataFrame(columns=["primary_id",

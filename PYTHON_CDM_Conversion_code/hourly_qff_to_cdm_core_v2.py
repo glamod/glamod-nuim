@@ -271,12 +271,12 @@ def main(station="", subset="", run_all=False, clobber=False):
         df["station_type"] = "1"
         df["observation_id"] = ""
         df["data_policy_licence"] = ""
-        df["primary_station_id"] = df["Station_ID"]
+        df["primary_station_id"] = df["STATION"]
         df["secondary_id"] = ""                                   
         df["station_name"] = df["Station_name"]
         df["quality_flag"] = ""
-        df["latitude"] = pd.to_numeric(df["Latitude"], errors='coerce')
-        df["longitude"] = pd.to_numeric(df["Longitude"], errors='coerce')
+        df["latitude"] = pd.to_numeric(df["LATITUDE"], errors='coerce')
+        df["longitude"] = pd.to_numeric(df["LONGITUDE"], errors='coerce')
         df["latitude"] = df["latitude"].round(3)
         df["longitude"]=  df["longitude"].round(3)
         df["Timestamp2"] = df["Year"].map(str) + "-" +\

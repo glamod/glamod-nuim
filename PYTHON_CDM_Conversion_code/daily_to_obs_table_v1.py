@@ -42,7 +42,7 @@ def main(station="", subset="", run_all=False, clobber=False):
     Parameters
     ----------
 
-    station : `str` 
+    station : `str`
         Single station ID to process
 
     subset : `str`
@@ -72,7 +72,7 @@ def main(station="", subset="", run_all=False, clobber=False):
                                                       run_all=run_all,
                                                       )
 
-            
+
     # Read in the data policy dataframe (only read in if needed)
     data_policy_df = pd.read_csv(utils.DAILY_STATION_RECORD_ENTRIES_OBS_LITE, encoding='latin-1')
     data_policy_df = data_policy_df.astype(str)
@@ -104,7 +104,7 @@ def main(station="", subset="", run_all=False, clobber=False):
                 print(f"   Output files for {filename} already exist:")
                 print(f"     {cdmobs_outfile}")
                 print("   Skipping to next station")
-                
+
                 continue #  to next file in the loop
 
         # Just retain the variables required
@@ -112,14 +112,14 @@ def main(station="", subset="", run_all=False, clobber=False):
 
 
         # set the source_flag
-        df["Source_flag"] = df["Source_flag"]. astype(str) 
+        df["Source_flag"] = df["Source_flag"]. astype(str)
         for source_flag, source_value in d_utils.SOURCE_FLAGS.items():
             df['Source_flag'] = df['Source_flag'].str.replace(source_flag, source_value)
 
         station_id = df.iloc[1]["Station_ID"]
 
         # set the value significance for each variable
-        df["value_significance"] = "" 
+        df["value_significance"] = ""
         for obs_var, val_signif in d_utils.VALUE_SIGNIFICANCE.items():
             df.loc[df['observed_variable'] == obs_var, 'value_significance'] = val_signif
 
@@ -159,10 +159,10 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         # set conversion method for variables
         df["conversion_method"] = ""
-        df.loc[df['observed_variable'] == "TMIN", 'conversion_method'] = '1' 
-        df.loc[df['observed_variable'] == "TMAX", 'conversion_method'] = '1' 
-        df.loc[df['observed_variable'] == "TAVG", 'conversion_method'] = '1' 
-        
+        df.loc[df['observed_variable'] == "TMIN", 'conversion_method'] = '1'
+        df.loc[df['observed_variable'] == "TMAX", 'conversion_method'] = '1'
+        df.loc[df['observed_variable'] == "TAVG", 'conversion_method'] = '1'
+
         # set numerical precision for variables
         df["numerical_precision"]=""
         for obs_var, num_prec in d_utils.NUMERICAL_PRECISION.items():
@@ -231,21 +231,21 @@ def main(station="", subset="", run_all=False, clobber=False):
         for flag, new_flag in d_utils.QUALITY_FLAGS.items():
             df.quality_flag = df.quality_flag.str.replace(flag, new_flag)
         df.quality_flag[df.quality_flag == "nan"] = "0"
-    
+
 
         # add timestamp to df and create report id
-        df["Timestamp2"] = df["year"].map(str) + "-" + df["month"].map(str) + "-" + df["day"].map(str)  
+        df["Timestamp2"] = df["year"].map(str) + "-" + df["month"].map(str) + "-" + df["day"].map(str)
         df["Seconds"] = "00"
         df["offset"] = "+00"
         df["date_time"] = df["Timestamp2"].map(str) + " " + df["hour"].map(str) + ":" +\
-                          df["Minute"].map(str) + ":" + df["Seconds"].map(str) 
+                          df["Minute"].map(str) + ":" + df["Seconds"].map(str)
         df.date_time = df.date_time + '+00'
         df["dates"] = df["date_time"].str[:-12]
 
         df['primary_station_id_2'] = df['primary_station_id'].astype(str) + '-' + df['source_id'].astype(str)
 
-        df = df.astype(str)  
-                                     
+        df = df.astype(str)
+
         # Concatenate columns for joining dataframe in next step
         df['source_id'] = df['source_id'].astype(str).apply(lambda x: x.replace('.0',''))
         df['primary_station_id_2']=df['primary_station_id'].astype(str)+'-'+df['source_id'].astype(str)
@@ -254,7 +254,7 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         # add data policy information
         df = d_utils.add_data_policy(df, data_policy_df)
-        
+
         # Remove NAs
         df = df.fillna("null")
         df = df.replace({"null":""})
@@ -289,15 +289,19 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         # Write the output files
         try:
-            unique_variables = df['observed_variable'].unique()
-            print(unique_variables)
-            df.sort_values("date_time", inplace=True)
-            df.to_csv(cdmobs_outfile, index=False, sep="|", compression="infer")
-            print(f"    {cdmobs_outfile}")
+            if len(df) > 0:
+                unique_variables = df['observed_variable'].unique()
+                print(unique_variables)
+                df.sort_values("date_time", inplace=True)
+                df.to_csv(cdmobs_outfile, index=False, sep="|", compression="infer")
+                print(f"    {cdmobs_outfile}")
+            else:
+                print(f"No data to sace, {cdmobs_outfile} not created")
+
             print("Done")
         except IOError:
             # something wrong with file paths, despite checking
-            print(f"Cannot save datafile: {cdmlite_outfile}")
+            print(f"Cannot save datafile: {cdmobs_outfile}")
         except RuntimeError:
             print("Runtime error")
         # TODO add logging for these errors
@@ -328,6 +332,6 @@ if __name__ == "__main__":
 
 
 
-     
-   
+
+
 

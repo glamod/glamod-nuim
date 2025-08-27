@@ -41,7 +41,7 @@ def main(station="", subset="", run_all=False, clobber=False):
     Parameters
     ----------
 
-    station : `str` 
+    station : `str`
         Single station ID to process
 
     subset : `str`
@@ -54,7 +54,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         Overwrite existing files if they exist.  If False, will skip existing ones
 
     gzip : `bool`
-        Do not expect or output compressed files 
+        Do not expect or output compressed files
     """
     # Read in either single file, list of files or run all
     print(station)
@@ -77,7 +77,7 @@ def main(station="", subset="", run_all=False, clobber=False):
     # Read in the data policy dataframe (only read in if needed)
     data_policy_df = pd.read_csv(utils.DAILY_STATION_RECORD_ENTRIES_OBS_LITE, encoding='latin-1')
     data_policy_df = data_policy_df.astype(str)
-              
+
     # To start at begining of files
     for filename in all_filenames:
 
@@ -118,12 +118,12 @@ def main(station="", subset="", run_all=False, clobber=False):
         # TODO - add cross check to ensure that all are tested for in the various steps
 
         # set the source_flag
-        df["Source_flag"] = df["Source_flag"]. astype(str) 
+        df["Source_flag"] = df["Source_flag"]. astype(str)
         for source_flag, source_value in d_utils.SOURCE_FLAGS.items():
             df['Source_flag'] = df['Source_flag'].str.replace(source_flag, source_value)
 
         # set the value significance for each variable
-        df["value_significance"] = "" 
+        df["value_significance"] = ""
         for obs_var, val_signif in d_utils.VALUE_SIGNIFICANCE.items():
             df.loc[df['observed_variable'] == obs_var, 'value_significance'] = val_signif
 
@@ -173,15 +173,15 @@ def main(station="", subset="", run_all=False, clobber=False):
             df.quality_flag = df.quality_flag.str.replace(flag, new_flag)
 
         # add timestamp to df and create report id
-        df["Timestamp2"] = df["year"].map(str) + "-" + df["month"].map(str)+ "-" + df["day"].map(str)  
+        df["Timestamp2"] = df["year"].map(str) + "-" + df["month"].map(str)+ "-" + df["day"].map(str)
         df["Seconds"] = "00"
         df["offset"] = "+00"
         df["date_time"] = df["Timestamp2"].map(str)+ " " + df["hour"].map(str) + ":" + \
-                          df["Minute"].map(str)+":"+df["Seconds"].map(str) 
+                          df["Minute"].map(str)+":"+df["Seconds"].map(str)
         df.date_time = df.date_time + '+00'
         df["report_id"] = df["date_time"]
 
-        df = df.astype(str)                                       
+        df = df.astype(str)
 
         # Concatenate columns for joining dataframe in next step
         df['source_id'] = df['source_id'].astype(str).apply(lambda x: x.replace('.0', ''))
@@ -194,7 +194,7 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         # Remove NAs
         df = df.fillna("null")
-        df = df.replace({"null":""})    
+        df = df.replace({"null":""})
 
         # sort out the locational metadata
         df["latitude"] = pd.to_numeric(df["latitude"], errors='coerce')
@@ -212,7 +212,7 @@ def main(station="", subset="", run_all=False, clobber=False):
 
 
 
-        # extract QC table information   
+        # extract QC table information
         qct = df[["primary_station_id", "report_id", "record_number", "qc_method", "quality_flag", "observed_variable", "value_significance"]]
 
         qct = qct.astype(str)
@@ -258,19 +258,25 @@ def main(station="", subset="", run_all=False, clobber=False):
         # Write the output files
         try:
             # Save CDM lite table to directory
-            unique_variables = df['observed_variable'].unique()
-            print(unique_variables)
-            df.sort_values("date_time", inplace=True)
-            df.to_csv(cdmlite_outfile, index=False, sep="|", compression="infer")
-            print(f"    {cdmlite_outfile}")
-            
+            if len(df) > 0:
+                unique_variables = df['observed_variable'].unique()
+                print(unique_variables)
+                df.sort_values("date_time", inplace=True)
+                df.to_csv(cdmlite_outfile, index=False, sep="|", compression="infer")
+                print(f"    {cdmlite_outfile}")
+            else:
+                print(f"No data to save, {cdmlite_outfile} not created")
             # and the QC table
             qct.sort_values("report_id", inplace=True)
             qct['qc_method'] = qct['qc_method'].str[:-1]
             unique_qc_methods = qct['qc_method'].unique()
-            print(unique_qc_methods)
-            qct.to_csv(qc_outfile, index=False, sep="|", compression="infer")
-            print(f"   {qc_outfile}")
+            if len(qct) > 0:
+                print(unique_qc_methods)
+                qct.to_csv(qc_outfile, index=False, sep="|", compression="infer")
+                print(f"   {qc_outfile}")
+            else:
+                print(f"No data to save, {qc_outfile} not created")
+
             print("Done")
         except IOError:
             # something wrong with file paths, despite checking
@@ -278,7 +284,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         except RuntimeError:
             print("Runtime error")
         # TODO add logging for these errors
-       
+
 #    return # main
 
 #****************************************
@@ -300,17 +306,17 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     main(station=args.station, subset=args.subset, run_all=args.run_all, clobber=args.clobber)
-      
-        
-                 
-    
 
-  
-       
-       
-       
-       
-    
-    
-   
+
+
+
+
+
+
+
+
+
+
+
+
 

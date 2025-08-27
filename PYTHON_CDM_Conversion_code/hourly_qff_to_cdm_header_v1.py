@@ -42,7 +42,7 @@ def main(station="", subset="", run_all=False, clobber=False):
     Parameters
     ----------
 
-    station : `str` 
+    station : `str`
         Single station ID to process
 
     subset : `str`
@@ -72,8 +72,8 @@ def main(station="", subset="", run_all=False, clobber=False):
                                                       run_all=run_all,
                                                       prepend=utils.SUBDAILY_CDM_OBS_FILE_ROOT
                                                       )
-             
-    
+
+
     # To start at begining of files
     for filename in all_filenames:
 
@@ -82,18 +82,18 @@ def main(station="", subset="", run_all=False, clobber=False):
             continue
         else:
             print("Processing {}".format(filename))
-        
+
         obs_table_df=pd.read_csv(filename, sep="|", usecols=OBS_TABLE_COLUMNS, compression="infer")
 
         if obs_table_df.shape[0] == 0:
             print(f"No data in file: {filename}")
             continue
-        
-        
+
+
         # extract Station_ID from report_ID in obs table
         obs_table_df['Station_ID'] = obs_table_df['report_id'].str[:11]
-        station_id = obs_table_df.iloc[0]["Station_ID"] # NOTE: this is renamed below to "primary_station_id" 
-        outroot_cdmhead = os.path.join(utils.SUBDAILY_CDM_HEAD_OUT_DIR, utils.SUBDAILY_CDM_HEAD_FILE_ROOT) 
+        station_id = obs_table_df.iloc[0]["Station_ID"] # NOTE: this is renamed below to "primary_station_id"
+        outroot_cdmhead = os.path.join(utils.SUBDAILY_CDM_HEAD_OUT_DIR, utils.SUBDAILY_CDM_HEAD_FILE_ROOT)
         cdmhead_outfile = f"{outroot_cdmhead}{station_id}{OUT_EXTENSION}{OUT_COMPRESSION}"
 
         if not clobber:
@@ -101,10 +101,10 @@ def main(station="", subset="", run_all=False, clobber=False):
             if os.path.exists(cdmhead_outfile):
                 print(f"   Output files for {filename} already exist:")
                 print(f"     {cdmhead_outfile}")
-                print("   Skipping to next station")  
+                print("   Skipping to next station")
                 continue #to next file in the loop
 
-        hdf = pd.DataFrame()  
+        hdf = pd.DataFrame()
         hdf['extract_record'] = obs_table_df['report_id'].str[:-17]
         hdf['station_record_number'] = hdf['extract_record'].str[12:]
         hdf['primary_station_id'] = hdf['extract_record'].str[:11]
@@ -118,7 +118,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         hdf["location_method"] = ""
         hdf["location_quality"] = "3"
         hdf["crs"] = "0"
-        hdf["station_speed"] = ""  
+        hdf["station_speed"] = ""
         hdf["station_course"] = ""
         hdf["station_heading"] = ""
         hdf["height_of_station_above_local_ground"] = ""
@@ -152,7 +152,7 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         del obs_table_df
 
-        # add in required information from external .csv file specific for header tables       
+        # add in required information from external .csv file specific for header tables
         df2 = pd.read_csv(utils.SUBDAILY_STATION_RECORD_ENTRIES_HEADER, encoding='latin-1')
         hdf = hdf.astype(str)
         df2 = df2.astype(str)
@@ -166,7 +166,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         hdf["longitude"] = hdf["longitude"].round(3)
 
         del df2
-        
+
         hdf = hdf.drop_duplicates(subset=['duplicates_report'])
 
         # restrict to columns
@@ -193,16 +193,19 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         # Save CDM head table to directory
         try:
-            hdf.to_csv(cdmhead_outfile, index=False, sep="|", compression="infer")
-            print(f"    {cdmhead_outfile}")
+            if len(hdf) > 0:
+                hdf.to_csv(cdmhead_outfile, index=False, sep="|", compression="infer")
+                print(f"    {cdmhead_outfile}")
+            else:
+                print(f"No data to save, {cdmhead_outfile} not created")
         except IOError:
             # something wrong with file paths, despite checking
             print(f"Cannot save datafile: {cdmhead_outfile}")
         except RuntimeError:
             print("Runtime error")
         # TODO add logging for these errors
-        
-        
+
+
         #  to next file in the loop
 
 
@@ -228,6 +231,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     main(station=args.station, subset=args.subset, run_all=args.run_all, clobber=args.clobber)
-     
-    
-   
+
+
+

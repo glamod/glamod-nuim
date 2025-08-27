@@ -567,6 +567,7 @@ def main(station="", subset="", run_all=False, clobber=False):
             else:
                 print(f"No data to save, {cdmobs_outfile} not created")
 
+            print("Done")
         except IOError:
             # something wrong with file paths, despite checking
             print(f"Cannot save datafile: {cdmobs_outfile}")

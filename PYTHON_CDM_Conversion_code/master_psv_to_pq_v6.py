@@ -62,12 +62,8 @@ def format_seconds(seconds):
 
 def get_file_tag(timestamp, freq):
     ts = pd.to_datetime(timestamp, errors='coerce', utc=True)
-    if freq in ['hourly', 'daily']:
-        return ts.strftime("%Y_%m")
-    elif freq == 'monthly':
-        return ts.strftime("%Y")
-    else:
-        return ts.strftime("%Y_%m")
+    # Always use YYYY_MM format for all frequencies
+    return ts.strftime("%Y_%m")
 
 def append_to_parquet(table, pq_path):
     """Append safely: combine with existing Parquet if exists."""
@@ -227,3 +223,4 @@ if __name__ == "__main__":
     print(f"⏱ Total processing time: {format_seconds(total_elapsed)}")
     with open(os.path.join(args.output_dir, "total_runtime.txt"), "w") as f:
         f.write(f"Total processing time: {format_seconds(total_elapsed)} ({round(total_elapsed,2)} sec)\n")
+

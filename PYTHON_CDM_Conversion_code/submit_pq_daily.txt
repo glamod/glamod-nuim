@@ -1,16 +1,20 @@
 #!/bin/bash
 
+# -----------------------------
 # Directories
+# -----------------------------
 INPUT_DIR="/ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/daily_data/r8/cdm_core"
-OUTPUT_DIR="/ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/daily_data/r8/parquet_output_daily_tmp"
+TMP_OUTPUT_DIR="/ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/daily_data/r8/parquet_output_daily_tmp"
+FINAL_OUTPUT_DIR="/ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/daily_data/r8/parquet_output_daily"
 STATION_LIST="/ichec/work/glamod/land_project_workspace/code/r8_pq_code/daily_station_list.txt"
+PY_SCRIPT="/ichec/work/glamod/land_project_workspace/code/r8_pq_code/master_psv_to_pq_v6.py"
 
-FREQ="daily"       # hourly, daily, monthly
-BATCH_SIZE=3000       # PSV files per batch
+FREQ="daily"        # hourly, daily, monthly
+BATCH_SIZE=3000     # PSV files per batch (adjust as needed)
 NUM_JOBS=30         # Parallel jobs
 
 # Base logs directory
-LOG_DIR="/ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/sub_daily_data/r8/${FREQ}_logs"
+LOG_DIR="/ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/daily_data/r8/${FREQ}_logs"
 
 # -----------------------------
 # Environment setup

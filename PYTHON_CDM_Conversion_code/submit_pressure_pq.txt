@@ -1,0 +1,114 @@
+#!/bin/bash
+# Safe parallel run with batch processing, job isolation, and logging
+
+# -----------------------------
+# User settings
+# -----------------------------
+INPUT_DIR="eidt"
+TMP_OUTPUT_DIR="edit"
+FINAL_OUTPUT_DIR="edit"
+STATION_LIST="edit"
+PY_SCRIPT="/ichec/work/glamod/land_project_workspace/code/r8_pq_code/master_psv_to_pq_v6.py"
+
+FREQ="hourly"       # hourly, daily, monthly
+BATCH_SIZE=25       # PSV files per batch
+NUM_JOBS=20         # Parallel jobs
+
+# Base logs directory
+LOG_DIR="/ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/sub_daily_data/r8/${FREQ}_logs_pressure"
+
+# -----------------------------
+# Environment setup
+# -----------------------------
+source /ichec/work/glamod/land_project_workspace/code/r8_202508/hourly/muenv/bin/activate
+
+mkdir -p "$TMP_OUTPUT_DIR"
+mkdir -p "$FINAL_OUTPUT_DIR"
+mkdir -p "$LOG_DIR"
+
+START_TIME=$(date +%s)
+
+# Split station list into NUM_JOBS chunks
+split -n l/$NUM_JOBS -d "$STATION_LIST" "$TMP_OUTPUT_DIR/stations_"
+
+# Collect chunk files
+CHUNKS=($TMP_OUTPUT_DIR/stations_*)
+echo "Found ${#CHUNKS[@]} station chunk(s) to process."
+
+# -----------------------------
+# Launch parallel jobs
+# -----------------------------
+for i in "${!CHUNKS[@]}"; do
+    STATION_CHUNK="${CHUNKS[$i]}"
+    JOB_ID="job_$(printf "%02d" $i)"
+    JOB_TMP_DIR="$TMP_OUTPUT_DIR/$JOB_ID"
+    mkdir -p "$JOB_TMP_DIR"
+
+    echo "Starting $JOB_ID with ${STATION_CHUNK}"
+    python3 "$PY_SCRIPT" \
+        --freq "$FREQ" \
+        --input_dir "$INPUT_DIR" \
+        --output_dir "$JOB_TMP_DIR" \
+        --station_list_file "$STATION_CHUNK" \
+        --job_id "$JOB_ID" \
+        --batch_size "$BATCH_SIZE" \
+        > "${LOG_DIR}/${JOB_ID}_pq_processed_log.txt" 2>&1 &
+done
+
+# Wait for all jobs to finish
+wait
+echo "✅ All parallel jobs finished!"
+
+# -----------------------------
+# Merge step: final files
+# -----------------------------
+echo "Starting merge..."
+python3 "$PY_SCRIPT" \
+    --freq "$FREQ" \
+    --output_dir "$TMP_OUTPUT_DIR" \
+    --merge_only \
+    --final_dir "$FINAL_OUTPUT_DIR" \
+    > "${LOG_DIR}/merge_log.txt" 2>&1
+
+echo "✅ Merge complete! Final files saved to $FINAL_OUTPUT_DIR"
+
+# -----------------------------
+# Collect logs into summary
+# -----------------------------
+SUMMARY_FILE="${LOG_DIR}/summary.txt"
+END_TIME=$(date +%s)
+ELAPSED=$((END_TIME - START_TIME))
+
+{
+    echo "=============================="
+    echo " Processing Summary ($FREQ)"
+    echo "=============================="
+    echo "Start Time : $(date -d @$START_TIME)"
+    echo "End Time   : $(date -d @$END_TIME)"
+    echo "Elapsed    : $((ELAPSED/3600))h $(((ELAPSED/60)%60))m $((ELAPSED%60))s"
+    echo
+
+    if [[ -f "${LOG_DIR}/processed_merge_pq.txt" ]]; then
+        echo "✅ Total rows processed:"
+        cat "${LOG_DIR}/processed_merge_pq.txt"
+        echo
+    else
+        echo "⚠️  No processed_merge_pq.txt found"
+    fi
+
+    if [[ -f "${LOG_DIR}/failed_rows.pq" ]]; then
+        echo "⚠️  Failed rows saved to: failed_rows.pq"
+    else
+        echo "✅ No failed rows"
+    fi
+
+    if [[ -f "${LOG_DIR}/failed_merge_pq.txt" ]]; then
+        echo "⚠️  Failed merge list saved to: failed_merge_pq.txt"
+    else
+        echo "✅ No merge failures"
+    fi
+    echo "=============================="
+} > "$SUMMARY_FILE"
+
+echo "📑 Logs available in $LOG_DIR"
+echo "📄 Summary written to $SUMMARY_FILE"

@@ -15,7 +15,7 @@ BATCH_SIZE=25       # PSV files per batch
 NUM_JOBS=20         # Parallel jobs
 
 # Base logs directory
-LOG_DIR="/ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/sub_daily_data/r8/${FREQ}_logs_pressure"
+LOG_DIR="edit/${FREQ}_logs_pressure"
 
 # -----------------------------
 # Environment setup
@@ -112,3 +112,4 @@ ELAPSED=$((END_TIME - START_TIME))
 
 echo "📑 Logs available in $LOG_DIR"
 echo "📄 Summary written to $SUMMARY_FILE"
+

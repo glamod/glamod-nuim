@@ -198,12 +198,14 @@ if __name__ == "__main__":
     parser.add_argument("--final_dir")
     parser.add_argument("--batch_size", type=int, default=50)
     parser.add_argument("--job_id", default="job_xx")
+    parser.add_argument("--log_dir", required=True)   # ✅ NEW
 
     args = parser.parse_args()
 
-    # Create freq-specific log dir
-    log_dir = f"/ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/sub_daily_data/r8/{args.freq}_logs"
+    # Use log_dir from args instead of hardcoding
+    log_dir = args.log_dir
     os.makedirs(log_dir, exist_ok=True)
+
 
     start_time = time.time()
 
@@ -223,4 +225,5 @@ if __name__ == "__main__":
     print(f"⏱ Total processing time: {format_seconds(total_elapsed)}")
     with open(os.path.join(args.output_dir, "total_runtime.txt"), "w") as f:
         f.write(f"Total processing time: {format_seconds(total_elapsed)} ({round(total_elapsed,2)} sec)\n")
+
 

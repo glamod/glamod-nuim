@@ -555,6 +555,7 @@ def main(station="", subset="", run_all=False, clobber=False):
                                  "report_meaning_of_time_stamp","report_duration","observed_variable",
                                  "units","observation_value","quality_flag","source_id","data_policy_licence",
                                  "report_type","value_significance"]]
+        df_lite_out.sort_values("report_timestamp")
 
         # extract columns for CDM Obs dataframe
         dfobs=merged_df[["observation_id","report_type","date_time","date_time_meaning",
@@ -803,3 +804,4 @@ if __name__ == "__main__":
 
         
         
+

@@ -234,7 +234,7 @@ def main(station="", subset="", run_all=False, clobber=False):
             continue
 
         # Set up the output filenames, and check if they exist
-        station_id=df.iloc[0]["Station_ID"] # NOTE: this is renamed below to "primary_station_id"
+        station_id=df.iloc[0]["STATION"] # NOTE: this is renamed below to "primary_station_id"
 
         outroot_cdmcore = os.path.join(utils.SUBDAILY_CDM_CORE_OUT_DIR, utils.SUBDAILY_CDM_CORE_FILE_ROOT)
         cdmcore_outfile = f"{outroot_cdmcore}{station_id}{OUT_EXTENSION}{OUT_COMPRESSION}"

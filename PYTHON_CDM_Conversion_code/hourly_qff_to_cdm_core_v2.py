@@ -422,10 +422,9 @@ def main(station="", subset="", run_all=False, clobber=False):
         dfslp = dfslp[FINAL_COLUMNS]
         dfslp = dfslp[dfslp.observation_value != "Null"]
 
-        # Make sure no decimal places and round value to required number of decimal places
-        dfslp['observation_value'] = dfslp['observation_value'].map(float)
-        dfslp['observation_value'] = (dfslp['observation_value']*100)
-        dfslp['observation_value'] = dfslp['observation_value'].map(int)
+      
+         # Make sure no decimal places and round value to required number of decimal places
+        dfslp['observation_value'] = (dfslp['observation_value'].astype(float) * 100).round(0).astype(int)
 
         dfslp = h_utils.fix_decimal_places(dfslp, do_obs_value=False)
 
@@ -471,9 +470,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         dfmslp = dfmslp[dfmslp.observation_value != "Null"]
 
         # Make sure no decimal places and round value to required number of decimal places
-        dfmslp['observation_value'] = dfmslp['observation_value'].map(float)
-        dfmslp['observation_value'] = (dfmslp['observation_value']*100)
-        dfmslp['observation_value'] = dfmslp['observation_value'].map(int)
+        dfmslp['observation_value'] = (dfmslp['observation_value'].astype(float) * 100).round(0).astype(int)
 
         dfmslp = h_utils.fix_decimal_places(dfmslp, do_obs_value=False)
 

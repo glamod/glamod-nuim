@@ -109,8 +109,11 @@ def extract_qc_info(var_frame, all_frame, var_name, do_report_id=False):
     var_frame.loc[var_frame['quality_flag'].notnull(), "quality_flag"] = 1
 
     # TODO: ensure this doesn't affect other columns in the dataframe.
-    var_frame = var_frame.fillna("Null")
-    var_frame.quality_flag[var_frame.quality_flag == "Null"] = 0
+   #Fill NaN values safely removes warnings
+    var_frame = var_frame.fillna("Null").infer_objects(copy=False)
+    
+    # Replace "Null" in the column using .loc
+    var_frame.loc[var_frame.quality_flag == "Null", "quality_flag"] = 0
 
     return var_frame
 

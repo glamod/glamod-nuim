@@ -8,7 +8,7 @@ Subroutines for sub-daily QFF to CDM conversion scripts
 
 import pandas as pd
 import numpy as np
-
+pd.set_option('future.no_silent_downcasting', True)
 HEIGHTS = {
     "temperature" : "2",
     "dew_point_temperature" : "2",

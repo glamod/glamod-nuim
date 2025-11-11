@@ -1,0 +1,32 @@
+Source name|GHCNd_source_Id|C3S_Source_Id
+ No source (i.e., data value missing)|Blank|
+ U.S. Cooperative Summary of the Day (NCDC DSI-3200)|0|161
+ CDMP Cooperative Summary of the Day (NCDC DSI-3206)|6|162
+ U.S. Cooperative Summary of the Day -- Transmitted via WxCoder3 (NCDC DSI-3207)|7|120
+ U.S. Automated Surface Observing System (ASOS)    real-time data (since January 1, 2006)|A|224
+ Australian data from the Australian Bureau of Meteorology|a|225
+ U.S. ASOS data for October 2000-December 2005 (NCDC  DSI-3211)|B|159
+ Belarus update|b|226
+ Environment Canada|C|227
+ Short time delay US National Weather Service CF6 daily summaries provided by the High Plains Regional Climate Center|D|228
+ European Climate Assessment and Dataset (Klein Tank            et al., 2002)|E|229
+ U.S. Fort data |F|230
+ Official Global Climate Observing System (GCOS) or  other government-supplied data|G|231
+ High Plains Regional Climate Center real-time data|H|160
+ International collection (non U.S. data received through personal contacts)|I|232
+ U.S. Cooperative Summary of the Day data digitized from  paper observer forms (from 2011 to present) |K|233
+ Monthly METAR Extract (additional ASOS data)|M|234
+ Community Collaborative Rain, Hail,and Snow (CoCoRaHS)|N|235
+" Data from several African countries that had been ""quarantined"", that is, withheld from public release    until permission was granted from the respective  meteorological services"|Q|236
+ NCEI Reference Network Database (Climate Reference Network and Regional Climate Reference Network)|R|237
+ All-Russian Research Institute of Hydrometeorological  Information-World Data Center|r|238
+" Global Summary of the Day (NCDC DSI-9618) NOTE: ""S"" values are derived from hourly synoptic reports exchanged on the Global Telecommunications System (GTS). Daily values derived in this fashion may differ significantly from ""true"" daily data, particularly for precipitation (i.e., use with caution)."|S|166
+ China Meteorological Administration/National Meteorological Information Center/ Climatic Data Center (http://cdc.cma.gov.cn)|s|239
+ SNOwpack TELemtry (SNOTEL) data obtained from the U.S. Department of Agriculture's Natural Resources Conservation Service|T|240
+ Remote Automatic Weather Station (RAWS) data obtained from the Western Regional Climate Center|U|241
+ Ukraine update|u|242
+ WBAN/ASOS Summary of the Day from NCDC's Integrated  Surface Data (ISD).  |W|163
+ U.S. First-Order Summary of the Day (NCDC DSI-3210)|X|164
+ Datzilla official additions or replacements |Z|165
+ Uzbekistan update|z|243
+Conagua Mexican Water Commission|m|196

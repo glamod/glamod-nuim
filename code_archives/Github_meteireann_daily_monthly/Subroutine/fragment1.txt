@@ -1,0 +1,46 @@
+      OPEN(UNIT=1,FILE=s_pathandname,FORM='formatted',
+     +  STATUS='OLD',ACTION='READ') 
+
+c     Read lines of data
+      ii=1
+      DO 
+       READ(1,1000,IOSTAT=io) s_linget1
+1000   FORMAT(a300)
+   
+       IF (io .GT. 0) THEN
+        WRITE(*,*) 'Check input. Something went wrong'
+        GOTO 100
+       ELSE IF (io .LT. 0) THEN 
+c        WRITE(*,*) 'end of file reached'
+        GOTO 100
+       ELSE
+        s_vec_line(ii)=TRIM(ADJUSTL(s_linget1))
+
+        IF (s_linget1(1:1).EQ.'(') THEN
+         i_eof=ii-2
+        ENDIF
+
+c        IF (i_lineflag.EQ.1) THEN 
+c         IF (ii_accum.GT.0) THEN 
+c        IF (TRIM(ADJUSTL(s_linget1(3:3))).EQ.'/') THEN 
+c        IF (ii.GT.18) THEN 
+c         s_vec_line(ii_accum)=TRIM(s_linget1)
+c         ii_accum=ii_accum+1
+c        ENDIF
+
+        ii=ii+1
+       ENDIF
+
+      ENDDO
+100   CONTINUE
+
+      CLOSE(UNIT=1)
+
+      l_lines=ii-1
+c      l_datalines=ii_accum-1
+      print*,'l_lines=',l_lines
+c      print*,'i_datecnt=',i_datecnt
+c      print*,'i_datepos=',i_datepos(1),i_datepos(2)
+      print*,'line12=',TRIM(s_vec_line(12))
+      print*,'line13=',TRIM(s_vec_line(13))
+      print*,'line end=',TRIM(s_vec_line(i_eof))

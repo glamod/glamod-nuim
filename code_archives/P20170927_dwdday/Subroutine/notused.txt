@@ -1,0 +1,105 @@
+c     skip this section code
+      GOTO 10
+
+      DO i=1,l_prod
+       s_date_single=s_day_date(i)
+       s_year =s_date_single(1:4)
+       s_month=s_date_single(5:6)
+       s_day  =s_date_single(7:8)
+
+c      Convert date to float
+       s_test4       =TRIM(s_year)
+       READ(s_test4,*) f_test
+       f_year        =f_test
+
+       s_test4       =TRIM(s_month)
+       READ(s_test4,*) f_test
+       f_month       =f_test
+
+       s_test4       =TRIM(s_day)
+       READ(s_test4,*) f_test
+       f_day         =f_test
+
+c      airt explicitly described
+       IF (f_year.LT.1987.0) THEN
+        s_dayavg_airt_stime(i)='0700'
+        s_dayavg_airt_timezone(i)='+'//s_whole_hour//s_minute_remain
+       ENDIF
+       IF (f_year.GE.1987.0) THEN
+        s_dayavg_airt_stime(i)='0730'
+        s_dayavg_airt_timezone(i)='+0100'
+       ENDIF
+
+c      pres not explicitly described
+       IF (f_year.LT.1987.0) THEN
+        s_dayavg_pres_stime(i)='0700'
+        s_dayavg_pres_timezone(i)='+'//s_whole_hour//s_minute_remain
+       ENDIF
+       IF (f_year.GE.1987.0) THEN
+        s_dayavg_pres_stime(i)='0730'
+        s_dayavg_pres_timezone(i)='+0100'
+       ENDIF
+
+c      relh explicity described
+       IF (f_year.LT.1987.0) THEN
+        s_dayavg_relh_stime(i)='0700'
+        s_dayavg_relh_timezone(i)='+'//s_whole_hour//s_minute_remain
+       ENDIF
+       IF (f_year.GE.1987.0) THEN
+        s_dayavg_relh_stime(i)='0730'
+        s_dayavg_relh_timezone(i)='+0100'
+       ENDIF
+
+c      wspd not explicitly described
+       IF (f_year.LT.1987.0) THEN
+        s_dayavg_wspd_stime(i)='0700'
+        s_dayavg_wspd_timezone(i)='+'//s_whole_hour//s_minute_remain
+       ENDIF
+       IF (f_year.GE.1987.0) THEN
+        s_dayavg_wspd_stime(i)='0730'
+        s_dayavg_wspd_timezone(i)='+0100'
+       ENDIF
+
+c      ppt not explicitly described
+       IF (f_year.LT.1987.0) THEN
+        s_daytot_ppt_stime(i)='0700'
+        s_daytot_ppt_timezone(i)='+'//s_whole_hour//s_minute_remain
+       ENDIF
+       IF (f_year.GE.1987.0) THEN
+        s_daytot_ppt_stime(i)='0730'
+        s_daytot_ppt_timezone(i)='+0100'
+       ENDIF
+
+c      snoacc not explicitly described
+       IF (f_year.LT.1987.0) THEN
+        s_daytot_snoacc_stime(i)='0700'
+        s_daytot_snoacc_timezone(i)='+'//s_whole_hour//s_minute_remain
+       ENDIF
+       IF (f_year.GE.1987.0) THEN
+        s_daytot_snoacc_stime(i)='0730'
+        s_daytot_snoacc_timezone(i)='+0100'
+       ENDIF
+c****
+c      airtk explicitly described
+       IF (f_year.LT.1987.0) THEN
+        s_dayavg_airtk_stime(i)='0700'
+        s_dayavg_airtk_timezone(i)='+'//s_whole_hour//s_minute_remain
+       ENDIF
+       IF (f_year.GE.1987.0) THEN
+        s_dayavg_airtk_stime(i)='0730'
+        s_dayavg_airtk_timezone(i)='+0100'
+       ENDIF
+
+c      pres not explicitly described
+       IF (f_year.LT.1987.0) THEN
+        s_dayavg_slpres_stime(i)='0700'
+        s_dayavg_slpres_timezone(i)='+'//s_whole_hour//s_minute_remain
+       ENDIF
+       IF (f_year.GE.1987.0) THEN
+        s_dayavg_slpres_stime(i)='0730'
+        s_dayavg_slpres_timezone(i)='+0100'
+       ENDIF
+
+      ENDDO 
+
+10    CONTINUE

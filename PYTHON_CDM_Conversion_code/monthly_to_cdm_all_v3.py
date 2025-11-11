@@ -4,7 +4,7 @@
 @author snoone
 edited 10/07/2025 snnone
 
-Convert monthly OBSERVATIONS files to Lite, Obs and hedaer .psv files (one per station).
+Convert monthly OBSERVATIONS files to Lite, Obs and header .psv files (one per station).
 
 s
 Call in one of three ways using:
@@ -42,15 +42,15 @@ INITIAL_VAR_COLUMNS = ["observation_id","report_type","date_time","date_time_mea
                       "latitude","longitude","height_of_station_above_sea_level"
                       ,"observed_variable","units","observation_value",
                       "value_significance","observation_duration","platform_type",
-                      "station_type","primary_station_id","station_name","quality_flag"
-                      ,"data_policy_licence"]
+                      "station_type","primary_station_id","station_name","quality_flag",
+                      "data_policy_licence"]
 
 FINAL_VAR_COLUMNS = ["observation_id","report_type","date_time","date_time_meaning",
                       "latitude","longitude","observation_height_above_station_surface",
                       "height_of_station_above_sea_level","observed_variable","units","observation_value",
                       "value_significance","observation_duration","platform_type",
-                      "station_type","primary_station_id","station_name","quality_flag"
-                      ,"data_policy_licence","source_id","primary_station_id_2"]
+                      "station_type","primary_station_id","station_name","quality_flag",
+                      "data_policy_licence","source_id","primary_station_id_2"]
 
 UNITS = {
     "SNWD" : "715",
@@ -228,7 +228,7 @@ def convert_to_kelvin(var_frame):
 
 def main(station="", subset="", run_all=False, clobber=False):
     """
-    Run processing of monthly OBSERVATIONS files to Lite, Obs and hedaer 
+    Run processing of monthly OBSERVATIONS files to Lite, Obs and header 
 
     Parameters
     ----------
@@ -622,4 +622,5 @@ if __name__ == "__main__":
 
         
         
+
 

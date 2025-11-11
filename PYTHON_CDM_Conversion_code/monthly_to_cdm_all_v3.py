@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 @author snoone
-edited 8/03/2022 snnone
+edited 10/07/2025 snnone
 
 Convert monthly OBSERVATIONS files to Lite, Obs and hedaer .psv files (one per station).
 
@@ -622,3 +622,4 @@ if __name__ == "__main__":
 
         
         
+

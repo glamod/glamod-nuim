@@ -119,7 +119,7 @@ def overwrite_conversion_precision_info(var_frame, var_name):
     var_frame["numerical_precision"] = NUMERICAL_PRECISION[var_name]
     var_frame["original_precision"] = ORIGINAL_PRECISION[var_name]
     var_frame["original_units"] = ORIGINAL_UNITS[var_name]
-   
+
     return var_frame
 
 
@@ -131,7 +131,7 @@ def main(station="", subset="", run_all=False, clobber=False):
     Parameters
     ----------
 
-    station : `str` 
+    station : `str`
         Single station ID to process
 
     subset : `str`
@@ -176,7 +176,7 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         # Read in the dataframe
         df = pd.read_csv(filename, sep="|", low_memory=False, compression="infer")
-        
+
         if df.shape[0] == 0:
             print(f"No data in file: {filename}")
             continue
@@ -192,13 +192,13 @@ def main(station="", subset="", run_all=False, clobber=False):
             if os.path.exists(cdmobs_outfile):
                 print(f"   Output files for {filename} already exist:")
                 print(f"     {cdmobs_outfile}")
-                print("   Skipping to next station")  
+                print("   Skipping to next station")
                 continue
             #  to next file in the loop
 
- 
+
         # Set up master df to extract each variable
-        #  Globally set some entries to 
+        #  Globally set some entries to
         df["report_id"] = ""
         df["observation_id"] = ""
         df["data_policy_licence"] = ""
@@ -210,10 +210,10 @@ def main(station="", subset="", run_all=False, clobber=False):
         df["z_coordinate"] = ""
         df["z_coordinate_type"] = ""
         df["observation_height_above_station_surface"] = ""
-        df["observed_variable"] = ""  
+        df["observed_variable"] = ""
         df["secondary_variable"] = ""
         df["observation_value"] = ""
-        df["value_significance"] = "" 
+        df["value_significance"] = ""
         df["secondary_value"] = ""
         df["units"] = ""
         df["code_table"] = ""
@@ -245,7 +245,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         df["advanced_uncertainty"] = ""
         df["advanced_homogenisation"] = ""
         df["advanced_assimilation_feedback"] = ""
-        df["secondary_id"] = ""  
+        df["secondary_id"] = ""
         df["source_id"] = ""
         df["source_record_id"] = ""
         df["primary_station_id"] = df["Station_ID"]
@@ -264,7 +264,7 @@ def main(station="", subset="", run_all=False, clobber=False):
 
 
         # =========================================================================================
-        # convert temperature changes for each variable    
+        # convert temperature changes for each variable
         dft = df[INITIAL_COLUMNS]
 
         # change for each variable to convert to cdm compliant values
@@ -274,7 +274,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         dft = h_utils.construct_extra_ids(dft, df, "temperature")
 
         dft = overwrite_conversion_precision_info(dft, "temperature")
-        
+
         # Extract QC information
         dft = h_utils.extract_qc_info(dft, df, "temperature")
 
@@ -294,11 +294,11 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         # Create observation_id field
         dft = h_utils.construct_obs_id(dft)
-        
+
         dft["report_id"] = dft["observation_id"].str[:-6]
 
         dft = dft[FINAL_COLUMNS]
-        
+
         df.dropna(subset = ["observation_value"], inplace=True)
 
         # Ensure correct number of decimal places
@@ -306,7 +306,7 @@ def main(station="", subset="", run_all=False, clobber=False):
 
 
         # =================================================================================
-        # convert dew point temperature changes for each variable    
+        # convert dew point temperature changes for each variable
         dfdpt = df[INITIAL_COLUMNS]
 
         # change for each variable to convert to cdm compliant values
@@ -340,9 +340,9 @@ def main(station="", subset="", run_all=False, clobber=False):
         dfdpt["report_id"] = dfdpt["observation_id"].str[:-6]
 
         dfdpt= dfdpt[FINAL_COLUMNS]
-        
+
         dfdpt.dropna(subset = ["observation_value"], inplace=True)
- 
+
         # Ensure correct number of decimal places
         dfdpt = h_utils.fix_decimal_places(dfdpt, do_obs_value=True)
 
@@ -359,7 +359,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         dfslp = h_utils.construct_extra_ids(dfslp, df, "station_level_pressure")
 
         dfslp = overwrite_conversion_precision_info(dfslp, "station_level_pressure")
-        
+
         # Extract QC information
         dfslp = h_utils.extract_qc_info(dfslp, df, "station_level_pressure")
 
@@ -368,7 +368,7 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         # remove unwanted missing data rows
         dfslp = h_utils.remove_missing_data_rows(dfslp, "station_level_pressure")
-        
+
         # concatenate columns for joining df for next step
         dfslp['source_id'] = dfslp['source_id'].astype(str).apply(lambda x: x.replace('.0', ''))
         dfslp['primary_station_id_2'] = dfslp['secondary_id'].astype(str) + '-' + dfslp['source_id'].astype(str)
@@ -378,7 +378,7 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         # Create observation_id field
         dfslp = h_utils.construct_obs_id(dfslp)
-        
+
         dfslp["report_id"] = dfslp["observation_id"].str[:-6]
 
         dfslp = dfslp[FINAL_COLUMNS]
@@ -396,18 +396,18 @@ def main(station="", subset="", run_all=False, clobber=False):
 
 
         # ===========================================================================================
-        # convert sea level presure 
+        # convert sea level presure
 
         dfmslp = df[INITIAL_COLUMNS]
 
         # change for each variable to convert to cdm compliant values
         dfmslp["observation_value"] = df["sea_level_pressure"].map(float)
         dfmslp["original_value"] = df["sea_level_pressure"]
-        
+
         dfmslp = h_utils.construct_extra_ids(dfmslp, df, "sea_level_pressure")
 
         dfmslp = overwrite_conversion_precision_info(dfmslp, "sea_level_pressure")
-        
+
         # Extract QC information
         dfmslp = h_utils.extract_qc_info(dfmslp, df, "sea_level_pressure")
 
@@ -426,12 +426,12 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         # Create observation_id field
         dfmslp = h_utils.construct_obs_id(dfmslp)
-        
+
         dfmslp["report_id"] = dfmslp["observation_id"].str[:-6]
 
         dfmslp = dfmslp[FINAL_COLUMNS]
 
-        dfmslp.dropna(subset = ["observation_value"], inplace=True) 
+        dfmslp.dropna(subset = ["observation_value"], inplace=True)
         null_index = dfmslp[dfmslp['observation_value'] == "Null"].index
         dfmslp = dfmslp.drop(index=null_index)
         dfmslp['observation_value'] = dfmslp['observation_value'].map(float)
@@ -440,7 +440,7 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         # Ensure correct number of decimal places
         dfmslp = h_utils.fix_decimal_places(dfmslp, do_obs_value=True)
-        
+
 
         # ===========================================================================
         # convert wind direction
@@ -455,7 +455,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         dfwd = h_utils.construct_extra_ids(dfwd, df, "wind_direction")
 
         dfwd = overwrite_conversion_precision_info(dfwd, "wind_direction")
-        
+
         # Mask wind_direction_Measurement_Code to retain only specified data
         dfwd = h_utils.apply_wind_measurement_codes(dfwd, ["", "N-Normal", "C-Calm", "V-Variable", "9-Missing"])
 
@@ -485,7 +485,7 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         # make sure no decimal places an dround value to reuqred decimal places
         dfwd.dropna(subset = ["observation_value"], inplace=True)
- 
+
         # Ensure correct number of decimal places
         dfwd['observation_value'] = dfwd['observation_value'].astype(str).apply(lambda x: x.replace('.0', ''))
         dfwd = h_utils.fix_decimal_places(dfwd, do_obs_value=False)
@@ -503,7 +503,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         dfws = h_utils.construct_extra_ids(dfws, df, "wind_speed")
 
         dfws = overwrite_conversion_precision_info(dfws, "wind_speed")
-        
+
         # Mask wind_speed_Measurement_Code to retain only specified data
         dfws = h_utils.apply_wind_measurement_codes(dfws, ["", "N-Normal", "C-Calm", "V-Variable", "9-Missing"])
 
@@ -526,7 +526,7 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         # Create observation_id field
         dfws = h_utils.construct_obs_id(dfws)
-        
+
         dfws["report_id"] = dfws["observation_id"].str[:-7] # WS is 3 digits
 
         dfws = dfws[FINAL_COLUMNS]
@@ -559,14 +559,18 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         # Save CDM obs table to directory
         try:
-            unique_variables = merged_df['observed_variable'].unique()
-            print(unique_variables)
-            merged_df.to_csv(cdmobs_outfile, index=False, sep="|", compression="infer")
-            print(f"    {cdmobs_outfile}")
-            
+            if len(merged_df) > 0:
+                unique_variables = merged_df['observed_variable'].unique()
+                print(unique_variables)
+                merged_df.to_csv(cdmobs_outfile, index=False, sep="|", compression="infer")
+                print(f"    {cdmobs_outfile}")
+            else:
+                print(f"No data to save, {cdmobs_outfile} not created")
+
+            print("Done")
         except IOError:
             # something wrong with file paths, despite checking
-            print(f"Cannot save datafile: {cdmlite_outfile}")
+            print(f"Cannot save datafile: {cdmobs_outfile}")
         except RuntimeError:
             print("Runtime error")
         # TODO add logging for these errors
@@ -595,11 +599,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     main(station=args.station, subset=args.subset, run_all=args.run_all, clobber=args.clobber)
-    
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
+
 

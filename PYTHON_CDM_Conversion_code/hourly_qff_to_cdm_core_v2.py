@@ -272,7 +272,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         df["observation_id"] = ""
         df["data_policy_licence"] = ""
         df["primary_station_id"] = df["STATION"]
-        df["secondary_id"] = ""                                  
+        df["secondary_id"] = ""
         df["station_name"] = df["Station_name"]
         df["quality_flag"] = ""
         df["latitude"] = pd.to_numeric(df["LATITUDE"], errors='coerce')
@@ -650,10 +650,13 @@ def main(station="", subset="", run_all=False, clobber=False):
         #   name the cdm_core files e.g. cdm_core _"insert date of run"_EG000062417.psv)
         try:
             # Save CDM core table to directory
-            unique_variables = merged_df['observed_variable'].unique()
-            print(unique_variables)
-            merged_df.to_csv(cdmcore_outfile, index=False, sep="|", compression="infer")
-            print(f"    {cdmcore_outfile}")
+            if len(merged_df) > 0:
+                unique_variables = merged_df['observed_variable'].unique()
+                print(unique_variables)
+                merged_df.to_csv(cdmcore_outfile, index=False, sep="|", compression="infer")
+                print(f"    {cdmcore_outfile}")
+            else:
+                print(f"No data to save, {cdmcore_outfile} not created")
 
             # Extract subsets of variables
             #    E.g.: slp and mslp for 20cr Ed Hawkins
@@ -669,8 +672,10 @@ def main(station="", subset="", run_all=False, clobber=False):
                     file_path = f"{utils.EXTRACTION_FILE_PATH}/{station_id}_{utils.EXTRACTION_FILE_NAME}.psv"
 
                     # Save the group to a pipe-separated file
-                    group_df.to_csv(file_path, sep='|', index=False, compression="infer")
-
+                    if len(group_df) > 0:
+                        group_df.to_csv(file_path, sep='|', index=False, compression="infer")
+                    else:
+                        print(f"No data to save, {file_path} not created")
 
             # Save QC table to directory
             qc_merged_df=pd.concat([qcdpt,qct,qcslp,qcmslp,qcwd,qcws], axis=0)
@@ -684,9 +689,13 @@ def main(station="", subset="", run_all=False, clobber=False):
             qc_merged_df['qc_method'] = qc_merged_df['qc_method'].str[:-1]
             qc_station_id=merged_df.iloc[0]["primary_station_id"]
             unique_qc_methods = qc_merged_df['qc_method'].unique()
-            print(unique_qc_methods)
-            qc_merged_df.to_csv(qc_outfile, index=False, sep="|", compression="infer")
-            print(f"   {qc_outfile}")
+            if len(qc_merged_df) > 0:
+                print(unique_qc_methods)
+                qc_merged_df.to_csv(qc_outfile, index=False, sep="|", compression="infer")
+                print(f"   {qc_outfile}")
+            else:
+                print(f"No data to save, {qc_outfile} not created")
+
             print("    Done")
         except IOError:
             # something wrong with file paths, despite checking

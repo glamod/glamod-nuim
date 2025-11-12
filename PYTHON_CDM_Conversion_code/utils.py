@@ -21,7 +21,7 @@ config = configparser.ConfigParser()
 config.read(os.path.join(os.path.abspath(os.path.dirname( __file__ )), CONFIG_FILE))
 
 # -----------------
-# Subdaily/daily/monthly 
+# Subdaily/daily/monthly
 # Paths
 SUBDAILY_QFF_IN_DIR = config.get("Paths", "subdaily_qff_indir")
 SUBDAILY_HEAD_IN_DIR = config.get("Paths", "subdaily_cdmhead_indir")
@@ -58,7 +58,6 @@ for path in (SUBDAILY_CDM_LITE_OUT_DIR,
              MONTHLY_CDM_HEAD_OUT_DIR,
              ):
     os.makedirs(path, exist_ok=True)
-
 
 # Files
 SUBDAILY_CDM_LITE_FILE_ROOT = config.get("Filenames", "subdaily_cdmlite_file")
@@ -152,7 +151,7 @@ def get_station_list_to_process(indir, extension, station="", subset="", run_all
     extension : `str`
         Filename extension of the input files
 
-    station : `str` 
+    station : `str`
         Single station ID to process
 
     subset : `str`
@@ -169,7 +168,7 @@ def get_station_list_to_process(indir, extension, station="", subset="", run_all
     if station != "":
         print(f"Single station run: {station}")
         all_filenames = [os.path.join(indir, f"{prepend}{station}{extension}")]
-        
+
     elif subset != "":
         print(f"Subset of stations run defined in: {subset}")
         # Allows for parallelisation
@@ -186,11 +185,11 @@ def get_station_list_to_process(indir, extension, station="", subset="", run_all
         except IOError:
             print(f"Subset file {subset} cannot be found")
             all_filenames = []
-        
+
         except OSError:
             print(f"Subset file {subset} cannot be found")
             all_filenames = []
-        
+
     elif run_all:
         print(f"All stations run in {indir}")
         # no prepend necessary as working from directory listing

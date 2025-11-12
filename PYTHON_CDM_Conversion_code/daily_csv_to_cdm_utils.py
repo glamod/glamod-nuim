@@ -27,6 +27,7 @@ SOURCE_FLAGS = {
     "D" : "228",
     "E" : "229",
     "F" : "230",
+    "f" : "408",
     "G" : "231",
     "H" : "160",
     "I" : "232",
@@ -269,7 +270,7 @@ def convert_values(var_frame, var_name, field_name, kelvin=False):
     elif var_name == "WESD":
         var_frame[field_name] = np.where(var_frame['observed_variable'] == 'WESD',
                                          var_frame[field_name] / 10,
-                                         var_frame[field_name]).round(2)  
+                                         var_frame[field_name]).round(2)
     elif var_name == "AWND":
         pass
 

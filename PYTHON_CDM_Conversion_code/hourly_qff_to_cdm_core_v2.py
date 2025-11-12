@@ -234,7 +234,7 @@ def main(station="", subset="", run_all=False, clobber=False):
             continue
 
         # Set up the output filenames, and check if they exist
-        station_id=df.iloc[0]["Station_ID"] # NOTE: this is renamed below to "primary_station_id"
+        station_id=df.iloc[0]["STATION"] # NOTE: this is renamed below to "primary_station_id"
 
         outroot_cdmcore = os.path.join(utils.SUBDAILY_CDM_CORE_OUT_DIR, utils.SUBDAILY_CDM_CORE_FILE_ROOT)
         cdmcore_outfile = f"{outroot_cdmcore}{station_id}{OUT_EXTENSION}{OUT_COMPRESSION}"
@@ -422,12 +422,19 @@ def main(station="", subset="", run_all=False, clobber=False):
         dfslp = dfslp[FINAL_COLUMNS]
         dfslp = dfslp[dfslp.observation_value != "Null"]
 
-        # Make sure no decimal places and round value to required number of decimal places
-        dfslp['observation_value'] = dfslp['observation_value'].map(float)
-        dfslp['observation_value'] = (dfslp['observation_value']*100)
-        dfslp['observation_value'] = dfslp['observation_value'].map(int)
+      
+         # Make sure no decimal places and round value to required number of decimal places
+        dfslp['observation_value'] = (dfslp['observation_value'].astype(float) * 100).round(0).astype(int)
+
+
+        dfslp['observation_value'] = pd.to_numeric(dfslp['observation_value'], errors='coerce') \
+                              .mul(100) \
+                              .round(0) \
+                              .astype('Int64') \
+                              .astype(str)
 
         dfslp = h_utils.fix_decimal_places(dfslp, do_obs_value=False)
+
 
         #===========================================================================================
         # Convert sea level pressure to CDM Core
@@ -471,9 +478,13 @@ def main(station="", subset="", run_all=False, clobber=False):
         dfmslp = dfmslp[dfmslp.observation_value != "Null"]
 
         # Make sure no decimal places and round value to required number of decimal places
-        dfmslp['observation_value'] = dfmslp['observation_value'].map(float)
-        dfmslp['observation_value'] = (dfmslp['observation_value']*100)
-        dfmslp['observation_value'] = dfmslp['observation_value'].map(int)
+        dfmslp['observation_value'] = (dfmslp['observation_value'].astype(float) * 100).round(0).astype(int)
+
+        dfmslp['observation_value'] = pd.to_numeric(dfmslp['observation_value'], errors='coerce') \
+                              .mul(100) \
+                              .round(0) \
+                              .astype('Int64') \
+                              .astype(str)
 
         dfmslp = h_utils.fix_decimal_places(dfmslp, do_obs_value=False)
 
@@ -522,6 +533,12 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         # Make sure no decimal places and round value to required number of decimal places
         dfwd['observation_value'] = dfwd['observation_value'].astype(str).apply(lambda x: x.replace('.0', ''))
+
+        dfwd['observation_value'] = pd.to_numeric(dfwd['observation_value'], errors='coerce') \
+                             .round(0) \
+                             .astype('Int64') \
+                             .astype(str)
+
         dfwd = h_utils.fix_decimal_places(dfwd, do_obs_value=False)
 
         #===========================================================================

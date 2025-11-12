@@ -296,7 +296,7 @@ def main(station="", subset="", run_all=False, clobber=False):
                 df.to_csv(cdmobs_outfile, index=False, sep="|", compression="infer")
                 print(f"    {cdmobs_outfile}")
             else:
-                print(f"No data to sace, {cdmobs_outfile} not created")
+                print(f"No data to save, {cdmobs_outfile} not created")
 
             print("Done")
         except IOError:

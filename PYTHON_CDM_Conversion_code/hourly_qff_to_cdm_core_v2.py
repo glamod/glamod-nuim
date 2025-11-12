@@ -105,7 +105,7 @@ def construct_report_type(var_frame, all_frame, id_field):
     except AttributeError:
         # if Station ID is numbers only (misformed)
         var_frame["report_type"] = '0'
-    
+
     return var_frame
 
 
@@ -142,29 +142,29 @@ def construct_qc_df(var_frame):
 
     # restrict to required columns
     qc_frame = qc_frame[["report_id","observation_id","qc_method","quality_flag"]]
-    
+
     # final changes
     qc_frame["quality_flag"] = pd.to_numeric(qc_frame["quality_flag"], errors='coerce')
     qc_frame = qc_frame.fillna("Null")
     qc_frame = qc_frame[qc_frame['quality_flag'] != 0]
 
     return qc_frame
-    
-        
+
+
 def extract_report_id(obs_id):
     """
     Function to split observation id and return a new report id
 
     obs_id : `str`
         String to parse
-    
+
     returns : `str`
     """
-    
+
     parts = obs_id.split('-')
     report_id = '-'.join(parts[:-2])
     return report_id
-    
+
 
 def main(station="", subset="", run_all=False, clobber=False):
     """
@@ -173,7 +173,7 @@ def main(station="", subset="", run_all=False, clobber=False):
     Parameters
     ----------
 
-    station : `str` 
+    station : `str`
         Single station ID to process
 
     subset : `str`
@@ -212,7 +212,7 @@ def main(station="", subset="", run_all=False, clobber=False):
     # Read in the location dataframe (only read in if needed - Rel 7 fix)
     location_df = pd.read_csv(utils.SUBDAILY_STATION_RECORD_ENTRIES_LOCATION, encoding='latin-1')
     location_df = location_df.astype(str)
-    
+
    # To start at begining of files
     for filename in all_filenames:
 
@@ -234,7 +234,7 @@ def main(station="", subset="", run_all=False, clobber=False):
             continue
 
         # Set up the output filenames, and check if they exist
-        station_id=df.iloc[0]["Station_ID"] # NOTE: this is renamed below to "primary_station_id"
+        station_id=df.iloc[0]["STATION"] # NOTE: this is renamed below to "primary_station_id"
 
         outroot_cdmcore = os.path.join(utils.SUBDAILY_CDM_CORE_OUT_DIR, utils.SUBDAILY_CDM_CORE_FILE_ROOT)
         cdmcore_outfile = f"{outroot_cdmcore}{station_id}{OUT_EXTENSION}{OUT_COMPRESSION}"
@@ -250,11 +250,11 @@ def main(station="", subset="", run_all=False, clobber=False):
                 print(f"     {cdmcore_outfile}")
                 print(f"     {qc_outfile}")
                 print("   Skipping to next station")
-                continue 
+                continue
             #  to next file in the loop
 
         # Set up master dataframe to extract each variable
-        #  Globally set some entries to 
+        #  Globally set some entries to
         df["report_type"] = "0"
         df["units"] = ""
         df["source_id"] = ""
@@ -263,8 +263,8 @@ def main(station="", subset="", run_all=False, clobber=False):
         df["date_time_meaning"] = "1"
         df["latitude"] = ""
         df["longitude"] = ""
-        df["observed_variable"] = ""  
-        df["value_significance"] = "" 
+        df["observed_variable"] = ""
+        df["value_significance"] = ""
         df["observation_duration"] = ""
         df["observation_value"] = ""
         df["platform_type"] = ""
@@ -272,7 +272,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         df["observation_id"] = ""
         df["data_policy_licence"] = ""
         df["primary_station_id"] = df["STATION"]
-        df["secondary_id"] = ""                                   
+        df["secondary_id"] = ""                                  
         df["station_name"] = df["Station_name"]
         df["quality_flag"] = ""
         df["latitude"] = pd.to_numeric(df["LATITUDE"], errors='coerce')
@@ -281,13 +281,13 @@ def main(station="", subset="", run_all=False, clobber=False):
         df["longitude"]=  df["longitude"].round(3)
         df["Timestamp2"] = df["Year"].map(str) + "-" +\
                            df["Month"].map("{:02.0f}".format) + "-" +\
-                           df["Day"].map("{:02.0f}".format)  
+                           df["Day"].map("{:02.0f}".format)
         df["Seconds"] = "00"
         df["offset"] = "+00"
         df["date_time"] = df["Timestamp2"].map(str) + " " +\
                           df["Hour"].map("{:02.0f}".format) + ":" + \
                           df["Minute"].map("{:02.0f}".format) + ":" + \
-                          df["Seconds"].map(str) 
+                          df["Seconds"].map(str)
         df['date_time'] =  pd.to_datetime(df['date_time'], format="%Y-%m-%d %H:%M:%S")
         df['date_time'] = df['date_time'].dt.strftime("%Y-%m-%d %H:%M:%S")
         df.date_time = df.date_time + '+00'
@@ -311,13 +311,13 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         # Remove unwanted missing data rows
         dft = h_utils.remove_missing_data_rows(dft, "temperature")
-        
+
         # Concatenate columns for joining dataframe in next step
         dft['source_id'] = dft['source_id'].astype(str).apply(lambda x: x.replace('.0', ''))
         dft['primary_station_id_2'] = dft['secondary_id'].astype(str) + '-' + \
                                       dft['source_id'].astype(str)
         dft["observation_value"] = pd.to_numeric(dft["observation_value"], errors='coerce')
-        
+
         # Add data policy and record number to dataframe
         dft = h_utils.add_data_policy(dft, data_policy_df)
 
@@ -356,13 +356,13 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         # Remove unwanted mising data rows
         dfdpt = h_utils.remove_missing_data_rows(dfdpt, "dew_point_temperature")
-        
+
         # Concatenate columns for joining dataframe for next step
         dfdpt['source_id'] = dfdpt['source_id'].astype(str).apply(lambda x: x.replace('.0', ''))
         dfdpt['primary_station_id_2'] = dfdpt['secondary_id'].astype(str) + '-' + \
                                         dfdpt['source_id'].astype(str)
         dfdpt["observation_value"] = pd.to_numeric(dfdpt["observation_value"],errors='coerce')
-        
+
         # Add data policy and record numbers to dataframe
         dfdpt = h_utils.add_data_policy(dfdpt, data_policy_df)
 
@@ -391,7 +391,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         # Change for each variable to convert to CDM compliant values
         dfslp["observation_value"] = df["station_level_pressure"]
         dfslp = h_utils.construct_extra_ids(dfslp, df, "station_level_pressure")
- 
+
         # Extract QC information for QC tables
         dfslp = h_utils.extract_qc_info(dfslp, df, "station_level_pressure", do_report_id=True)
 
@@ -400,12 +400,12 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         # Remove unwanted missing data rows
         dfslp = h_utils.remove_missing_data_rows(dfslp, "station_level_pressure")
-        
+
         # Concatenate columns for joining dataframe for next step
         dfslp['source_id'] = dfslp['source_id'].astype(str).apply(lambda x: x.replace('.0', ''))
         dfslp['primary_station_id_2'] = dfslp['secondary_id'].astype(str) + '-' + \
                                         dfslp['source_id'].astype(str)
-        
+
         # Add data policy and record numbers to dataframe
         dfslp = h_utils.add_data_policy(dfslp, data_policy_df)
 
@@ -426,7 +426,15 @@ def main(station="", subset="", run_all=False, clobber=False):
          # Make sure no decimal places and round value to required number of decimal places
         dfslp['observation_value'] = (dfslp['observation_value'].astype(float) * 100).round(0).astype(int)
 
+
+        dfslp['observation_value'] = pd.to_numeric(dfslp['observation_value'], errors='coerce') \
+                              .mul(100) \
+                              .round(0) \
+                              .astype('Int64') \
+                              .astype(str)
+
         dfslp = h_utils.fix_decimal_places(dfslp, do_obs_value=False)
+
 
         #===========================================================================================
         # Convert sea level pressure to CDM Core
@@ -447,12 +455,12 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         # Remove unwanted missing data rows
         dfmslp = h_utils.remove_missing_data_rows(dfmslp, "sea_level_pressure")
-        
+
         # Concatenate columns for joining dataframe for next step
         dfmslp['source_id'] = dfmslp['source_id'].astype(str).apply(lambda x: x.replace('.0', ''))
         dfmslp['primary_station_id_2'] = dfmslp['secondary_id'].astype(str) + '-' + \
                                          dfmslp['source_id'].astype(str)
-        
+
         # Add data policy and record numbers to dataframe
         dfmslp = h_utils.add_data_policy(dfmslp, data_policy_df)
 
@@ -471,6 +479,12 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         # Make sure no decimal places and round value to required number of decimal places
         dfmslp['observation_value'] = (dfmslp['observation_value'].astype(float) * 100).round(0).astype(int)
+
+        dfmslp['observation_value'] = pd.to_numeric(dfmslp['observation_value'], errors='coerce') \
+                              .mul(100) \
+                              .round(0) \
+                              .astype('Int64') \
+                              .astype(str)
 
         dfmslp = h_utils.fix_decimal_places(dfmslp, do_obs_value=False)
 
@@ -497,12 +511,12 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         # Remove unwanted missing data rows
         dfwd = h_utils.remove_missing_data_rows(dfwd, "wind_direction")
-        
+
         # Concatenate columns for joining dataframe for next step
         dfwd['source_id'] = dfwd['source_id'].astype(str).apply(lambda x: x.replace('.0', ''))
         dfwd['primary_station_id_2'] = dfwd['secondary_id'].astype(str) + '-' + \
                                        dfwd['source_id'].astype(str)
-        
+
         # Add data policy and record numbers to datframe
         dfwd = h_utils.add_data_policy(dfwd, data_policy_df)
         # Restrict to required columns
@@ -519,8 +533,14 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         # Make sure no decimal places and round value to required number of decimal places
         dfwd['observation_value'] = dfwd['observation_value'].astype(str).apply(lambda x: x.replace('.0', ''))
+
+        dfwd['observation_value'] = pd.to_numeric(dfwd['observation_value'], errors='coerce') \
+                             .round(0) \
+                             .astype('Int64') \
+                             .astype(str)
+
         dfwd = h_utils.fix_decimal_places(dfwd, do_obs_value=False)
-        
+
         #===========================================================================
         # Convert wind speed to CDM Core
         dfws = df[INITIAL_COLUMNS]
@@ -580,13 +600,13 @@ def main(station="", subset="", run_all=False, clobber=False):
             print(f"No data in merged CDM Core file for: {filename}")
             continue
 
-       
+
         # rename merged_df columns to cdm-core and create report_id
         merged_df["height_of_station_above_sea_level"] = df["height_of_station_above_sea_level"]
         merged_df["report_timestamp"] = merged_df["date_time"]
         merged_df["report_meaning_of_time_stamp"] = merged_df["date_time_meaning"]
         merged_df["report_duration"] = merged_df["observation_duration"]
-             
+
         # Apply the function to create the new column report_id
         merged_df['report_id'] = merged_df['observation_id'].apply(extract_report_id)
 
@@ -603,9 +623,9 @@ def main(station="", subset="", run_all=False, clobber=False):
                                  "report_meaning_of_time_stamp","report_duration","observed_variable",
                                  "units","observation_value","quality_flag","source_id","data_policy_licence",
                                  "report_type","value_significance"]]
-        
+
         # Release 7 only
-        # add location information  from location.csv to overwrite 
+        # add location information  from location.csv to overwrite
         merged_df = h_utils.add_location(merged_df, location_df)
 
         # This duplication from 10 lines above is apparently needed.
@@ -617,10 +637,10 @@ def main(station="", subset="", run_all=False, clobber=False):
 
         # Convert the column to numeric first
         merged_df['height_of_station_above_sea_level'] = pd.to_numeric(merged_df['height_of_station_above_sea_level'])
-        
+
         # Then round or convert to integers
         merged_df['height_of_station_above_sea_level'] = merged_df['height_of_station_above_sea_level'].round(0).astype(int)
-        
+
         merged_df["latitude"] = pd.to_numeric(merged_df["latitude"],errors='coerce')
         merged_df["longitude"] = pd.to_numeric(merged_df["longitude"],errors='coerce')
         merged_df["latitude"]= merged_df["latitude"].round(3)

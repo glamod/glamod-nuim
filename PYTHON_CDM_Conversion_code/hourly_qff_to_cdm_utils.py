@@ -8,7 +8,7 @@ Subroutines for sub-daily QFF to CDM conversion scripts
 
 import pandas as pd
 import numpy as np
-
+pd.set_option('future.no_silent_downcasting', True)
 HEIGHTS = {
     "temperature" : "2",
     "dew_point_temperature" : "2",
@@ -149,7 +149,7 @@ def remove_missing_data_rows(var_frame, var_name):
 
     # TODO: These lines won't apply to CDM lite as all NaN's replaced with "Null" (capital N)
     #  by extract_qc_info()
-    var_frame = var_frame.fillna("null")
+    var_frame = var_frame.fillna("null").infer_objects(copy=False)
     var_frame = var_frame.replace({"null" : f"{MISSING_DATA[var_name]}"})
     var_frame = var_frame[var_frame.observation_value != f"{MISSING_DATA[var_name]}"]
     try:

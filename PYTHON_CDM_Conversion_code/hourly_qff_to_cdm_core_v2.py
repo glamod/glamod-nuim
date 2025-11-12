@@ -272,7 +272,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         df["observation_id"] = ""
         df["data_policy_licence"] = ""
         df["primary_station_id"] = df["STATION"]
-        df["secondary_id"] = ""
+        df["secondary_id"] = ""                                  
         df["station_name"] = df["Station_name"]
         df["quality_flag"] = ""
         df["latitude"] = pd.to_numeric(df["LATITUDE"], errors='coerce')
@@ -422,10 +422,9 @@ def main(station="", subset="", run_all=False, clobber=False):
         dfslp = dfslp[FINAL_COLUMNS]
         dfslp = dfslp[dfslp.observation_value != "Null"]
 
-        # Make sure no decimal places and round value to required number of decimal places
-        dfslp['observation_value'] = dfslp['observation_value'].map(float)
-        dfslp['observation_value'] = (dfslp['observation_value']*100)
-        dfslp['observation_value'] = dfslp['observation_value'].map(int)
+      
+         # Make sure no decimal places and round value to required number of decimal places
+        dfslp['observation_value'] = (dfslp['observation_value'].astype(float) * 100).round(0).astype(int)
 
 
         dfslp['observation_value'] = pd.to_numeric(dfslp['observation_value'], errors='coerce') \
@@ -479,9 +478,7 @@ def main(station="", subset="", run_all=False, clobber=False):
         dfmslp = dfmslp[dfmslp.observation_value != "Null"]
 
         # Make sure no decimal places and round value to required number of decimal places
-        dfmslp['observation_value'] = dfmslp['observation_value'].map(float)
-        dfmslp['observation_value'] = (dfmslp['observation_value']*100)
-        dfmslp['observation_value'] = dfmslp['observation_value'].map(int)
+        dfmslp['observation_value'] = (dfmslp['observation_value'].astype(float) * 100).round(0).astype(int)
 
         dfmslp['observation_value'] = pd.to_numeric(dfmslp['observation_value'], errors='coerce') \
                               .mul(100) \

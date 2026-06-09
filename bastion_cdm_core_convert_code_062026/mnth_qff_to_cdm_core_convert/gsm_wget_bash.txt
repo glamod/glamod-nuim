@@ -1,0 +1,12 @@
+wget -i gsom_get_list_r8.1.txt
+
+cd C:/Users/snoone/Dropbox/Copernicus_2021/admin/8th_data_release/code/monthly
+python monthly_to_cdm_all_v2.py --subset mnth-ls1.txt -running
+cd C:/Users/snoone/Dropbox/Copernicus_2021/admin/8th_data_release/code/monthly
+python monthly_to_cdm_all_v2.py --subset mnth-ls2.txt-running
+cd C:/Users/snoone/Dropbox/Copernicus_2021/admin/8th_data_release/code/monthly
+python monthly_to_cdm_all_v2.py --subset mnth-ls3.txt
+cd C:/Users/snoone/Dropbox/Copernicus_2021/admin/8th_data_release/code/monthly
+python monthly_to_cdm_all_v2.py --subset mnth-ls4.txt
+
+gzip -d *.gz

@@ -1,0 +1,66 @@
+#!/bin/bash
+# ------------------------------------------------------
+# Stable high-performance QFF processing
+# Files processed in parallel
+# One output per worker
+# ------------------------------------------------------
+
+set -euo pipefail
+
+CODE_DIR="/ichec/work/glamod/land_project_workspace/code/r8.1_202602/hourly"
+DATA_DIR="/ichec/work/glamod/land_project_workspace/data/level1/level1c_sub_daily_data_qff/release_8"
+
+OUT_DIR="outputs_qff"
+LOG_DIR="logs_qff"
+
+cd "$CODE_DIR" || exit 1
+
+NCORES=75
+export OMP_NUM_THREADS=1
+
+mkdir -p "$OUT_DIR" "$LOG_DIR"
+
+rm -f "$OUT_DIR"/*.csv "$LOG_DIR"/*.log
+
+echo "Finding files..."
+
+find "$DATA_DIR" -type f \( -name "*.qff" -o -name "*.gz" \) | sort > all_files.txt
+
+TOTAL=$(wc -l < all_files.txt)
+echo "Total files: $TOTAL"
+
+if [ "$TOTAL" -eq 0 ]; then
+    echo "No files found."
+    exit 1
+fi
+
+echo "Running parallel across $NCORES cores..."
+
+# 🔥 Each file processed independently
+parallel -j "$NCORES" --bar --halt soon,fail=1 \
+"python count_qff_observations_vars.py {} $OUT_DIR/{/.}.csv" \
+:::: all_files.txt
+
+echo "Merging outputs..."
+
+# Find generated CSVs safely
+CSV_FILES=$(ls "$OUT_DIR"/*.csv 2>/dev/null || true)
+
+if [ -z "$CSV_FILES" ]; then
+    echo "No CSV files generated."
+    exit 1
+fi
+
+FIRST=$(echo "$CSV_FILES" | head -n 1)
+
+head -n 1 "$FIRST" > final_qff_count.csv
+
+for f in $CSV_FILES; do
+    tail -n +2 "$f" >> final_qff_count.csv
+done
+
+echo "Cleaning temporary files..."
+rm -f "$OUT_DIR"/*.csv
+
+echo "DONE ✅"
+echo "Final file: final_qff_count.csv"

@@ -1,0 +1,138 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Jan 27 10:57:52 2026
+
+@author: snoone
+"""
+
+# -*- coding: utf-8 -*-
+"""
+Monthly aggregation from parquet files
+
+Counts per (year_month, observed_variable):
+- total observations
+- quality_flag pass (0)
+- quality_flag fail (1)
+- number of unique source_id
+"""
+
+import os
+import re
+from glob import glob
+from collections import defaultdict
+
+import pyarrow.parquet as pq
+import pandas as pd
+
+# ------------------------------------------------------------
+# Paths
+# ------------------------------------------------------------
+INPUT_DIR = (
+    "/ichec/work/glamod/land_project_workspace/data/level2/"
+    "cdm_obs_core/sub_daily_data/r8.1/final_merged_pq/all"
+)
+
+OUTPUT_DIR = (
+    "/ichec/work/glamod/land_project_workspace/code/r8.1_pq_code"
+)
+
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+# ------------------------------------------------------------
+# Variable mapping
+# ------------------------------------------------------------
+VAR_MAP = {
+    57: "station_level_pressure",
+    58: "sea_level_pressure",
+    85: "temperature",
+    107: "wind_direction",
+    106: "wind_speed",
+    36: "dew_point_temperature",
+}
+
+TARGET_VARS = set(VAR_MAP.keys())
+
+# ------------------------------------------------------------
+# Regex to extract YYYY_MM
+# ------------------------------------------------------------
+PATTERN = re.compile(r"_(\d{4}_\d{2})\.pq$")
+
+# ------------------------------------------------------------
+# Storage dictionaries
+# ------------------------------------------------------------
+n_obs = defaultdict(int)
+n_pass = defaultdict(int)
+n_fail = defaultdict(int)
+source_ids = defaultdict(set)
+
+# ------------------------------------------------------------
+# Process parquet files (memory safe)
+# ------------------------------------------------------------
+pq_files = sorted(glob(os.path.join(INPUT_DIR, "*.pq")))
+print(f"Found {len(pq_files)} monthly parquet files")
+
+for f in pq_files:
+    name = os.path.basename(f)
+    m = PATTERN.search(name)
+    if not m:
+        continue
+
+    yyyy_mm = m.group(1)
+
+    # Read only needed columns
+    table = pq.read_table(
+        f,
+        columns=["observed_variable", "quality_flag", "source_id"]
+    )
+
+    df = table.to_pandas()
+
+    # Keep only target variables
+    df = df[df["observed_variable"].isin(TARGET_VARS)]
+
+    if df.empty:
+        continue
+
+    # --------------------------------------------------------
+    # Counts
+    # --------------------------------------------------------
+    for var_id, g in df.groupby("observed_variable"):
+        key = (yyyy_mm, var_id)
+
+        n_obs[key] += len(g)
+        n_pass[key] += (g["quality_flag"] == 0).sum()
+        n_fail[key] += (g["quality_flag"] == 1).sum()
+        source_ids[key].update(g["source_id"].unique())
+
+    print(f"Processed {yyyy_mm}")
+
+# ------------------------------------------------------------
+# Build DataFrame
+# ------------------------------------------------------------
+rows = []
+for (yyyy_mm, var_id) in n_obs.keys():
+    rows.append({
+        "year_month": yyyy_mm,
+        "observed_variable": var_id,
+        "variable_name": VAR_MAP[var_id],
+        "n_observations": n_obs[(yyyy_mm, var_id)],
+        "n_pass": n_pass[(yyyy_mm, var_id)],
+        "n_fail": n_fail[(yyyy_mm, var_id)],
+        "n_source_id": len(source_ids[(yyyy_mm, var_id)]),
+    })
+
+df = pd.DataFrame(rows)
+
+# Sort by date properly
+df["year"] = df["year_month"].str.slice(0, 4).astype(int)
+df["month"] = df["year_month"].str.slice(5, 7).astype(int)
+df = df.sort_values(["observed_variable", "year", "month"])
+
+# ------------------------------------------------------------
+# Save CSV
+# ------------------------------------------------------------
+csv_path = os.path.join(OUTPUT_DIR, "monthly_observation_counts_extended.csv")
+df.drop(columns=["year", "month"]).to_csv(csv_path, index=False)
+
+print(f"Saved CSV: {csv_path}")
+print("✅ All CSV written successfully")

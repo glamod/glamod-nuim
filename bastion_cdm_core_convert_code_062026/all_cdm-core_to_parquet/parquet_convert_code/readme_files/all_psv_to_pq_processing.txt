@@ -1,0 +1,371 @@
+# CDM-CORE TO PARQUET CONVERSION PIPELINE (R8.2)
+
+This document describes the standard workflow for converting CDM-Core datasets (**daily, monthly, and sub-daily**) into Parquet format on the new bastion machine.
+
+---
+
+## 1. Connect to the Bastion Host
+
+```bash
+ssh bastion
+ssh glamodproc.ichec.ie
+```
+
+---
+
+## 2. Change to the Conversion Code Directory
+
+```bash
+cd /ichec/work/glamod/land_project_workspace/code/git_code/bastion_cdm_core_convert_code_062026/all_cdm-core_to_parquet/parquet_convert_code
+```
+
+---
+
+## 3. Generate Station Lists
+
+Create a station list for the required timescale.
+
+### Daily
+
+```bash
+ls /ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/daily_data/r8.2/cdm_core \
+    > daily_station_list.txt
+```
+
+### Monthly
+
+```bash
+ls /ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/monthly_data/r8.2/cdm_core \
+    > monthly_station_list.txt
+```
+
+### Sub-daily
+
+```bash
+ls /ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/sub_daily_data/r8.2/r8.2_core \
+    > sub_daily_station_list.txt
+```
+
+---
+
+## 4. Create Balanced Processing Groups (A–E)
+
+Randomise and split station lists to distribute workload evenly across processing groups.
+
+### Daily
+
+```bash
+./split_stations_dy_list.sh
+```
+
+### Monthly
+
+```bash
+./split_stations_mnth_list.sh
+```
+
+### Sub-daily
+
+```bash
+./split_stations_sbdy_list.sh
+```
+
+---
+
+## 5. Standard Processing Workflow
+
+All timescales follow the same sequence:
+
+```text
+Create station list
+        ↓
+Split into balanced groups (A–E)
+        ↓
+Launch tmux session
+        ↓
+Run auto-scaling PSV → Parquet conversion
+        ↓
+Monitor processing
+        ↓
+Export logs
+        ↓
+Run interim merge
+        ↓
+Validate row counts
+        ↓
+Run final merge
+        ↓
+Validate outputs
+```
+
+---
+
+# DAILY PIPELINE
+
+## Start tmux Session
+
+```bash
+tmux new -s dy_pq1
+tmux attach -t dy_pq1
+```
+
+## Run Pipeline
+
+```bash
+./run_daily_all_parts.sh
+```
+
+This launches:
+
+```text
+run_psv_to_parquet_autoscale.sh
+    → auto-detects dataset frequency
+    → manages memory allocation
+    → executes psv_to_pq_memory_eff_v3.py
+```
+
+## Configuration
+
+| Variable          | Value                                                                                                                                       |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| INPUT_DIR         | `/ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/daily_data/r8.2/cdm_core`                                               |
+| OUTPUT_BASE       | `/ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/daily_data/r8.2/daily_pq_tmp`                                           |
+| FINAL_BASE        | `/ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/daily_data/r8.2/final_merged_pq`                                        |
+| LOG_BASE          | `/ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/r8.2_daily-logs`                                                        |
+| STATION_LIST_BASE | `/ichec/work/glamod/land_project_workspace/code/git_code/bastion_cdm_core_convert_code_062026/all_cdm-core_to_parquet/parquet_convert_code` |
+| PYTHON_ENV        | `/ichec/work/glamod/land_project_workspace/code/r8.1_202602/hourly/muenv/bin/python`                                                        |
+
+## Monitoring
+
+```bash
+ls -1 | wc -l
+wc -l job_*.checkpoint
+free -h
+```
+
+## Export Logs
+
+```bash
+./scp-via-bastion01 -i bastion \
+snoone@glamodproc.ichec.ie:/ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/r8.2_daily-logs/C/pq_processed_log_C.txt \
+/drives/C/Users/snoone/Dropbox/Copernicus_2025/admin/8.2_data_release/station_configuration_files/pq_processing/
+```
+
+## Interim Merge
+
+```bash
+source /ichec/work/glamod/land_project_workspace/code/r8.1_202602/hourly/muenv/bin/activate
+
+python initial_pq_batch_merge_dy_v2.py --max_workers 10
+```
+
+## Validate Row Counts
+
+```bash
+python count_rows_psv.py
+```
+
+## Final Merge
+
+```bash
+python final_merge_seq_dy.py \
+    --parent_input_dir /ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/daily_data/r8.2/final_merged_pq \
+    --output_dir /ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/daily_data/r8.2/final_merged_pq \
+    --max_workers 10
+```
+
+---
+
+# MONTHLY PIPELINE
+
+## Start tmux Session
+
+```bash
+tmux new -s mnth_pq1
+tmux attach -t mnth_pq1
+```
+
+## Run Pipeline
+
+```bash
+./run_monthly_all_parts.sh
+```
+
+This launches:
+
+```text
+run_psv_to_parquet_autoscale.sh
+    → auto-detects dataset frequency
+    → manages memory allocation
+    → executes psv_to_pq_memory_eff_v3.py
+```
+
+## Configuration
+
+| Variable          | Value                                                                                                                                       |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| INPUT_DIR         | `/ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/monthly_data/r8.2/cdm_core`                                             |
+| OUTPUT_BASE       | `/ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/monthly_data/r8.2/monthly_pq_tmp`                                       |
+| FINAL_BASE        | `/ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/monthly_data/r8.2/final_merged_pq`                                      |
+| LOG_BASE          | `/ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/r8.2_monthly-logs`                                                      |
+| STATION_LIST_BASE | `/ichec/work/glamod/land_project_workspace/code/git_code/bastion_cdm_core_convert_code_062026/all_cdm-core_to_parquet/parquet_convert_code` |
+| PYTHON_ENV        | `/ichec/work/glamod/land_project_workspace/code/r8.1_202602/hourly/muenv/bin/python`                                                        |
+
+## Monitoring
+
+```bash
+ls -1 | wc -l
+wc -l job_*.checkpoint
+free -h
+```
+
+## Export Logs
+
+```bash
+./scp-via-bastion01 -i bastion \
+snoone@glamodproc.ichec.ie:/ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/r8.2_monthly-logs/A/pq_processed_log_A.txt \
+/drives/C/Users/snoone/Dropbox/Copernicus_2025/admin/8.2_data_release/station_configuration_files/pq_processing/
+```
+
+## Interim Merge
+
+```bash
+source /ichec/work/glamod/land_project_workspace/code/r8.1_202602/hourly/muenv/bin/activate
+
+python initial_pq_batch_merge_mnth_v2.py --max_workers 10
+```
+
+## Validate Row Counts
+
+```bash
+python count_rows_psv.py
+```
+
+## Final Merge
+
+```bash
+python final_merge_seq_mnth.py \
+    --parent_input_dir /ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/monthly_data/r8.2/final_merged_pq \
+    --output_dir /ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/monthly_data/r8.2/final_merged_pq \
+    --max_workers 10
+```
+
+---
+
+# SUB-DAILY PIPELINE
+
+## Start tmux Session
+
+```bash
+tmux new -s sbdy_pq1
+tmux attach -t sbdy_pq1
+```
+
+## Run Pipeline
+
+```bash
+./run_sub_daily_all_parts.sh
+```
+
+This launches:
+
+```text
+run_psv_to_parquet_autoscale.sh
+    → auto-detects dataset frequency
+    → manages memory allocation
+    → executes psv_to_pq_memory_eff_v3.py
+```
+
+### Manual Execution (Optional)
+
+```bash
+./run_psv_to_parquet_autoscale.sh \
+    /ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/sub_daily_data/r8.2/r8.2_core \
+    /ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/sub_daily_data/r8.2/sub_daily_pq_tmp/A \
+    /ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/sub_daily_data/r8.2/final_merged_pq/A \
+    /ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/r8.2_sub_daily-logs/A \
+    /ichec/work/glamod/land_project_workspace/code/git_code/bastion_cdm_core_convert_code_062026/all_cdm-core_to_parquet/parquet_convert_code/sub_daily_station_list_A.txt \
+    /ichec/work/glamod/land_project_workspace/code/r8.1_202602/hourly/muenv/bin/python
+```
+
+## Configuration
+
+| Variable          | Value                                                                                                                                       |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| INPUT_DIR         | `/ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/sub_daily_data/r8.2/r8.2_core`                                          |
+| OUTPUT_BASE       | `/ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/sub_daily_data/r8.2/sub_daily_pq_tmp`                                   |
+| FINAL_BASE        | `/ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/sub_daily_data/r8.2/final_merged_pq`                                    |
+| LOG_BASE          | `/ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/r8.2_sub_daily-logs`                                                    |
+| STATION_LIST_BASE | `/ichec/work/glamod/land_project_workspace/code/git_code/bastion_cdm_core_convert_code_062026/all_cdm-core_to_parquet/parquet_convert_code` |
+| PYTHON_ENV        | `/ichec/work/glamod/land_project_workspace/code/r8.1_202602/hourly/muenv/bin/python`                                                        |
+
+## Monitoring
+
+```bash
+ls -1 | wc -l
+wc -l job_*.checkpoint
+free -h
+```
+
+## Export Logs
+
+```bash
+./scp-via-bastion01 -i bastion \
+snoone@glamodproc.ichec.ie:/ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/r8.2_sub_daily-logs/A/pq_processed_log_A.txt \
+/drives/C/Users/snoone/Dropbox/Copernicus_2025/admin/8.2_data_release/station_configuration_files/pq_processing/
+```
+
+## Interim Merge
+
+```bash
+source /ichec/work/glamod/land_project_workspace/code/r8.1_202602/hourly/muenv/bin/activate
+
+python initial_pq_batch_merge_sbdy_v2.py --max_workers 10
+```
+
+## Validate Row Counts
+
+```bash
+python count_rows_psv.py
+```
+
+## Final Merge
+
+```bas
+```
+
+---
+
+## 6. General Commands
+
+### tmux
+
+```bash
+tmux ls
+tmux attach -t <session_name>
+tmux kill-session -t <session_name>
+```
+
+Detach from a session:
+
+```text
+Ctrl-b d
+```
+
+### File Counts
+
+```bash
+ls -1 | wc -l
+```
+
+### Checkpoints
+
+```bash
+wc -l job_*.checkpoint
+```
+
+### Memory Usage
+
+```bash
+free -h
+```

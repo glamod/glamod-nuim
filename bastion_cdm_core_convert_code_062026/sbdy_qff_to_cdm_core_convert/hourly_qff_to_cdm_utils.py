@@ -99,22 +99,27 @@ def extract_qc_info(var_frame, all_frame, var_name, do_report_id=False):
         Process the report_id field too (CDM Lite only)
     """
 
-    var_frame["quality_flag"] = all_frame[f"{var_name}_QC_flag"]
-    var_frame["qc_method"] = var_frame["quality_flag"]
+    # ------------------------------------------------------------
+    # QC FLAG (force numeric so downstream logic is stable)
+    # ------------------------------------------------------------
+    var_frame["quality_flag"] = pd.to_numeric(
+        all_frame[f"{var_name}_QC_flag"],
+        errors="coerce"
+    )
+
+    # replace NaN with 0 (no QC flag)
+    var_frame["quality_flag"] = var_frame["quality_flag"].fillna(0).astype(int)
+
+    # ------------------------------------------------------------
+    # QC METHOD (must be string for .str.replace() later)
+    # ------------------------------------------------------------
+    var_frame["qc_method"] = var_frame["quality_flag"].astype(str)
+
+    # ------------------------------------------------------------
+    # report_id (CDM Lite only)
+    # ------------------------------------------------------------
     if do_report_id:
-        # CDM Lite version has report_id entry here (not needed for OBS)
         var_frame["report_id"] = var_frame["date_time"]
-
-        # Set quality_flag to 1 for all non-NaN values
-    var_frame.loc[var_frame['quality_flag'].notnull(), "quality_flag"] = 1
-
-   # TODO: ensure this doesn't affect other columns in the dataframe.
-   #Fill NaN values safely
-    var_frame = var_frame.fillna("Null").infer_objects(copy=False)
-    
-    # Replace "Null" in the column using .loc
-    var_frame.loc[var_frame.quality_flag == "Null", "quality_flag"] = 0
-
 
     return var_frame
 

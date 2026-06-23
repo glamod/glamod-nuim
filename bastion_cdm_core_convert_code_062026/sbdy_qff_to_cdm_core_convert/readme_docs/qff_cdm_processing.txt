@@ -1,0 +1,256 @@
+SUB-DAILY QFF TO CDM-CORE CONVERSION PROCESS
+============================================
+
+This document describes the workflow for converting sub-daily QFF data
+to CDM-Core format on the bastion host.
+
+-------------------------------------------------------------------------------
+1. CONNECT TO THE BASTION HOST
+-------------------------------------------------------------------------------
+
+SSH to the bastion server:
+
+    ssh bastion
+    ssh glamodproc.ichec.ie
+
+-------------------------------------------------------------------------------
+2. KEY DIRECTORY LOCATIONS
+-------------------------------------------------------------------------------
+
+Conversion code directory:
+
+    /ichec/work/glamod/land_project_workspace/code/git_code/
+    bastion_cdm_core_convert_code_062026/sbdy_qff_to_cdm_core_convert
+
+Sub-daily QFF input directory:
+
+    /ichec/work/glamod/land_project_workspace/data/level1/
+    level1c_sub_daily_data_qff/release_8.1
+
+CDM-Core output directory:
+
+    /ichec/work/glamod/land_project_workspace/data/level2/
+    cdm_obs_core/sub_daily_data/r8.2/r8.2_core
+
+Change to required directories:
+
+    cd /ichec/work/glamod/land_project_workspace/code/git_code/bastion_cdm_core_convert_code_062026/sbdy_qff_to_cdm_core_convert
+
+    cd /ichec/work/glamod/land_project_workspace/data/level1/
+       level1c_sub_daily_data_qff/release_8.1
+
+    cd /ichec/work/glamod/land_project_workspace/data/level2/
+       cdm_obs_core/sub_daily_data/r8.2/r8.2_core
+
+-------------------------------------------------------------------------------
+3. CHECK CURRENT PROCESSING STATUS
+-------------------------------------------------------------------------------
+
+Count output files:
+
+    ls -1 | wc -l
+
+Check system memory (important for parallel runs):
+
+    free -h
+
+-------------------------------------------------------------------------------
+4. CREATE PROCESSING LISTS
+-------------------------------------------------------------------------------
+
+Generate shuffled station execution commands from QFF files and split into
+six batches.
+
+Each station becomes a full python command.
+
+Example single station test:
+
+    python3 hourly_qff_to_cdm_core_v3.py --station MYI0000WMKK
+
+Batch list creation:
+
+    find /ichec/work/glamod/land_project_workspace/data/level1/\
+level1c_sub_daily_data_qff/release_8.1 \
+        -maxdepth 1 \
+        -type f \
+        -name "*.qff.gz" \
+        -printf "%f\n" \
+        | sed 's/\.qff\.gz$//' \
+        | sort \
+        | shuf --random-source=<(yes 42) \
+        | sed 's/^/python3 hourly_qff_to_cdm_core_v3.py --station /' \
+        > all_sub_daily.txt
+
+Split into 6 batches:
+
+    split -d -n l/6 all_sub_daily.txt sbdy_ls
+
+Rename files:
+
+    for i in {0..5}; do
+        mv sbdy_ls$(printf "%02d" "$i") sbdy_ls$((i+1)).txt
+    done
+
+Resulting files:
+
+    sbdy_ls1.txt
+    sbdy_ls2.txt
+    sbdy_ls3.txt
+    sbdy_ls4.txt
+    sbdy_ls5.txt
+    sbdy_ls6.txt
+
+-------------------------------------------------------------------------------
+5. ACTIVATE PYTHON ENVIRONMENT
+-------------------------------------------------------------------------------
+
+    source /ichec/work/glamod/land_project_workspace/code/r8.1_202508/hourly/muenv/bin/activate
+
+-------------------------------------------------------------------------------
+6. RUN SINGLE STATION TEST
+-------------------------------------------------------------------------------
+
+    python hourly_qff_to_cdm_core_v3.py --station ACM00078861
+
+-------------------------------------------------------------------------------
+7. BATCH PROCESSING USING TMUX + GNU PARALLEL
+-------------------------------------------------------------------------------
+
+IMPORTANT NOTE:
+- Only run 3 jobs concurrently at a time (memory constraints)
+- Run in two batches if needed
+
+Recommended launcher:
+
+    ./submit_hr_bash.sh
+
+Each tmux session runs GNU parallel:
+
+-------------------------------------------------------------------------------
+
+Session: sbdy_1
+
+    tmux new -s sbdy_1
+    source /ichec/work/glamod/land_project_workspace/code/r8_202508/
+           hourly/muenv/bin/activate
+    parallel --jobs 30 < sbdy_1.txt
+
+Session: sbdy_2
+
+    tmux new -s sbdy_2
+    source /ichec/work/glamod/land_project_workspace/code/r8_202508/
+           hourly/muenv/bin/activate
+    parallel --jobs 30 < sbdy_ls2.txt
+
+Session: sbdy_3
+
+    tmux new -s sbdy_3
+    source /ichec/work/glamod/land_project_workspace/code/r8_202508/
+           hourly/muenv/bin/activate
+    parallel --jobs 30 < sbdy_ls3.txt
+
+Session: sbdy_4
+
+    tmux new -s sbdy_4
+    source /ichec/work/glamod/land_project_workspace/code/r8_202508/
+           hourly/muenv/bin/activate
+    parallel --jobs 30 < sbdy_ls4.txt
+
+Session: sbdy_5
+
+    tmux new -s sbdy_5
+    source /ichec/work/glamod/land_project_workspace/code/r8_202508/
+           hourly/muenv/bin/activate
+    parallel --jobs 30 < sbdy_ls5.txt
+
+Session: sbdy_6
+
+    tmux new -s sbdy_6
+    source /ichec/work/glamod/land_project_workspace/code/r8_202508/
+           hourly/muenv/bin/activate
+    parallel --jobs 30 < sbdy_ls6.txt
+
+-------------------------------------------------------------------------------
+8. VALIDATION AND CHECKING OUTPUTS
+-------------------------------------------------------------------------------
+
+Attach to validation session:
+
+    tmux attach -t check_sbdy
+
+Run QC scripts:
+
+    python checked_outputs/by_vars_obs_count/count_qff_observations_vars.py
+    python checked_outputs/by_vars_obs_count/count_vars_psv_sbdy.py
+
+-------------------------------------------------------------------------------
+9. STATION CONFIGURATION EXTRACTION
+-------------------------------------------------------------------------------
+
+Expected runtime: ~24 hours
+
+⚠ NOTE: previous line references may incorrectly mention daily;
+this step applies to sub-daily workflow.
+
+Run:
+
+    python extract_station_config_info.py --run_all --time D
+
+(or adjust flag if required for sub-daily processing)
+
+-------------------------------------------------------------------------------
+10. USEFUL COMMANDS
+-------------------------------------------------------------------------------
+
+List tmux sessions:
+
+    tmux ls
+
+Attach to session:
+
+    tmux attach -t sbdy_1
+    tmux attach -t sbdy_2
+    etc.
+
+Detach:
+
+    Ctrl-b d
+
+Kill session:
+
+    tmux kill-session -t sbdy_1
+
+Check memory usage:
+
+    free -h
+
+Check file counts:
+
+    ls -1 | wc -l
+
+-------------------------------------------------------------------------------
+WORKFLOW SUMMARY
+-------------------------------------------------------------------------------
+
+    Connect to bastion host
+             |
+             v
+    Generate shuffled station command list
+             |
+             v
+    Split into 6 batches
+             |
+             v
+    Activate environment
+             |
+             v
+    Run single-station test
+             |
+             v
+    Launch tmux + parallel jobs (max 3 concurrent batches)
+             |
+             v
+    Run QC checks
+             |
+             v
+    Extract station configuration information

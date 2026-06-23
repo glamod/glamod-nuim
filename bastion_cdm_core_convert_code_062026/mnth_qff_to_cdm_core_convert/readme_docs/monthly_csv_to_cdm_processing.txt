@@ -1,0 +1,270 @@
+MONTHLY CSV TO CDM-CORE CONVERSION PROCESS
+==========================================
+
+This document describes the workflow for converting monthly CSV files to
+CDM-Core format on the bastion host.
+
+-------------------------------------------------------------------------------
+1. CONNECT TO THE BASTION HOST
+-------------------------------------------------------------------------------
+
+SSH to the bastion server:
+
+    ssh bastion
+    ssh glamodproc.ichec.ie
+
+-------------------------------------------------------------------------------
+2. KEY DIRECTORY LOCATIONS
+-------------------------------------------------------------------------------
+
+Conversion code directory:
+
+    /ichec/work/glamod/land_project_workspace/code/git_code/
+    bastion_cdm_core_convert_code_062026/mnth_qff_to_cdm_core_convert
+
+Monthly CSV input directory:
+
+    /ichec/work/glamod/land_project_workspace/data/level1/csv/monthly
+
+CDM-Core output directory:
+
+    /ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/
+    monthly_data/r8.2/cdm_core
+
+Change to the required directories as needed:
+
+    cd /ichec/work/glamod/land_project_workspace/code/git_code/
+       bastion_cdm_core_convert_code_062026/mnth_qff_to_cdm_core_convert
+
+    cd /ichec/work/glamod/land_project_workspace/data/level1/csv/monthly
+
+    cd /ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/
+       monthly_data/r8.2/cdm_core
+
+-------------------------------------------------------------------------------
+3. DOWNLOAD THE LATEST GSOM DATA
+-------------------------------------------------------------------------------
+
+Retrieve and extract the latest Global Summary of the Month (GSOM) archive:
+
+    wget -qO- \
+    https://www.ncei.noaa.gov/data/global-summary-of-the-month/archive/\
+gsom-latest.tar.gz | tar -xz
+
+-------------------------------------------------------------------------------
+4. CHECK CURRENT PROCESSING STATUS
+-------------------------------------------------------------------------------
+
+Count the number of output files generated:
+
+    ls -1 | wc -l
+
+-------------------------------------------------------------------------------
+5. CREATE PROCESSING LISTS
+-------------------------------------------------------------------------------
+
+Generate six evenly sized lists of station filenames from the monthly CSV
+files.
+
+The .csv extension is removed before creating the lists.
+
+    find /ichec/work/glamod/land_project_workspace/data/level1/csv/monthly \
+        -maxdepth 1 \
+        -type f \
+        -name "*.csv" \
+        -printf "%f\n" \
+        | sed 's/\.csv$//' \
+        | sort > all_monthly.txt
+
+    split -d -n l/6 all_monthly.txt mnth_ls
+
+    for i in {0..5}; do
+        mv mnth_ls$(printf "%02d" "$i") mnth_ls$((i+1)).txt
+    done
+
+The following files will be created:
+
+    mnth_ls1.txt
+    mnth_ls2.txt
+    mnth_ls3.txt
+    mnth_ls4.txt
+    mnth_ls5.txt
+    mnth_ls6.txt
+
+-------------------------------------------------------------------------------
+6. ACTIVATE THE PYTHON ENVIRONMENT
+-------------------------------------------------------------------------------
+
+Before running any conversion scripts:
+
+    source /ichec/work/glamod/land_project_workspace/code/r8_202508/
+           hourly/muenv/bin/activate
+
+-------------------------------------------------------------------------------
+7. RUN A SINGLE-STATION TEST
+-------------------------------------------------------------------------------
+
+Verify the workflow using a single station before launching the full batch
+process.
+
+Example:
+
+    python monthly_to_cdm_core_v3.py --station USC00244558
+
+-------------------------------------------------------------------------------
+8. LAUNCH BATCH PROCESSING JOBS
+-------------------------------------------------------------------------------
+
+The full dataset is processed using six parallel tmux sessions.
+
+Recommended method:
+
+    ./launch_all_tmux_mnth.sh
+
+This script creates six tmux sessions and starts one processing job in each
+session.
+
+Equivalent manual commands:
+
+Session: mnth_1
+
+    tmux new -s mnth_1
+    source /ichec/work/glamod/land_project_workspace/code/r8_202508/
+           hourly/muenv/bin/activate
+    python monthly_to_cdm_core_v3.py --subset mnth_ls1.txt
+
+Session: mnth_2
+
+    tmux new -s mnth_2
+    source /ichec/work/glamod/land_project_workspace/code/r8_202508/
+           hourly/muenv/bin/activate
+    python monthly_to_cdm_core_v3.py --subset mnth_ls2.txt
+
+Session: mnth_3
+
+    tmux new -s mnth_3
+    source /ichec/work/glamod/land_project_workspace/code/r8_202508/
+           hourly/muenv/bin/activate
+    python monthly_to_cdm_core_v3.py --subset mnth_ls3.txt
+
+Session: mnth_4
+
+    tmux new -s mnth_4
+    source /ichec/work/glamod/land_project_workspace/code/r8_202508/
+           hourly/muenv/bin/activate
+    python monthly_to_cdm_core_v3.py --subset mnth_ls4.txt
+
+Session: mnth_5
+
+    tmux new -s mnth_5
+    source /ichec/work/glamod/land_project_workspace/code/r8_202508/
+           hourly/muenv/bin/activate
+    python monthly_to_cdm_core_v3.py --subset mnth_ls5.txt
+
+Session: mnth_6
+
+    tmux new -s mnth_6
+    source /ichec/work/glamod/land_project_workspace/code/r8_202508/
+           hourly/muenv/bin/activate
+    python monthly_to_cdm_core_v3.py --subset mnth_ls6.txt
+
+-------------------------------------------------------------------------------
+9. VALIDATE THE OUTPUTS
+-------------------------------------------------------------------------------
+
+After all six processing jobs have completed:
+
+    tmux new -s check_mnth
+    tmux attach -t check_mnth
+
+Run the validation script:
+
+    python checked_outputs/Compare_csv_psv_files.py
+
+-------------------------------------------------------------------------------
+10. EXTRACT STATION CONFIGURATION INFORMATION
+-------------------------------------------------------------------------------
+
+Expected runtime: approximately 24 hours.
+
+Attach to the validation session:
+
+    tmux attach -t check_mnth
+
+Run:
+
+    python extract_station_config_info.py --run_all --time M
+
+-------------------------------------------------------------------------------
+11. USEFUL TMUX COMMANDS
+-------------------------------------------------------------------------------
+
+List active sessions:
+
+    tmux ls
+
+Attach to a session:
+
+    tmux attach -t mnth_1
+    tmux attach -t mnth_2
+    tmux attach -t mnth_3
+    tmux attach -t mnth_4
+    tmux attach -t mnth_5
+    tmux attach -t mnth_6
+
+Detach from a session:
+
+    Ctrl-b d
+
+Kill a session:
+
+    tmux kill-session -t mnth_1
+
+-------------------------------------------------------------------------------
+12. MONITORING COMMANDS
+-------------------------------------------------------------------------------
+
+Count files in the current directory:
+
+    ls -1 | wc -l
+
+Monitor output file generation:
+
+    watch -n 60 'ls -1 \
+    /ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/\
+monthly_data/r8.2/cdm_core | wc -l'
+
+-------------------------------------------------------------------------------
+13. STOP ALL RUNNING PYTHON PROCESSES (OPTIONAL)
+-------------------------------------------------------------------------------
+
+WARNING: This command terminates all Python processes owned by user 'snoone'.
+
+    pkill -u snoone -f python
+
+-------------------------------------------------------------------------------
+WORKFLOW SUMMARY
+-------------------------------------------------------------------------------
+
+    Connect to bastion host
+             |
+             v
+    Download latest GSOM data
+             |
+             v
+    Create station lists
+             |
+             v
+    Activate Python environment
+             |
+             v
+    Run single-station test
+             |
+             v
+    Launch 6 parallel tmux jobs
+             |
+             v
+    Validate outputs
+             |
+             v
+    Extract station configuration information

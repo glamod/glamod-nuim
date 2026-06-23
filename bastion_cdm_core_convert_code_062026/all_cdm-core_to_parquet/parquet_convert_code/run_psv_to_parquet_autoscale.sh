@@ -25,22 +25,28 @@ echo "Detected $TOTAL_CORES cores, $TOTAL_MEM_MB MB total RAM"
 # -----------------------------
 # Detect input type and frequency
 # -----------------------------
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 FIRST_FILE=$(head -n 1 "$STATION_LIST")
 FREQ="daily"  # default
 
+if [[ "$INPUT_DIR" == *sub_daily* ]]; then
+    FREQ="sub_daily"
+elif [[ "$INPUT_DIR" == *monthly* ]]; then
+    FREQ="monthly"
+fi
+
+PYTHON_SCRIPT="$SCRIPT_DIR/psv_to_pq_memory_eff_v3.py"
+
+if [[ ! -f "$PYTHON_SCRIPT" ]]; then
+    echo "❌ Python script not found:"
+    echo "   $PYTHON_SCRIPT"
+    exit 1
+fi
+
 if [[ "$FIRST_FILE" == *.psv* ]]; then
-    if [[ "$INPUT_DIR" == *sub_daily* ]]; then
-        FREQ="sub_daily"
-    elif [[ "$INPUT_DIR" == *monthly* ]]; then
-        FREQ="monthly"
-    else
-        FREQ="daily"
-    fi
-    PYTHON_SCRIPT=/ichec/work/glamod/land_project_workspace/code/r8.1_pq_code/sub_daily_psv_to_pq_memory_eff_v3.py
     echo "Detected PSV input. Frequency set to $FREQ."
 elif [[ "$FIRST_FILE" == *.pq ]]; then
-    FREQ="sub_daily"
-    PYTHON_SCRIPT=/ichec/work/glamod/land_project_workspace/code/r8.1_pq_code/sub_daily_psv_to_pq_memory_eff_v3.py
     echo "Detected PQ input. Frequency assumed $FREQ."
 else
     echo "❌ Unknown input type: $FIRST_FILE"

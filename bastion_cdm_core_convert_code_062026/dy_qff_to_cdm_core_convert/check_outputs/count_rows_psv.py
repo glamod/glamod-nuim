@@ -13,9 +13,9 @@ import traceback
 # ==============================
 # Configuration
 # ==============================
-DATA_DIR = "/ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/sub_daily_data/r8.1/r8.1_core"
-OUTPUT_TXT = "/ichec/work/glamod/land_project_workspace/code/r8.1_202602/hourly/row_counts_sbdy_r8.1.txt"
-ERROR_LOG = "/ichec/work/glamod/land_project_workspace/code/r8.1_202602/hourly/row_counts_sbdy_r8.1_errors.log"
+DATA_DIR = "/ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/daily_data/r8.2/cdm_core"
+OUTPUT_TXT = "/ichec/work/glamod/land_project_workspace/code/git_code/bastion_cdm_core_convert_code_062026/dy_qff_to_cdm_core_convert/row_counts_sbdy_r8.2.txt"
+ERROR_LOG = "/ichec/work/glamod/land_project_workspace/code/git_code/bastion_cdm_core_convert_code_062026/dy_qff_to_cdm_core_convertrow_counts_sbdy_r8.2_errors.log"
 
 # Find all .psv and .psv.gz files
 files = glob.glob(os.path.join(DATA_DIR, "*.psv*"))

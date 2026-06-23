@@ -33,7 +33,7 @@ monthly_cdmhead_file=cdm_head_r6.0_
 [Records]
 subdaily_station_records_obs_lite=/ichec/work/glamod/land_project_workspace/code/r8.1_202602/station_list/record_id.csv
 subdaily_station_records_location=/ichec/work/glamod/land_project_workspace/code/r8.1_202602/station_list/location.csv
-subdaily_station_records_obs_core=/ichec/work/glamod/land_project_workspace/code/r8.1_202602/station_list/record_id.csv
+subdaily_station_records_obs_core=/ichec/work/glamod/land_project_workspace/code/r8.2/station_list/record_id.csv
 subdaily_station_records_header= /ichec/work/glamod/land_project_workspace/station_list/record_id_head.csv
 daily_station_records_obs_lite=/ichec/work/glamod/land_project_workspace/code/r8.1_202602/station_list/record_id_dy.csv
 daily_station_records_header=//ichec/work/glamod/land_project_workspace/code/r8.1_202602/station_list/record_id_dy.csv

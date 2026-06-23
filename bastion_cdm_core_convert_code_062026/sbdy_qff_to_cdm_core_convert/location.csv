@@ -1,0 +1,32 @@
+primary_station_id,longitude,latitude,height_of_station_above_sea_level,notes,name ,,,,,,,,
+ARM00087500,0,0,-999,correct as per station_list not processed to QFF! due to 0-0,BOGUS ARGENTINEAN,,,,,,,,NII0000DNSU
+ARM00087869,0,0,-999,correct as per station_list not processed toQFF! due to 0-1,NAME AND LOC UNKN,,,,,,,,RSMU0035102
+ICU92-00230,-18.2,65.66,503,corrected- but not processed to CDM-OBS!,HLARFJALL,,,,,,,,RSU00023330
+,,,,,,,,,,,,,INMU0020498
+primary_id,record_number,station_name,longitude,latitude,height_of_station_above_sea_level,start_date,end_date,country,observed_variables,data_policy_licence,notes,,KRU091533-2
+GGM00037499,1,CHARNALY,41.6,41.6,310,1954,1975,Georgia,"[slp, mslp]",open access,correct coords in Georgia,,BUMU0015552
+GGU00037380,1,ABASHA USSR,42.22,42.22,39,1959,1963,Georgia,"[td, ws, t, wd]",non_commercial,correct coords in Georgia,,CSA00787605
+,,,,,,,,,,,,,GII0000LXGB
+primary_id,record_number,station_name,longitude,latitude,height_of_station_above_sea_level,start_date,end_date,country,observed_variables,data_policy_licence,notes,,GRMU0016622
+NII0000DNSU,1,OSUBI AIRPORT,5.82,5.6,7.9,2021,2026,Nigeria,"[td, ws, t, wd]",non_commercial,corrected,,IRM00040857
+RSMU0035102,1,TEPLOVKA USSR,46.31,52.35,40,1959,1963,Russia,"[td, ws, t, wd, mslp]",non_commercial,corrected,,SLUeetown-3
+RSU00023330,1,SALEKHARD USSR,66.6,66.53,35,1948,1971,Russia,"[wd, ws, mslp, t, td]",non_commercial,corrected,,TZU063894-2
+INMU0020498,6,PORT BLAIR ANDAMAN ISLANDS,92.72,11.67,80,1954,1960,India,[td],non_commercial,corrected,,UGU063705-3
+KRU091533-2,5,OCEAN_ISLAND,169.58,-0.87,25,1904,1908,Kiribati,[mslp],open access,corrected,,USW00013839
+KRU091533-2,6,OCEAN_ISLAND,169.58,-0.87,25,1908,1908,Kiribati,[mslp],open access,corrected,,ARM00087500
+KRU091533-2,4,OCEAN_ISLAND,169.58,-0.87,25,1909,1909,Kiribati,[mslp],open access,corrected,,ARM00087869
+KRU091533-2,7,OCEAN_ISLAND,169.58,-0.87,25,1910,1911,Kiribati,[mslp],open access,corrected,,ICU92-00230
+KRU091533-2,3,OCEAN_ISLAND,169.58,-0.87,25,1911,1912,Kiribati,[mslp],open access,corrected,,
+KRU091533-2,2,OCEAN_ISLAND,169.58,-0.87,25,1912,1915,Kiribati,[mslp],open access,corrected,,
+KRU091533-2,8,OCEAN_ISLAND,169.58,-0.87,25,1915,1916,Kiribati,[mslp],open access,corrected,,
+KRU091533-2,9,OCEAN_ISLAND,169.58,-0.87,25,1920,1941,Kiribati,[mslp],open access,corrected,,
+KRU091533-2,1,OCEAN_ISLAND,169.58,-0.87,25,1937,1937,Kiribati,[mslp],open access,corrected,,
+BUMU0015552,3,VARNA BULGARIA,27.92,43.21,41,1952,1967,Bulgaria,"[td, ws, t, mslp, wd]",non_commercial,corrected,,
+CSA00787605,4,SAN JOSE/LA SABANA,-84.1,9.93,1132,1949,1955,Costa Rica,"[wd, ws, t]",non_commercial,corrected,,
+GII0000LXGB,9,GIBRALTAR,-5.35,36.14,4.6,1955,1957,Gibraltar,[mslp],open access,corrected,,
+GRMU0016622,4,THESSALONIKI GREECE (MIKRA),22.97,40.52,4,1961,1971,Greece,"[mslp, td]",non_commercial,corrected,,
+IRM00040857,5,BUSHEHR,50.85,28.92,8,1944,1948,Iran,"[t, td, ws, wd]",non_commercial,corrected,,
+SLUeetown-3,3,"FREETOWN,SIERRALEONE",-13.23,8.48,12,1941,1944,Sierra Leone,[slp],open access,corrected,,
+TZU063894-2,2,DARESSALAM,39.3,6.79,13,1905,1912,Tanzania,[mslp],open access,corrected,,
+UGU063705-3,2,ENTEBBE,32.48,0.05,1171,1910,1913,Uganda,[slp],open access,corrected,,
+USW00013839,4,DOTHAN RGNL AP,-85.44,31.32,112.2,1941,1945,United States,"[slp, td, ws, t, wd, mslp]",open access,corrected,,

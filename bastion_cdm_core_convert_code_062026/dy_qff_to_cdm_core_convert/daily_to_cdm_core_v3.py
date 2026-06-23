@@ -6,10 +6,10 @@ CDM Lite files have all variables, one after another.
 
 Call in one of three ways using:
 
->python daily_to_cdm_lite_v2.py --station STATIONID
->python daily_to_cdm_lite_v2.py --subset FILENAME
->python daily_to_cdm_lite_v2.py --run_all
->python daily_to_cdm_lite_v2.py --help
+>python daily_to_cdm_core_v3.py --station STATIONID
+>python daily_to_cdm_core_v3.py --subset FILENAME
+>python daily_to_cdm_core_v3.py --run_all
+>python daily_to_cdm_core_v3.py --help
 
 Created on Thu Nov 11 16:31:58 2021
 
@@ -163,19 +163,29 @@ def main(station="", subset="", run_all=False, clobber=False):
         # --- Observation IDs ---
         df["dates"] = df["report_id_a"].str[:-11].str.rstrip()
         df['observation_id'] = df['primary_station_id'] + '-' + df['record_number'].astype(str) + '-' + df['dates']
-        df['observation_id'] = df['observation_id'].str.replace(r' ', '-') + df['observed_variable'] + '-' + df['value_significance']
+        df['observation_id'] = df['observation_id'].str.replace(r' ', '-', regex=True) + '-' + df['observed_variable'] + '-' + df['value_significance']
         df["report_id"] = df['primary_station_id'] + '-' + df['record_number'].astype(str) + '-' + df['dates']
 
-        # --- QC table ---
-        qct = df[["primary_station_id","report_id","record_number","qc_method","quality_flag","observed_variable","value_significance"]].copy()
-        qct["dates"] = qct["report_id"].str[:-11]
-        qct['observation_id'] = qct['primary_station_id'] + '-' + qct['record_number'].astype(str) + '-' + qct['dates']
-        qct['observation_id'] = qct['observation_id'].str.replace(r' ', '-') + qct['observed_variable'] + '-' + qct['value_significance']
-        qct = qct[["report_id","observation_id","qc_method","quality_flag"]]
-        qct["quality_flag"] = pd.to_numeric(qct["quality_flag"], errors='coerce').fillna(0).astype(int)
+                # --- QC table ---
+        qct = df[[
+            "report_id",
+            "observation_id",
+            "qc_method",
+            "quality_flag"
+        ]].copy()
+        
+        # --- QC method replacements (KEPT AS REQUESTED) ---
         for qc_method, qc_code in d_utils.QC_METHODS.items():
-            qct['qc_method'] = qct['qc_method'].str.replace(qc_method, qc_code)
+            qct["qc_method"] = qct["qc_method"].str.replace(qc_method, qc_code, regex=False)
+        
         qct = qct[qct.qc_method.notnull() & (qct.qc_method != "")]
+        
+        # --- quality flag formatting ---
+        qct["quality_flag"] = (
+            pd.to_numeric(qct["quality_flag"], errors="coerce")
+            .fillna(0)
+            .astype(int)
+        )
 
         # --- Final output columns ---
         df = df[["station_name","primary_station_id","report_id","observation_id",

@@ -1,0 +1,256 @@
+DAILY CSV TO CDM-CORE CONVERSION PROCESS
+========================================
+
+This document describes the workflow for converting daily CSV files to CDM-Core format on the bastion host.
+
+-------------------------------------------------------------------------------
+1. CONNECT TO THE BASTION HOST
+-------------------------------------------------------------------------------
+
+SSH to the bastion server:
+
+    ssh bastion
+    ssh glamodproc.ichec.ie
+
+-------------------------------------------------------------------------------
+2. KEY DIRECTORY LOCATIONS
+-------------------------------------------------------------------------------
+
+Conversion code directory:
+
+    /ichec/work/glamod/land_project_workspace/code/git_code/
+    bastion_cdm_core_convert_code_062026/dy_qff_to_cdm_core_convert
+
+Daily CSV input directory:
+
+    /ichec/work/glamod/land_project_workspace/data/level1/csv/daily
+
+CDM-Core output directory:
+
+    /ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/
+    daily_data/r8.2/cdm_core
+
+Change to the required directories as needed:
+
+    cd /ichec/work/glamod/land_project_workspace/code/git_code/
+       bastion_cdm_core_convert_code_062026/dy_qff_to_cdm_core_convert
+
+    cd /ichec/work/glamod/land_project_workspace/data/level1/csv/daily
+
+    cd /ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/
+       daily_data/r8.2/cdm_core
+
+-------------------------------------------------------------------------------
+3. CHECK CURRENT PROCESSING STATUS
+-------------------------------------------------------------------------------
+
+Count the number of output files generated:
+
+    ls -1 | wc -l
+
+-------------------------------------------------------------------------------
+4. CREATE PROCESSING LISTS
+-------------------------------------------------------------------------------
+
+Generate six evenly sized lists of station filenames from the compressed
+daily CSV files.
+
+The .csv.gz extension is removed before creating the lists.
+
+    find /ichec/work/glamod/land_project_workspace/data/level1/csv/daily \
+        -maxdepth 1 \
+        -type f \
+        -name "*.csv.gz" \
+        -printf "%f\n" \
+        | sed 's/\.csv\.gz$//' \
+        | sort > all_daily.txt
+
+    split -d -n l/6 all_daily.txt dy_ls
+
+    for i in {0..5}; do
+        mv dy_ls$(printf "%02d" "$i") dy_ls$((i+1)).txt
+    done
+
+The following files will be created:
+
+    dy_ls1.txt
+    dy_ls2.txt
+    dy_ls3.txt
+    dy_ls4.txt
+    dy_ls5.txt
+    dy_ls6.txt
+
+-------------------------------------------------------------------------------
+5. ACTIVATE THE PYTHON ENVIRONMENT
+-------------------------------------------------------------------------------
+
+Before running any conversion scripts:
+
+    source /ichec/work/glamod/land_project_workspace/code/r8_202508/
+           hourly/muenv/bin/activate
+
+-------------------------------------------------------------------------------
+6. RUN A SINGLE-STATION TEST
+-------------------------------------------------------------------------------
+
+Verify the workflow using a single station before launching the full batch
+process.
+
+Example:
+
+    python daily_to_cdm_core_v3.py --station USC00244558
+
+-------------------------------------------------------------------------------
+7. LAUNCH BATCH PROCESSING JOBS
+-------------------------------------------------------------------------------
+
+The full dataset is processed using six parallel tmux sessions.
+
+Recommended method:
+
+    ./launch_all_tmux_dy.sh
+
+This script creates six tmux sessions and starts one processing job in each
+session.
+
+Equivalent manual commands:
+
+Session: dy_1
+
+    tmux new -s dy_1
+    source /ichec/work/glamod/land_project_workspace/code/r8_202508/
+           hourly/muenv/bin/activate
+    python daily_to_cdm_core_v3.py --subset dy_ls1.txt
+
+Session: dy_2
+
+    tmux new -s dy_2
+    source /ichec/work/glamod/land_project_workspace/code/r8_202508/
+           hourly/muenv/bin/activate
+    python daily_to_cdm_core_v3.py --subset dy_ls2.txt
+
+Session: dy_3
+
+    tmux new -s dy_3
+    source /ichec/work/glamod/land_project_workspace/code/r8_202508/
+           hourly/muenv/bin/activate
+    python daily_to_cdm_core_v3.py --subset dy_ls3.txt
+
+Session: dy_4
+
+    tmux new -s dy_4
+    source /ichec/work/glamod/land_project_workspace/code/r8_202508/
+           hourly/muenv/bin/activate
+    python daily_to_cdm_core_v3.py --subset dy_ls4.txt
+
+Session: dy_5
+
+    tmux new -s dy_5
+    source /ichec/work/glamod/land_project_workspace/code/r8_202508/
+           hourly/muenv/bin/activate
+    python daily_to_cdm_core_v3.py --subset dy_ls5.txt
+
+Session: dy_6
+
+    tmux new -s dy_6
+    source /ichec/work/glamod/land_project_workspace/code/r8_202508/
+           hourly/muenv/bin/activate
+    python daily_to_cdm_core_v3.py --subset dy_ls6.txt
+
+-------------------------------------------------------------------------------
+8. VALIDATE THE OUTPUTS
+-------------------------------------------------------------------------------
+
+After all six processing jobs have completed:
+
+    tmux new -s check_dy
+    tmux attach -t check_dy
+
+Run the validation script:
+
+    python checked_outputs/Compare_csv_psv_files.py
+
+-------------------------------------------------------------------------------
+9. EXTRACT STATION CONFIGURATION INFORMATION
+-------------------------------------------------------------------------------
+
+Expected runtime: approximately 24 hours.
+
+Attach to the validation session:
+
+    tmux attach -t check_dy
+
+Run:
+
+    python extract_station_config_info.py --run_all --time D
+
+-------------------------------------------------------------------------------
+10. USEFUL TMUX COMMANDS
+-------------------------------------------------------------------------------
+
+List active sessions:
+
+    tmux ls
+
+Attach to a session:
+
+    tmux attach -t dy_1
+    tmux attach -t dy_2
+    tmux attach -t dy_3
+    tmux attach -t dy_4
+    tmux attach -t dy_5
+    tmux attach -t dy_6
+
+Detach from a session:
+
+    Ctrl-b d
+
+Kill a session:
+
+    tmux kill-session -t dy_1
+
+-------------------------------------------------------------------------------
+11. STOP ALL RUNNING PYTHON PROCESSES
+-------------------------------------------------------------------------------
+
+WARNING: This command terminates all Python processes owned by user 'snoone'.
+
+    pkill -u snoone -f python
+
+-------------------------------------------------------------------------------
+12. MONITORING COMMANDS
+-------------------------------------------------------------------------------
+
+Count files in the current directory:
+
+    ls -1 | wc -l
+
+Monitor output file generation:
+
+    watch -n 60 'ls -1 \
+    /ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/\
+daily_data/r8.2/cdm_core | wc -l'
+
+-------------------------------------------------------------------------------
+WORKFLOW SUMMARY
+-------------------------------------------------------------------------------
+
+    Connect to bastion host
+             |
+             v
+    Create station lists
+             |
+             v
+    Activate Python environment
+             |
+             v
+    Run single-station test
+             |
+             v
+    Launch 6 parallel tmux jobs
+             |
+             v
+    Validate outputs
+             |
+             v
+    Extract station configuration information

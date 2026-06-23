@@ -79,7 +79,7 @@ SUB_DAILY_QC_FLAGS = {
     "m" : "18,", # humidity
     "r" : "19,", # world Records
     "z" : "20,", # Wind logical calm masked zero direction
-    "," : "21,", # Timestamp - identical observation values"
+    "," : ",21,", # Timestamp - identical observation values"
 }
 
 def construct_report_type(var_frame, all_frame, id_field):
@@ -659,47 +659,54 @@ def main(station="", subset="", run_all=False, clobber=False):
             print(f"    {cdmcore_outfile}")
 
             # Extract subsets of variables
-            #    E.g.: slp and mslp for 20cr Ed Hawkins
             if len(utils.EXTRACTION_VARIABLE_IDS) != 0:
-                # Some variables set for extracction
-
-                # Filter the DataFrame to keep rows where 'observed_variable' is either "57" or "58"
                 filtered_df = merged_df[merged_df['observed_variable'].isin(utils.EXTRACTION_VARIABLE_IDS)]
 
-                # Iterate over each unique 'primary_station_id' and save filtered rows to separate files
                 for station_id, group_df in filtered_df.groupby('primary_station_id'):
-                    # Define the output file path
                     file_path = f"{utils.EXTRACTION_FILE_PATH}/{station_id}_{utils.EXTRACTION_FILE_NAME}.psv"
-
-                    # Save the group to a pipe-separated file
                     group_df.to_csv(file_path, sep='|', index=False, compression="infer")
 
-
             # Save QC table to directory
-            qc_merged_df=pd.concat([qcdpt,qct,qcslp,qcmslp,qcwd,qcws], axis=0)
-            qc_merged_df.astype(str)
+            qc_list = [qcdpt, qct, qcslp, qcmslp, qcwd, qcws]
+            qc_list = [df for df in qc_list if df is not None and len(df) > 0]
 
-            # Replace flag characters with numbers for CDM core
+            qc_merged_df = pd.concat(qc_list, axis=0, ignore_index=True)
+
+            qc_merged_df["qc_method"] = qc_merged_df["qc_method"].fillna("")
+
             for qc_flag, qc_value in SUB_DAILY_QC_FLAGS.items():
-                qc_merged_df['qc_method'] = qc_merged_df['qc_method'].str.replace(qc_flag, qc_value)
+                qc_merged_df["qc_method"] = qc_merged_df["qc_method"].str.replace(
+                    qc_flag, qc_value, regex=False
+                )
 
-            # Remove unwanted "," from column
-            qc_merged_df['qc_method'] = qc_merged_df['qc_method'].str[:-1]
-            qc_station_id=merged_df.iloc[0]["primary_station_id"]
-            unique_qc_methods = qc_merged_df['qc_method'].unique()
-            print(unique_qc_methods)
-            qc_merged_df.to_csv(qc_outfile, index=False, sep="|", compression="infer")
-            print(f"   {qc_outfile}")
-            print("    Done")
-        except IOError:
-            # something wrong with file paths, despite checking
-            print(f"Cannot save datafile: {cdmcore_outfile}")
-        except RuntimeError:
-            print("Runtime error")
-        # TODO add logging for these errors
+            print(qc_merged_df["qc_method"].unique())
 
-    return # main
+            try:
+                merged_df.to_csv(
+                    cdmcore_outfile,
+                    index=False,
+                    sep="|",
+                    compression={"method": "gzip", "compresslevel": 3}
+                )
 
+                qc_merged_df.to_csv(
+                    qc_outfile,
+                    index=False,
+                    sep="|",
+                    compression={"method": "gzip", "compresslevel": 3}
+                )
+
+                print("Done")
+
+            except Exception as e:
+                print(f"Save failed for {cdmcore_outfile}: {e}")
+
+            return
+
+        except Exception as e:
+            print(f"Processing failed for {filename}: {e}")
+            continue         
+            
 #****************************************
 if __name__ == "__main__":
 

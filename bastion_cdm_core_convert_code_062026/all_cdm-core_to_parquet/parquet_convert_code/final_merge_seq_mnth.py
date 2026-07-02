@@ -48,11 +48,27 @@ def merge_tag(tag, files, output_dir, log_dir):
                 seen_hashes.update(row_hash[~mask])
 
                 # Write incrementally
+                
                 if not df_unique.empty:
+                
+                    # Remove any pandas index
+                    df_unique.reset_index(drop=True, inplace=True)
+                
+                    table = pa.Table.from_pandas(
+                        df_unique,
+                        preserve_index=False
+                    )
+                
                     if writer is None:
-                        writer = pq.ParquetWriter(final_path, pa.Table.from_pandas(df_unique).schema, use_dictionary=True)
-                    writer.write_table(pa.Table.from_pandas(df_unique))
+                        writer = pq.ParquetWriter(
+                            final_path,
+                            table.schema,
+                            use_dictionary=True
+                        )
+                
+                    writer.write_table(table)
                     rows_written += len(df_unique)
+                    del table
 
                 del df, df_unique  # free memory
 

@@ -43,7 +43,7 @@ monthly_station_records_header=/ichec/work/glamod/land_project_workspace/data/mo
 ftp=ftp.ncdc.noaa.gov
 ftpdir=/pub/data/ghcn/daily/superghcnd/
 daily_update_outdir= /ichec/work/glamod/land_project_workspace/data/daily_updates/ncei_file_downloads/
-daily_update_cdmlite_outdir= /ichec/work/glamod/land_project_workspace/data/daily_updates\cdm_core_daily_update_outputs/
+daily_update_cdmlite_outdir= /ichec/work/glamod/land_project_workspace/data/daily_updates/cdm_core_daily_update_outputs/
 daily_update_cdmhead_outdir=/ichec/work/glamod/land_project_workspace/
 daily_update_cdmobs_outdir=/ichec/work/glamod/land_project_workspace/
 daily_update_cdmqc_outdir=/ichec/work/glamod/land_project_workspace/
@@ -54,7 +54,7 @@ urldir=/data/global-summary-of-the-month/archive/
 monthly_file=gsom-latest.tar.gz
 
 monthly_update_outdir=/ichec/work/glamod/land_project_workspace/data/monthly_updates/ncei_file_downloads/
-monthly_update_extractdir=/ichec/work/glamod/land_project_workspace/data/monthly_updates/cdm_core_monthly_update_outputs/
+monthly_update_extractdir=/ichec/work/glamod/land_project_workspace/data/monthly_updates/cdm_core_monthly_extract/
 
 monthly_update_tempdir=/ichec/work/glamod/land_project_workspace/data/monthly_updates/temp/
 monthly_update_stndir=/ichec/work/glamod/land_project_workspace/data/monthly_updates/stations/
@@ -62,7 +62,7 @@ monthly_update_stndir=/ichec/work/glamod/land_project_workspace/data/monthly_upd
 monthly_update_cdmhead_outdir=/ichec/work/glamod/land_project_workspace/data/monthly_updates/cdm_header/
 monthly_update_cdmobs_outdir=/ichec/work/glamod/land_project_workspace/data/monthly_updates/cdm_obs/
 monthly_update_cdmqc_outdir=/ichec/work/glamod/land_project_workspace/data/monthly_updates/cdm_qc/
-monthly_update_cdmlite_outdir=/ichec/work/glamod/land_project_workspace/data/monthly_updates/cdm_lite/
+monthly_update_cdmlite_outdir=/ichec/work/glamod/land_project_workspace/data/monthly_updates/cdm_core_monthly_update_outputs/
 
 [Extraction]
 variables=[57,58]

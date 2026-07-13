@@ -36,6 +36,15 @@ def merge_tag(tag, files, output_dir, log_dir):
             parquet_file = pq.ParquetFile(f)
             for batch in parquet_file.iter_batches(batch_size=CHUNK_SIZE):
                 df = pa.Table.from_batches([batch]).to_pandas()
+                # Remove any index column accidentally stored in the parquet
+                df.drop(columns="__index_level_0__", errors="ignore", inplace=True)
+                # Rename report_meaning_of_time_stamp -> report_meaning_of_timestamp
+                df.rename(
+                    columns={
+                        "report_meaning_of_time_stamp": "report_meaning_of_timestamp"
+                    },
+                    inplace=True,
+                )
                 row_hash = pd.util.hash_pandas_object(df, index=False)
                 df["__row_hash__"] = row_hash
 

@@ -19,7 +19,7 @@ from matplotlib.ticker import FuncFormatter
 # -----------------------------
 # USER SETTINGS
 # -----------------------------
-CSV_PATH = r"C:\Users\snoone\Dropbox\Copernicus_2025\admin\release_8.1\plots\monthly\monthly_observation_counts_extended_monthly.csv"
+CSV_PATH = r"C:\Users\snoone\Dropbox\Copernicus_2025\admin\release_8.2\plots\monthly\monthly_observation_counts_extended_monthly.csv"
 FREQ_LABEL = "Monthly"
 
 # Variable ID to name mapping for monthly data
@@ -69,6 +69,7 @@ for var_id, var_name in VAR_MAP.items():
     for col, color in [("n_pass", "green"), ("n_fail", "black")]:
         if col not in VALUE_COLUMNS:
             continue
+        missing = sub[col].isna()
         vals = sub[col].fillna(0).astype(float)
         total_vals = vals.sum()
         linear_vals = vals.copy()
@@ -78,7 +79,15 @@ for var_id, var_name in VAR_MAP.items():
             scale_label = " (millions)"
 
         plt.figure(figsize=(18,6))
-        plt.bar(dates_num, linear_vals, width=width_days, color=color, edgecolor="black")
+        bar_colors = ["red" if m else color for m in missing]
+
+        plt.bar(
+            dates_num,
+            linear_vals,
+            width=width_days,
+            color=bar_colors,
+            edgecolor="black",
+        )
         plt.ylabel(f"{col}{scale_label}")
         plt.xlabel("Year")
         plt.title(f"{FREQ_LABEL} {var_name} – {col} (linear) | Total {col}: {int(total_vals):,}")
@@ -102,6 +111,7 @@ for var_id, var_name in VAR_MAP.items():
     for col in VALUE_COLUMNS:
         if col in ["n_pass", "n_fail"]:
             continue
+        missing = sub[col].isna()
         vals = sub[col].fillna(0).astype(float)
         total_vals = vals.sum()
         linear_vals = vals.copy()
@@ -111,7 +121,15 @@ for var_id, var_name in VAR_MAP.items():
             scale_label = " (millions)"
 
         plt.figure(figsize=(18,6))
-        plt.bar(dates_num, linear_vals, width=width_days, color="steelblue", edgecolor="black")
+        bar_colors = ["red" if m else color for m in missing]
+
+        plt.bar(
+            dates_num,
+            linear_vals,
+            width=width_days,
+            color=bar_colors,
+            edgecolor="black",
+        )
         plt.ylabel(f"{col}{scale_label}")
         plt.xlabel("Year")
         plt.title(f"{FREQ_LABEL} {var_name} – {col} (linear) | Total {col}: {int(total_vals):,}")
@@ -129,68 +147,6 @@ for var_id, var_name in VAR_MAP.items():
         plt.ylim(bottom=0)
         plt.tight_layout()
         plt.savefig(os.path.join(COUNT_DIR, f"{var_name}_{col}_linear.pdf"))
-        plt.close()
-
-    # --- Log plots: combined n_pass/n_fail ---
-    # --- Log plots: combined n_pass/n_fail ---a
-        if "n_pass" in VALUE_COLUMNS and "n_fail" in VALUE_COLUMNS:
-            pass_values = sub["n_pass"].fillna(0).astype(float).clip(lower=0.001)
-            fail_values = sub["n_fail"].fillna(0).astype(float)
-            total_pass, total_fail = sub["n_pass"].sum(), sub["n_fail"].sum()
-        
-            plt.figure(figsize=(18,6))
-            plt.bar(dates_num, pass_values, width=width_days, color="green", label="n_pass")
-        
-            # Only plot n_fail if there are actual fails
-            if total_fail > 0:
-                fail_values = fail_values.clip(lower=0.001)
-                plt.bar(dates_num, fail_values, width=width_days, color="black", label="n_fail")
-        
-            plt.yscale("log")
-            plt.ylabel("Counts (log scale)")
-            plt.xlabel("Year")
-            plt.title(f"{FREQ_LABEL} {var_name} – n_pass (green) & n_fail (black, log) | "
-                      f"Total n_pass: {int(total_pass):,}, Total n_fail: {int(total_fail):,}")
-            plt.grid(axis="y", alpha=0.3)
-            plt.legend()
-            ax = plt.gca()
-            ax.xaxis_date()
-            ax.xaxis.set_major_locator(mdates.YearLocator(base=5))
-            ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
-            plt.xticks(rotation=45)
-            plt.xlim(dates_num.min()-width_days, dates_num.max()+width_days)
-            plt.tight_layout()
-            plt.savefig(os.path.join(LOG_DIR, f"{var_name}_pass_fail_log.pdf"))
-            plt.close()
-
-
-    # --- Log plots for other numeric columns ---
-    for col in VALUE_COLUMNS:
-        if col in ["n_pass", "n_fail"]:
-            continue
-        vals = sub[col].fillna(0).astype(float).clip(lower=0.001)
-        total_vals = sub[col].sum()
-        linear_vals = vals.copy()
-        scale_label = ""
-        if linear_vals.max() > 1_000_000:
-            linear_vals /= 1_000_000
-            scale_label = " (millions)"
-
-        plt.figure(figsize=(18,6))
-        plt.bar(dates_num, linear_vals, width=width_days, color="steelblue", edgecolor="black")
-        plt.yscale("log")
-        plt.ylabel(f"{col} (log scale){scale_label}")
-        plt.xlabel("Year")
-        plt.title(f"{FREQ_LABEL} {var_name} – {col} (log) | Total {col}: {int(total_vals):,}")
-        plt.grid(axis="y", alpha=0.3)
-        ax = plt.gca()
-        ax.xaxis_date()
-        ax.xaxis.set_major_locator(mdates.YearLocator(base=5))
-        ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
-        plt.xticks(rotation=45)
-        plt.xlim(dates_num.min()-width_days, dates_num.max()+width_days)
-        plt.tight_layout()
-        plt.savefig(os.path.join(LOG_DIR, f"{var_name}_{col}_log.pdf"))
         plt.close()
 
 print("✅ Monthly plots generated successfully!")

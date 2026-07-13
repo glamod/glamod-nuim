@@ -244,9 +244,9 @@ python count_rows_psv.py
 ## Final Merge
 
 ```bash
-python final_merge_seq_dy.py \
-    --parent_input_dir /ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/daily_data/r8.2/final_merged_pq \
-    --output_dir /ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/daily_data/r8.2/final_merged_pq \
+python final_merge_seq_mnth.py \
+    --parent_input_dir /ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/monthly_data/r8.2/final_merged_pq \
+    --output_dir /ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/monthly_data/r8.2/final_merged_pq \
     --max_workers 10
 ```
 

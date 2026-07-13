@@ -88,7 +88,11 @@ AUTO_MODE = False
 # MANUAL MONTHS
 # ---------------------------------------------------------
 MANUAL_MONTHS = [
+    (2026, 1),
+    (2026, 2),
+    (2026, 3),
     (2026, 4),
+    (2026, 5),
 ]
 
 # ---------------------------------------------------------
@@ -111,16 +115,7 @@ SPECIFIC_FILES = [
 
 ]
 
-# =========================================================
-# DATE FILTER SETTINGS
-# =========================================================
 
-# True  = keep only data ON/AFTER FILTER_START_DATE
-# False = keep all data
-APPLY_DATE_FILTER = True
-
-# Format: DD/MM/YYYY
-FILTER_START_DATE = "26/01/2026"
 
 # =========================================================
 # CLEANUP SETTINGS
@@ -310,7 +305,7 @@ def cleanup_files(tar_path, extract_dir):
 # =========================================================
 # GET FILES
 # =========================================================
-def get_monthly_files():
+def get_monthly_files(year, month):
 
     # =====================================================
     # SPECIFIC FILES MODE
@@ -341,54 +336,25 @@ def get_monthly_files():
 
     selected_files = []
 
-    now = datetime.utcnow()
-
-    current_year = now.year
-    current_month = now.month
-
-    previous_month = current_month - 1
-    previous_year = current_year
-
-    if previous_month == 0:
-
-        previous_month = 12
-        previous_year -= 1
-
+    
     for start_date, end_date in matches:
-
-        dt = datetime.strptime(end_date, "%Y%m%d")
-
-        keep = False
-
-        # =================================================
-        # AUTO MODE
-        # PREVIOUS MONTH ONLY
-        # =================================================
-        if AUTO_MODE:
-
-            if (
-                dt.year == previous_year and
-                dt.month == previous_month
-            ):
-
-                keep = True
-
-        # =================================================
-        # MANUAL MODE
-        # =================================================
-        else:
-
-            if (dt.year, dt.month) in MANUAL_MONTHS:
-
-                keep = True
-
+    
+        start_dt = datetime.strptime(start_date, "%Y%m%d")
+        end_dt = datetime.strptime(end_date, "%Y%m%d")
+    
+        keep = (
+            (start_dt.year == year and start_dt.month == month)
+            or
+            (end_dt.year == year and end_dt.month == month)
+        )
+    
         if keep:
-
+    
             fname = (
                 f"superghcnd_diff_"
                 f"{start_date}_to_{end_date}.tar.gz"
             )
-
+    
             selected_files.append(fname)
 
     selected_files = sorted(
@@ -480,7 +446,7 @@ def find_insert_file(root_dir):
 # =========================================================
 # PROCESS INSERT
 # =========================================================
-def process_insert(insert_path):
+def process_insert(insert_path, year, month):
 
     print("Processing:", insert_path)
 
@@ -639,6 +605,22 @@ def process_insert(insert_path):
     df["day"] = (
         df["Date"].astype(str).str[6:8]
     )
+    # KEEP ONLY REQUESTED MONTH
+    df["year"] = df["year"].astype(int)
+    df["month"] = df["month"].astype(int)
+    
+    df = df[
+        (df["year"] == year) &
+        (df["month"] == month)
+    ].copy()
+    
+    print(f"Rows after month filter: {len(df):,}")
+    
+    # Convert back to strings for timestamp creation
+   # Convert back to strings for timestamp creation
+    df["year"] = df["year"].astype(str)
+    df["month"] = df["month"].astype(str).str.zfill(2)
+    df["day"] = df["day"].astype(str).str.zfill(2)
 
     # =====================================================
     # CDM FIELDS
@@ -758,17 +740,17 @@ def process_insert(insert_path):
     )
 
     df["observation_id"] = (
-        df["primary_station_id"].astype(str) + "-" +
-        df["record_number"] + "-" +
-        df["dates"] + "-" +
-        df["observed_variable"].astype(str) + "-" +
-        df["value_significance"].astype(str)
+        df["primary_station_id"].astype(str).str.strip() + "-" +
+        df["record_number"].astype(str).str.strip() + "-" +
+        df["dates"].astype(str).str.strip() + "-" +
+        df["observed_variable"].astype(str).str.strip() + "-" +
+        df["value_significance"].astype(str).str.strip()
     )
 
     df["report_id"] = (
-        df["primary_station_id"].astype(str) + "-" +
-        df["record_number"] + "-" +
-        df["dates"]
+        df["primary_station_id"].astype(str).str.strip() + "-" +
+        df["record_number"].astype(str).str.strip() + "-" +
+        df["dates"].astype(str).str.strip()
     )
 
     # =====================================================
@@ -801,19 +783,11 @@ def process_insert(insert_path):
 # =========================================================
 # OUTPUT NAME
 # =========================================================
-def make_output_name(df):
-
-    timestamps = pd.to_datetime(
-        df["report_timestamp"],
-        errors="coerce"
-    )
-
-    min_date = timestamps.min().strftime("%Y-%m-%d")
-    max_date = timestamps.max().strftime("%Y-%m-%d")
+def make_output_name(year, month):
 
     return (
-        f"daily_cdm_core_updates_"
-        f"{min_date}_{max_date}.psv"
+        f"insitu-observations-surface-land_daily_"
+        f"{year}_{month:02d}.psv"
     )
 
 # =========================================================
@@ -874,210 +848,186 @@ def apply_schema(df):
 
     return df
 
-
-# =========================================================
-# FILTER OUTPUT DATE RANGE
-# =========================================================
-def filter_by_start_date(df):
-
-    # -----------------------------------------------------
-    # NO FILTER
-    # -----------------------------------------------------
-    if not APPLY_DATE_FILTER:
-
-        return df
-
-    print("\nApplying start date filter:")
-    print(f"Keeping data from {FILTER_START_DATE} onwards")
-
-    # -----------------------------------------------------
-    # CONVERT report_timestamp
-    # -----------------------------------------------------
-    timestamps = pd.to_datetime(
-        df["report_timestamp"],
-        errors="coerce",
-        utc=True
-    )
-
-    # -----------------------------------------------------
-    # USER DATE
-    # -----------------------------------------------------
-    start_dt = pd.to_datetime(
-        FILTER_START_DATE,
-        format="%d/%m/%Y",
-        utc=True
-    )
-
-    # -----------------------------------------------------
-    # FILTER
-    # -----------------------------------------------------
-    df = df[
-        timestamps >= start_dt
-    ].copy()
-
-    print(f"Rows remaining: {len(df):,}")
-
-    return df
-   
-
 # =========================================================
 # PIPELINE
 # =========================================================
 def run_pipeline():
 
-    files = get_monthly_files()
+    # -----------------------------------------------------
+    # MONTHS TO PROCESS
+    # -----------------------------------------------------
+    if AUTO_MODE:
 
-    if not files:
-        raise RuntimeError("No files selected")
+        now = datetime.utcnow()
 
+        year = now.year
+        month = now.month - 1
+
+        if month == 0:
+            month = 12
+            year -= 1
+
+        months_to_process = [(year, month)]
+
+    else:
+
+        months_to_process = MANUAL_MONTHS
+
+    # -----------------------------------------------------
+    # LOAD PROCESSED FILES
+    # -----------------------------------------------------
     processed_files = load_processed_files()
 
     print("\n=================================================")
     print(f"ALREADY PROCESSED: {len(processed_files)}")
     print("=================================================")
 
-    all_dfs = []
-
-    for i, filename in enumerate(files, start=1):
+    # -----------------------------------------------------
+    # PROCESS EACH MONTH
+    # -----------------------------------------------------
+    for year, month in months_to_process:
 
         print("\n=================================================")
-        print(f"[{i}/{len(files)}] {filename}")
+        print(f"PROCESSING {year}-{month:02d}")
         print("=================================================")
 
-        if filename in processed_files:
+        files = get_monthly_files(year, month)
 
-            print("SKIPPING (already processed)")
-
+        if not files:
+            print(f"No files found for {year}-{month:02d}")
             continue
 
-        tar_path = None
-        extract_dir = None
+        all_dfs = []
 
-        try:
+        # -------------------------------------------------
+        # PROCESS EACH FILE
+        # -------------------------------------------------
+        for i, filename in enumerate(files, start=1):
 
-            tar_path = download_file(filename)
+            print("\n=================================================")
+            print(f"[{i}/{len(files)}] {filename}")
+            print("=================================================")
 
-            extract_dir = extract_tar(tar_path)
+            if filename in processed_files:
 
-            insert_path = find_insert_file(extract_dir)
+                print("SKIPPING (already processed)")
+                continue
 
-            df = process_insert(insert_path)
+            tar_path = None
+            extract_dir = None
 
-            all_dfs.append(df.copy())
+            try:
 
-            rows = len(df)
+                tar_path = download_file(filename)
 
-            del df
+                extract_dir = extract_tar(tar_path)
 
-            gc.collect()
+                insert_path = find_insert_file(extract_dir)
 
-            save_processed_file(filename)
+                df = process_insert(insert_path, year, month)
 
-            print(f"Rows processed: {rows:,}")
+                if not df.empty:
+                   all_dfs.append(df)
 
-        except Exception as e:
+                rows = len(df)
 
-            print(f"FAILED: {filename}")
-            print(str(e))
+                del df
 
-        finally:
+                gc.collect()
 
-            cleanup_files(
-                tar_path,
-                extract_dir
-            )
+                save_processed_file(filename)
 
-    # =====================================================
-    # NO NEW FILES
-    # =====================================================
-    if not all_dfs:
+                print(f"Rows processed: {rows:,}")
 
-        print("\nNo new files to process")
+            except Exception as e:
 
-        return
+                print(f"FAILED: {filename}")
+                print(str(e))
 
-    # =====================================================
-    # COMBINE
-    # =====================================================
-    final_df = pd.concat(
-        all_dfs,
-        ignore_index=True
-    )
+            finally:
 
-    # =====================================================
-    # REMOVE DUPLICATES
+                cleanup_files(
+                    tar_path,
+                    extract_dir
+                )
 
-    final_df = final_df.drop_duplicates()
+        # -------------------------------------------------
+        # NO DATA FOR THIS MONTH
+        # -------------------------------------------------
+        if not all_dfs:
 
-    # =====================================================
-    # FILTER BY START DATE
-    # =====================================================
-    final_df = filter_by_start_date(final_df)
+            print(f"No observations for {year}-{month:02d}")
+            continue
 
-    # =====================================================
-    # SORT BY report_timestamp
-    # =====================================================
-    final_df["report_timestamp_dt"] = pd.to_datetime(
-        final_df["report_timestamp"],
-        errors="coerce"
-    )
+        # -------------------------------------------------
+        # COMBINE
+        # -------------------------------------------------
+        final_df = pd.concat(
+            all_dfs,
+            ignore_index=True
+        )
 
-    final_df = final_df.sort_values(
-        "report_timestamp_dt"
-    )
+        final_df = final_df.drop_duplicates()
 
-    final_df = final_df.drop(
-        columns=["report_timestamp_dt"]
-    )
+        # -------------------------------------------------
+        # SORT
+        # -------------------------------------------------
+        final_df["report_timestamp_dt"] = pd.to_datetime(
+            final_df["report_timestamp"],
+            errors="coerce"
+        )
 
-    final_df = final_df.reset_index(drop=True)
-    # =====================================================
-    # APPLY FINAL SCHEMA
-    # =====================================================
-    final_df = apply_schema(final_df)
+        final_df = final_df.sort_values(
+            "report_timestamp_dt"
+        )
 
-    # =====================================================
-    # OUTPUT PATHS
-    # =====================================================
-    base_filename = make_output_name(final_df)
+        final_df = final_df.drop(
+            columns=["report_timestamp_dt"]
+        )
 
-    psv_outpath = os.path.join(
-        PROCESSING_DIR,
-        base_filename
-    )
+        final_df = final_df.reset_index(drop=True)
 
-    pq_outpath = os.path.join(
-        PROCESSING_DIR,
-        base_filename.replace(".psv", ".pq")
-    )
+        # -------------------------------------------------
+        # APPLY SCHEMA
+        # -------------------------------------------------
+        final_df = apply_schema(final_df)
 
-    # =====================================================
-    # SAVE PSV
-    # =====================================================
-    final_df.to_csv(
-        psv_outpath,
-        sep="|",
-        index=False
-    )
+        # -------------------------------------------------
+        # OUTPUT
+        # -------------------------------------------------
+        base_filename = make_output_name(year, month)
 
-    # =====================================================
-    # SAVE PARQUET
-    # =====================================================
-    final_df.to_parquet(
-        pq_outpath,
-        index=False
-    )
+        psv_outpath = os.path.join(
+            PROCESSING_DIR,
+            base_filename
+        )
 
-    print("\n=================================================")
-    print("DONE")
-    print("=================================================")
-    print(f"Total rows: {len(final_df):,}")
+        pq_outpath = os.path.join(
+            PROCESSING_DIR,
+            base_filename.replace(".psv", ".pq")
+        )
 
-    print("\nSaved PSV:")
-    print(psv_outpath)
+        # -------------------------------------------------
+        # SAVE
+        # -------------------------------------------------
+        final_df.to_csv(
+            psv_outpath,
+            sep="|",
+            index=False
+        )
 
-    print("\nSaved Parquet:")
-    print(pq_outpath)
+        final_df.to_parquet(
+            pq_outpath,
+            index=False
+        )
+
+        print("\n=================================================")
+        print(f"FINISHED {year}-{month:02d}")
+        print("=================================================")
+        print(f"Rows: {len(final_df):,}")
+
+        print(f"Saved PSV: {psv_outpath}")
+        print(f"Saved PQ : {pq_outpath}")
 
 
 # =========================================================

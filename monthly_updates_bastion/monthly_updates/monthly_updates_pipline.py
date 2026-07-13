@@ -92,6 +92,10 @@ N_MONTHS_BACK = 1
 
 MANUAL_MONTHS = [
     (2024, 1),
+    (2024, 2),
+    (2024, 3),
+    (2024, 4),
+    (2024, 5),
 ]
 
 REMOVE_TAR_FILES = True
@@ -955,32 +959,13 @@ def cleanup_files(tar_path, extract_dir):
 # =========================================================
 # OUTPUT NAME
 # =========================================================
-
-def make_output_name(df):
-
-    timestamps = pd.to_datetime(
-        df["report_timestamp"],
-        errors="coerce",
-        utc=True
-    )
-
-    timestamps = timestamps.dropna()
-
-    if timestamps.empty:
-        raise ValueError(
-            "No valid report_timestamp values found."
-        )
-
-    min_date = timestamps.min().strftime("%Y-%m-%d")
-
-    max_date = timestamps.max().strftime("%Y-%m-%d")
+def make_output_name(year, month):
 
     return (
-        f"cdm_lite_monthly_update_"
-        f"{min_date}_{max_date}"
+        f"insitu-observations-surface-land_monthly_"
+        f"{year}_{month:02d}.psv"
     )
-
-# =========================================================
+#=============================================
 # PIPELINE
 # =========================================================
 
@@ -992,6 +977,7 @@ def run_pipeline():
         f"Target months: {target_months}"
     )
 
+    # Download once
     tar_path = download_update_file()
 
     extract_dir = extract_tar(tar_path)
@@ -999,107 +985,110 @@ def run_pipeline():
     station_files = find_station_files(extract_dir)
 
     logger.info(
-        f"Station files found: "
-        f"{len(station_files):,}"
+        f"Station files found: {len(station_files):,}"
     )
 
     logger.info(
         f"Using {min(80, cpu_count())} workers"
     )
-    
-    tasks = [
-        (infile, target_months)
-        for infile in station_files
-    ]
-    
-    with Pool(processes=min(50, cpu_count())) as pool:
-    
-        results = pool.map(
-            process_wrapper,
-            tasks,
-            chunksize=250
-        )
-    
-    all_outputs = [
-    
-        df for df in results
-    
-        if len(df) > 0
-    
-    ]
 
-    if len(all_outputs) == 0:
-    
-        logger.warning("No output data")
-    
-        cleanup_files(
-            tar_path,
-            extract_dir
-        )
-    
-        return
-    
-    # -----------------------------------------------------
-    # CONCAT FINAL OUTPUT
-    # -----------------------------------------------------
-    
-    final_df = pd.concat(
-        all_outputs,
-        ignore_index=True
-    )
-    del all_outputs
-
-    gc.collect()
-
-    final_df = final_df.drop_duplicates()
-
-    final_df = final_df.sort_values(
-        "report_timestamp"
-    )
-
-    final_df = final_df.reset_index(drop=True)
-
-    final_df = apply_schema(final_df)
-
-    base_name = make_output_name(final_df)
-
-    psv_out = os.path.join(
-        OUTPUT_DIR,
-        f"{base_name}.psv"
-    )
-
-    pq_out = os.path.join(
-        OUTPUT_DIR,
-        f"{base_name}.pq"
-    )
-
-    if SAVE_PSV:
-
-        final_df.to_csv(
-            psv_out,
-            sep="|",
-            index=False
-        )
+    # Process one month at a time
+    for year, month in target_months:
 
         logger.info(
-            f"Saved PSV: {psv_out}"
+            f"Processing {year}-{month:02d}"
         )
 
-    if SAVE_PARQUET:
+        tasks = [
+            (infile, [(year, month)])
+            for infile in station_files
+        ]
 
-        final_df.to_parquet(
-            pq_out,
-            index=False,
-            engine="pyarrow"
+        with Pool(processes=min(50, cpu_count())) as pool:
+
+            results = pool.map(
+                process_wrapper,
+                tasks,
+                chunksize=250
+            )
+
+        all_outputs = [
+
+            df for df in results
+
+            if len(df) > 0
+
+        ]
+
+        if len(all_outputs) == 0:
+
+            logger.warning(
+                f"No output data for {year}-{month:02d}"
+            )
+
+            continue
+
+        # -----------------------------------------------------
+        # CONCAT FINAL OUTPUT
+        # -----------------------------------------------------
+    
+        final_df = pd.concat(
+            all_outputs,
+            ignore_index=True
         )
-
-        logger.info(
-            f"Saved Parquet: {pq_out}"
+        del all_outputs
+    
+        gc.collect()
+    
+        final_df = final_df.drop_duplicates()
+    
+        final_df = final_df.sort_values(
+            "report_timestamp"
         )
-
-    del final_df
-
-    gc.collect()
+    
+        final_df = final_df.reset_index(drop=True)
+    
+        final_df = apply_schema(final_df)
+    
+        base_name = make_output_name(year, month)
+    
+        psv_out = os.path.join(
+            OUTPUT_DIR,
+            f"{base_name}.psv"
+        )
+    
+        pq_out = os.path.join(
+            OUTPUT_DIR,
+            f"{base_name}.pq"
+        )
+    
+        if SAVE_PSV:
+    
+            final_df.to_csv(
+                psv_out,
+                sep="|",
+                index=False
+            )
+    
+            logger.info(
+                f"Saved PSV: {psv_out}"
+            )
+    
+        if SAVE_PARQUET:
+    
+            final_df.to_parquet(
+                pq_out,
+                index=False,
+                engine="pyarrow"
+            )
+    
+            logger.info(
+                f"Saved Parquet: {pq_out}"
+            )
+    
+        del final_df
+    
+        gc.collect()
 
     cleanup_files(
         tar_path,

@@ -29,11 +29,11 @@ import pandas as pd
 # ------------------------------------------------------------
 INPUT_DIR = (
     "/ichec/work/glamod/land_project_workspace/data/level2/"
-    "cdm_obs_core/sub_daily_data/r8.1/final_merged_pq/all"
+    "cdm_obs_core/sub_daily_data/r8.2/final_merged_pq/"
 )
 
 OUTPUT_DIR = (
-    "/ichec/work/glamod/land_project_workspace/code/r8.1_pq_code"
+    "/ichec/work/glamod/land_project_workspace/code/git_code/bastion_cdm_core_convert_code_062026/all_cdm-core_to_parquet/plot_outputs"
 )
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -64,6 +64,8 @@ n_obs = defaultdict(int)
 n_pass = defaultdict(int)
 n_fail = defaultdict(int)
 source_ids = defaultdict(set)
+latitudes = defaultdict(set)
+longitudes = defaultdict(set)
 
 # ------------------------------------------------------------
 # Process parquet files (memory safe)
@@ -82,7 +84,13 @@ for f in pq_files:
     # Read only needed columns
     table = pq.read_table(
         f,
-        columns=["observed_variable", "quality_flag", "source_id"]
+        columns=[
+            "observed_variable",
+            "quality_flag",
+            "source_id",
+            "latitude",
+            "longitude",
+        ]
     )
 
     df = table.to_pandas()
@@ -102,7 +110,9 @@ for f in pq_files:
         n_obs[key] += len(g)
         n_pass[key] += (g["quality_flag"] == 0).sum()
         n_fail[key] += (g["quality_flag"] == 1).sum()
-        source_ids[key].update(g["source_id"].unique())
+        source_ids[key].update(g["source_id"].dropna().unique())
+        latitudes[key].update(g["latitude"].dropna().unique())
+        longitudes[key].update(g["longitude"].dropna().unique())
 
     print(f"Processed {yyyy_mm}")
 
@@ -112,14 +122,16 @@ for f in pq_files:
 rows = []
 for (yyyy_mm, var_id) in n_obs.keys():
     rows.append({
-        "year_month": yyyy_mm,
-        "observed_variable": var_id,
-        "variable_name": VAR_MAP[var_id],
-        "n_observations": n_obs[(yyyy_mm, var_id)],
-        "n_pass": n_pass[(yyyy_mm, var_id)],
-        "n_fail": n_fail[(yyyy_mm, var_id)],
-        "n_source_id": len(source_ids[(yyyy_mm, var_id)]),
-    })
+    "year_month": yyyy_mm,
+    "observed_variable": var_id,
+    "variable_name": VAR_MAP[var_id],
+    "n_observations": n_obs[(yyyy_mm, var_id)],
+    "n_pass": n_pass[(yyyy_mm, var_id)],
+    "n_fail": n_fail[(yyyy_mm, var_id)],
+    "n_source_id": len(source_ids[(yyyy_mm, var_id)]),
+    "n_latitude": len(latitudes[(yyyy_mm, var_id)]),
+    "n_longitude": len(longitudes[(yyyy_mm, var_id)]),
+})
 
 df = pd.DataFrame(rows)
 

@@ -91,11 +91,11 @@ AUTO_MODE = False
 N_MONTHS_BACK = 1
 
 MANUAL_MONTHS = [
-    (2024, 1),
-    (2024, 2),
-    (2024, 3),
-    (2024, 4),
-    (2024, 5),
+    (2026, 1),
+    (2026, 2),
+    (2026, 3),
+    (2026, 4),
+    (2026, 5),
 ]
 
 REMOVE_TAR_FILES = True
@@ -963,7 +963,7 @@ def make_output_name(year, month):
 
     return (
         f"insitu-observations-surface-land_monthly_"
-        f"{year}_{month:02d}.psv"
+        f"{year}_{month:02d}"
     )
 #=============================================
 # PIPELINE

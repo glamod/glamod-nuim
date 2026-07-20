@@ -7,7 +7,7 @@ import pyarrow.parquet as pq
 import pyarrow as pa
 import pandas as pd
 
-#"""initial merge of pq files into sub job folder """
+"""initial merge of pq files into sub job folder """
 # -----------------------------
 # Configuration
 # -----------------------------

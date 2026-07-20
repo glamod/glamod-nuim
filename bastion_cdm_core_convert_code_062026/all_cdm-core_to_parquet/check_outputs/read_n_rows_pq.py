@@ -26,9 +26,9 @@ print("=== Column Data Types ===")
 print(df.dtypes)
 
 # ==============================
-# SAVE FIRST 50,000 ROWS TO CSV/TXT
+# SAVE FIRST N ROWS TO CSV/TXT
 # ==============================
-output_csv = "C:/Users/snoone/Dropbox/PYTHON_TRAINING/Daily_updates_CDM_CORE_2026/dy_updates_first_5000_rows_check.txt"
-
-df.head(5000).to_csv(output_csv, index=False)
-print(f"/nSaved first 5000 rows to: {output_csv}")
+output_csv = "C:/Users/snoone/Dropbox/PYTHON_TRAINING/Daily_updates_CDM_CORE_2026/dy_updates_first_N_rows_check.txt"
+#edit based on number of rows set to read
+df.head().to_csv(output_csv, index=False)
+print(f"/nSaved first N rows to: {output_csv}")

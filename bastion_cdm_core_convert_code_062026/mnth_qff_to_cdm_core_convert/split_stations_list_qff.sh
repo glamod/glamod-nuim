@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#split into 5 files:
+## Randomly shuffles the GSOM input file list and splits it into five approximately equal-sized text files for parallel processing.
 
 
 

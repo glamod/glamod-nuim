@@ -7,13 +7,12 @@ Created on Tue Jan 27 10:57:52 2026
 
 # -*- coding: utf-8 -*-
 """
-Monthly aggregation from parquet files
-
-Counts per (year_month, observed_variable):
+ # Parallel validation of observation counts between Level-1 CSV and Level-2 CDM Core PSV files for each station.
 - total observations
 - quality_flag pass (0)
 - quality_flag fail (1)
 - number of unique source_id
+for plotting locally for checks
 """
 
 import os

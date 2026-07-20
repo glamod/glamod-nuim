@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+#'## Counts valid observations for selected meteorological variables in a QFF file by station and outputs per-station totals to a CSV file.
 import sys
 import os
 import gzip

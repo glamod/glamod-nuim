@@ -1,6 +1,5 @@
-#!/bin/bash
 
-#!/bin/bash
+##working code on bastion 
 
 # Activate environment
 source /ichec/work/glamod/land_project_workspace/code/r8_202508/hourly/muenv/bin/activate

@@ -2,7 +2,7 @@
 """
 @author: snoone
 """
-
+#"""Counts observations for selected variables across a list of Level-1 daily CSV files,combining temperature variables, and outputs total observation counts by variable."""
 import os
 import gzip
 import csv

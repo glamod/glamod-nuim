@@ -5,14 +5,12 @@ HPC-optimised CSV vs PSV row comparison
 - 80 cores
 - streaming output
 """
-
 import os
 import gzip
 import csv as pycsv
 from csv import DictWriter
 from collections import Counter
 from multiprocessing import Pool, cpu_count
-
 # ---------------------------------------------------------------------
 # CONFIG
 # ---------------------------------------------------------------------

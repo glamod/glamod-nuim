@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #split into 5 files:
-
+## Randomly shuffles an input file list and splits it into five approximately equal-sized text files for parallel processing.
 
 
 INPUT="dy_list_get_csv.txt"

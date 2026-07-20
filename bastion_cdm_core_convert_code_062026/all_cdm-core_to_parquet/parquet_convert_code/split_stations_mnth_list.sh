@@ -1,4 +1,5 @@
-#split into 5 files:
+#splits master station list .txt into 5 shufled station list files""""
+
 
 #!/bin/bash
 

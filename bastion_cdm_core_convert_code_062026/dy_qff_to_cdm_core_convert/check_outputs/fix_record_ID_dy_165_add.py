@@ -1,5 +1,5 @@
 import pandas as pd
-
+## Appends on local machine one new record with observed variable 165 to each station by duplicating a template row, assigning the next record number, and preserving all existing data.
 # ----------------------------
 # 1. Load
 # ----------------------------

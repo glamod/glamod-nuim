@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Sub-daily counts plotting script – linear and log plots
+Sub-daily counts plotting script – linear and log plots-ran locally not om bastionounts plotting script – linear and log plots
 
 - Linear plots: separate n_pass and n_fail, plus other numeric columns
 - Log plots: combined n_pass/n_fail AND separate log plots for all numeric columns

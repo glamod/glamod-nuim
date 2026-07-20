@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Daily counts plotting script – linear and log plots
+Daily counts plotting script – linear and log plots-ran locally not om bastion
 
 - Linear plots: separate n_pass and n_fail, plus other numeric columns
 - Log plots: combined n_pass/n_fail AND separate log plots for all numeric columns
@@ -31,6 +31,7 @@ VAR_MAP = {
     107: "wind_speed",
     45: "fresh_snow",
     53: "snow_depth"
+    58: "sea_level_pressure"
 }
 
 # -----------------------------

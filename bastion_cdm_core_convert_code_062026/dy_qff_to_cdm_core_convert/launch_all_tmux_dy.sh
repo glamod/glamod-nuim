@@ -1,5 +1,5 @@
 #!/bin/bash
-
+## Restarts daily CDM Core conversion jobs across existing tmux sessions by reactivating the virtual environment and rerunning each assigned file subset.
 VENV="/ichec/work/glamod/land_project_workspace/code/r8_202508/hourly/muenv/bin/activate"
 SCRIPT="daily_to_cdm_core_v3.py"
 

@@ -1,4 +1,6 @@
 #!/bin/bash
+#"""converts psv to pq files in batches"""
+
 set -e  # stop immediately if any part fails
 
 INPUT_DIR=/ichec/work/glamod/land_project_workspace/data/level2/cdm_obs_core/sub_daily_data/r8.2/r8.2_core

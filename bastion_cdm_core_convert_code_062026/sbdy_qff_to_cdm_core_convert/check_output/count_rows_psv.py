@@ -3,7 +3,7 @@
 Created on Thu Aug 21 10:53:35 2025
 
 @author: snoone
-"""
+"""# Counts rows in all sub-daily CDM Core PSV files, logs per-file and total row counts, and records any unreadable or corrupt files encountered during processing.
 
 import os
 import glob

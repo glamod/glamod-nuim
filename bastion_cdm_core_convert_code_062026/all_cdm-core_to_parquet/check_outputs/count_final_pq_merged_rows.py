@@ -4,7 +4,7 @@ Created on Wed Jun 17 11:11:42 2026
 
 @author: snoone
 """
-
+"""Compares the row counts for PQT, PSV and QFF files for the variables that are produced to ensure that these match"""
 import os
 import pyarrow.parquet as pq
 

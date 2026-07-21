@@ -1,0 +1,43 @@
+
+##working code on bastion 
+
+# Activate environment
+source /ichec/work/glamod/land_project_workspace/code/r8_202508/hourly/muenv/bin/activate
+
+# Go to workflow directory
+cd /ichec/work/glamod/land_project_workspace/data/daily_updates
+
+# Run script
+python daily_update_pipeline_monthly_batch_man_auto.py >> daily_pipeline.log 2>&1
+
+
+make exe.
+chmod +x daily_pipeline.sh
+
+#cron 
+
+
+crontab -e
+add:
+0 6 10 * * tmux has-session -t daily_pipeline 2>/dev/null || tmux new-session -d -s daily_pipeline '/ichec/work/glamod/land_project_workspace/data/daily_updates/daily_pipeline.sh'
+
+test:
+40 10 * * * tmux new-session -d -s daily_pipeline '/ichec/work/glamod/land_project_workspace/data/daily_updates/daily_pipeline.sh'
+
+
+tmux attach -t daily_pipeline
+
+rm -rf \ncei_file_downloads\\
+
+Meaning:
+
+0 = minute
+6 = 6 AM
+12 = 12th day
+* * = every month, every weekday
+
+The cron job will:
+
+start a detached tmux session
+named monthly_pipeline
+run your workflow automatically

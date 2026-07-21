@@ -1,0 +1,44 @@
+#!/bin/bash
+
+#!/bin/bash
+
+# Activate environment
+source /ichec/work/glamod/land_project_workspace/code/r8_202508/hourly/muenv/bin/activate
+
+# Go to workflow directory
+cd /ichec/work/glamod/land_project_workspace/data/monthly_updates
+
+# Run script
+python monthly_updates_pipline.py >> monthly_pipeline.log 2>&1
+
+
+make exe.
+chmod +x monthly_pipeline.sh
+
+#cron 
+i 
+
+add:
+0 6 17 * * tmux has-session -t monthly_pipeline 2>/dev/null || tmux new-session -d -s monthly_pipeline '/ichec/work/glamod/land_project_workspace/data/monthly_updates/monthly_pipeline.sh'
+
+test
+18 11 * * * tmux has-session -t monthly_pipeline 2>/dev/null || tmux new-session -d -s monthly_pipeline '/ichec/work/glamod/land_project_workspace/data/monthly_updates/monthly_pipeline.sh'
+
+
+
+
+tmux attach -t monthly_pipeline
+
+
+Meaning:
+
+0 = minute
+6 = 6 AM
+12 = 12th day
+* * = every month, every weekday
+
+The cron job will:
+
+start a detached tmux session
+named monthly_pipeline
+run your workflow automatically

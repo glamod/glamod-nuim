@@ -1,0 +1,13 @@
+###ftp_download_ghcnd_diff
+MAILTO="simon.noone@mu.ie"
+25 19 * * * /home/users/sjnoone/bin/diff_down_new
+#python_end_cron_ftp
+
+### run convert file process on Lotus
+MAILTO="simon.noone@mu.ie"
+35 19 * * * /home/users/sjnoone/bin/unzip_diff_new
+##end
+### run remove /gz
+MAILTO="simon.noone@mu.ie"
+30 20 * * * /home/users/sjnoone/ghcnd_ftp_updates_dy/remove_gz
+##end
